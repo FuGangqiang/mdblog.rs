@@ -9,3 +9,4 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
+getopts = "0.2"

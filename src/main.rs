@@ -1,7 +1,11 @@
-extern crate getopts;
+#![feature(question_mark)]
 
-use getopts::{Options, Occur, HasArg};
+extern crate getopts;
+extern crate mdblog;
+
+use getopts::{Options, Occur, HasArg, Matches};
 use std::env;
+use mdblog::Mdblog;
 
 
 fn print_usage(opts: Options) {
@@ -59,10 +63,39 @@ fn main() {
     let command = &args[1];
 
     match command.as_ref() {
-        "init" => println!("init command"),
-        "build" => println!("build command"),
-        "server" => println!("server command"),
+        "init" => init(&args),
+        "build" => build(&matches),
+        "server" => server(&matches),
         _ => print_usage(opts),
     }
     ::std::process::exit(0);
+}
+
+
+fn init(args: &Vec<String>) {
+    if args.len() != 3 {
+        println!("`init` subcommand requires an argument.");
+        ::std::process::exit(1);
+    }
+    let mut root_dir = ::std::env::current_dir().unwrap();
+    root_dir.push(&args[2]);
+    let mb = Mdblog::new(&root_dir);
+    if let Err(e) = mb.init(){
+        panic!(e.to_string());
+    }
+}
+
+
+fn build(matches: &Matches) {
+    let theme = matches.opt_str("t").unwrap_or("simple".to_string());
+    let root_dir = ::std::env::current_dir().unwrap();
+    let mb = Mdblog::new(&root_dir);
+    if let Err(e) = mb.build(&theme) {
+        panic!(e.to_string());
+    }
+}
+
+
+fn server(matches: &Matches) {
+    println!("server command");
 }

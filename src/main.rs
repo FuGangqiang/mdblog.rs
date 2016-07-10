@@ -89,7 +89,7 @@ fn init(args: &Vec<String>) {
 fn build(matches: &Matches) {
     let theme = matches.opt_str("t").unwrap_or("simple".to_string());
     let root_dir = ::std::env::current_dir().unwrap();
-    let mb = Mdblog::new(&root_dir);
+    let mut mb = Mdblog::new(&root_dir);
     if let Err(e) = mb.build(&theme) {
         panic!(e.to_string());
     }

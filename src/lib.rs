@@ -1,12 +1,16 @@
 #![feature(question_mark)]
 
+mod theme;
+
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::{Write, Error, ErrorKind};
+use theme::Theme;
 
 
 pub struct Mdblog {
     root: PathBuf,
+    theme: Theme,
 }
 
 
@@ -14,6 +18,8 @@ impl Mdblog {
     pub fn new<P: AsRef<Path>>(root: P) -> Mdblog {
         Mdblog {
             root: root.as_ref().to_owned(),
+            theme: Theme::new(&root),
+            posts: Vec::new(),
         }
     }
 
@@ -39,7 +45,8 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn build(&self, theme: &str) -> ::std::io::Result<()> {
+    pub fn build(&mut self, theme: &str) -> ::std::io::Result<()> {
+        self.theme.load(theme)?;
         Ok(())
     }
 

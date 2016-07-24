@@ -10,3 +10,4 @@ readme = "README.md"
 
 [dependencies]
 getopts = "0.2"
+walkdir = "0.1"

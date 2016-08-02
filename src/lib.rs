@@ -6,6 +6,7 @@ extern crate walkdir;
 
 mod theme;
 mod post;
+mod utils;
 
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -54,8 +55,9 @@ impl Mdblog {
     }
 
     pub fn build(&mut self, theme: &str) -> ::std::io::Result<()> {
-        self.theme.load(theme)?;
+        self.load_theme(&theme)?;
         self.load_posts()?;
+        self.export()?;
         Ok(())
     }
 
@@ -63,16 +65,37 @@ impl Mdblog {
         println!("server blog at localhost:{}", port);
     }
 
+    pub fn export(&self) -> ::std::io::Result<()> {
+        self.export_post_html()?;
+        Ok(())
+    }
+
+    pub fn load_theme(&mut self, theme: &str) -> ::std::io::Result<()> {
+        debug!("loading theme: {}", theme);
+        self.theme.load(theme)?;
+        Ok(())
+    }
+
     pub fn load_posts(&mut self) -> ::std::io::Result<()> {
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.unwrap();
-            if  entry.path() == posts_dir {
+            if !is_markdown_file(&entry) {
                 continue;
             }
             self.posts.push(Post::new(&self.root,
                                       &entry.path().strip_prefix(&self.root).unwrap().to_owned()));
+        }
+        for post in self.posts.iter_mut() {
+            post.load()?;
+        }
+        Ok(())
+    }
+
+    pub fn export_post_html(&self) -> ::std::io::Result<()> {
+        for post in &self.posts {
+            post.render_html(&self.theme);
         }
         Ok(())
     }
@@ -84,4 +107,25 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .to_str()
         .map(|s| s.starts_with("."))
         .unwrap_or(false)
+}
+
+fn is_markdown_file(entry: &DirEntry) -> bool {
+    if !entry.path().is_file() {
+        return false;
+    }
+    let fname = entry.file_name().to_str();
+    match fname {
+        None => {
+            return false;
+        },
+        Some(s) => {
+            if s.starts_with(|c| (c == '.') | (c == '~')) {
+                return false;
+            } else if s.ends_with(".md") {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 }

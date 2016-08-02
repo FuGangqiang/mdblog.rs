@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Error, ErrorKind};
 use std::path::{Path, PathBuf};
+use utils::create_file;
+use theme::Theme;
 
 
 pub struct Post {
@@ -24,7 +26,12 @@ impl Post {
         }
     }
 
+    pub fn dest(&self) -> PathBuf {
+        self.root.join("builds").join(self.path.with_extension("html"))
+    }
+
     pub fn load(&mut self) -> ::std::io::Result<()> {
+        debug!("loading post: {}", self.path.display());
         let mut pf = File::open(self.root.join(&self.path))?;
         let mut content = String::new();
         pf.read_to_string(&mut content)?;
@@ -46,6 +53,14 @@ impl Post {
             }
             self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }
+        Ok(())
+    }
+
+    pub fn render_html(&self, theme: &Theme) -> ::std::io::Result<()> {
+        debug!("rendering post: {}", self.path.display());
+        let dest = self.dest();
+        let f = create_file(&dest)?;
+        debug!("created html: {:?}", dest.display());
         Ok(())
     }
 }

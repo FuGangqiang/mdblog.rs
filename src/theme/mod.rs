@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::{Read, Write, Error, ErrorKind};
+use utils::create_file;
 
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
@@ -171,12 +172,4 @@ impl Theme {
 
         Ok(())
     }
-}
-
-
-pub fn create_file(path: &Path) -> ::std::io::Result<File> {
-    if let Some(p) = path.parent() {
-        ::std::fs::create_dir_all(p)?;
-    }
-    Ok(File::create(path)?)
 }

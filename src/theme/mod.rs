@@ -72,7 +72,8 @@ impl Theme {
     }
 
     pub fn load(&mut self, name: &str) -> ::std::io::Result<()> {
-        let src_dir = self.root.join(format!("themes/{}", name));
+        debug!("loading theme: {}", name);
+        let src_dir = self.root.join("themes").join(name);
         if src_dir.exists() {
             let mut favicon_file = File::open(src_dir.join("static/img/favicon.png"))?;
             let mut logo_file = File::open(src_dir.join("static/img/logo.png"))?;
@@ -125,10 +126,11 @@ impl Theme {
     }
 
     pub fn export(&self) -> ::std::io::Result<()> {
-        let dest_dir = self.root.join(format!("themes/{}", self.name));
+        let dest_dir = self.root.join("themes").join(&self.name);
         if dest_dir.exists() {
             return Ok(());
         }
+        debug!("exporting theme: {}", self.name);
         ::std::fs::create_dir_all(&dest_dir)?;
 
         let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;

@@ -1,5 +1,7 @@
 #![feature(question_mark)]
 
+#[macro_use]
+extern crate log;
 extern crate walkdir;
 
 mod theme;

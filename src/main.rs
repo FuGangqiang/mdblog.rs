@@ -1,5 +1,7 @@
 #![feature(question_mark)]
 
+extern crate log;
+extern crate env_logger;
 extern crate getopts;
 extern crate mdblog;
 
@@ -22,6 +24,8 @@ Usage:
 
 
 fn main() {
+    env_logger::init().unwrap();
+
     let args: Vec<String> = env::args().collect();
 
     let mut opts = Options::new();

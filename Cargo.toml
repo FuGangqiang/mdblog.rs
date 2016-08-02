@@ -11,3 +11,5 @@ readme = "README.md"
 [dependencies]
 getopts = "0.2"
 walkdir = "0.1"
+log = "0.3"
+env_logger = "0.3"

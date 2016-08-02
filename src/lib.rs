@@ -3,6 +3,8 @@
 #[macro_use]
 extern crate log;
 extern crate walkdir;
+extern crate tera;
+extern crate pulldown_cmark;
 
 mod theme;
 mod post;
@@ -15,12 +17,14 @@ use utils::create_error;
 use theme::Theme;
 use post::Post;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use tera::{Tera};
 
 
 pub struct Mdblog {
     root: PathBuf,
     theme: Theme,
     posts: Vec<Post>,
+    renderer: Option<Tera>,
 }
 
 
@@ -30,6 +34,7 @@ impl Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
             posts: Vec::new(),
+            renderer: None,
         }
     }
 
@@ -73,6 +78,9 @@ impl Mdblog {
     pub fn load_theme(&mut self, theme: &str) -> ::std::io::Result<()> {
         debug!("loading theme: {}", theme);
         self.theme.load(theme)?;
+        let template_dir = self.root.join("themes").join(&theme).join("templates");
+        debug!("template dir: {}", template_dir.display());
+        self.renderer = Some(Tera::new(&format!("{}/*", template_dir.display())));
         Ok(())
     }
 
@@ -94,8 +102,9 @@ impl Mdblog {
     }
 
     pub fn export_post_html(&self) -> ::std::io::Result<()> {
+        let tera = self.renderer.as_ref().unwrap();
         for post in &self.posts {
-            post.render_html(&self.theme);
+            post.render_html(tera)?;
         }
         Ok(())
     }

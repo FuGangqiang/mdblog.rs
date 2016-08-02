@@ -2,8 +2,11 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use utils::{create_file, render_html, create_error};
+use utils::{create_file, create_error};
 use theme::Theme;
+use tera::{Tera, Context};
+use std::error::Error;
+use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
 
 
 pub struct Post {
@@ -30,6 +33,15 @@ impl Post {
         self.root.join("builds").join(self.path.with_extension("html"))
     }
 
+    pub fn content(&self) -> String {
+        let mut opts = Options::empty();
+        opts.insert(OPTION_ENABLE_TABLES);
+        let mut s = String::with_capacity(self.body.len() * 3 / 2);
+        let p = Parser::new_ext(&self.body, opts);
+        html::push_html(&mut s, p);
+        s
+    }
+
     pub fn load(&mut self) -> ::std::io::Result<()> {
         debug!("loading post: {}", self.path.display());
         let mut pf = File::open(self.root.join(&self.path))?;
@@ -54,11 +66,24 @@ impl Post {
         Ok(())
     }
 
-    pub fn render_html(&self, theme: &Theme) -> ::std::io::Result<()> {
+    pub fn render_html(&self, tera: &Tera) -> ::std::io::Result<()> {
         debug!("rendering post: {}", self.path.display());
         let dest = self.dest();
-        let f = create_file(&dest)?;
-        debug!("created html: {:?}", dest.display());
-        Ok(())
+        let mut f = create_file(&dest)?;
+        let mut context = Context::new();
+        let content = self.content();
+        context.add("content", &content);
+        match tera.render("post.tpl", context) {
+            Ok(s) => {
+                f.write(s.as_bytes())?;
+                debug!("created html: {:?}", dest.display());
+                return Ok(());
+            }
+            Err(e) => {
+                return create_error(format!("post({path}) render error: {descrition}",
+                                            path=self.path.display(),
+                                            descrition=e.description()));
+            }
+        }
     }
 }

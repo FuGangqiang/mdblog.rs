@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::io::{Read, Write, Error, ErrorKind};
-use utils::create_file;
+use std::io::{Read, Write};
+use utils::{create_file, create_error};
 
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
@@ -120,7 +120,7 @@ impl Theme {
                 self.tags.extend_from_slice(&SIMPLE_TAGS);
                 self.export()?;
             } else {
-               return Err(Error::new(ErrorKind::Other, format!("{} theme not found", name)));
+               return create_error(format!("{} theme not found", name));
             }
         }
         Ok(())

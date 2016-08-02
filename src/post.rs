@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Read, Error, ErrorKind};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use utils::create_file;
+use utils::{create_file, render_html, create_error};
 use theme::Theme;
 
 
@@ -37,19 +37,17 @@ impl Post {
         pf.read_to_string(&mut content)?;
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            return Err(Error::new(ErrorKind::Other,
-                                  format!("post({path}) must both have `head` and `body` parts",
-                                          path=self.path.display())));
+            return create_error(format!("post({path}) must both have `head` and `body` parts",
+                                        path=self.path.display()));
         }
         self.head = v[0].to_string();
         self.body = v[1].to_string();
         for line in self.head.lines() {
             let pair: Vec<&str> = line.splitn(2, ':').collect();
             if pair.len() != 2 {
-                return Err(Error::new(ErrorKind::Other,
-                                      format!("post({path}) `head` part parse error: {line}",
-                                              path=self.path.display(),
-                                              line=line)));
+                return create_error(format!("post({path}) `head` part parse error: {line}",
+                                            path=self.path.display(),
+                                            line=line));
             }
             self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }

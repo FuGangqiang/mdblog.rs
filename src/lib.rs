@@ -10,7 +10,8 @@ mod utils;
 
 use std::path::{Path, PathBuf};
 use std::fs::File;
-use std::io::{Write, Error, ErrorKind};
+use std::io::Write;
+use utils::create_error;
 use theme::Theme;
 use post::Post;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
@@ -34,8 +35,7 @@ impl Mdblog {
 
     pub fn init(&self) -> ::std::io::Result<()> {
         if self.root.exists() {
-            return Err(Error::new(ErrorKind::Other,
-                                  format!("{root} directory already existed.", root=self.root.display())));
+            return create_error(format!("{root} directory already existed.", root=self.root.display()));
         }
         ::std::fs::create_dir_all(&self.root)?;
 

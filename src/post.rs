@@ -26,7 +26,7 @@ pub struct Post {
 
 impl Post {
     pub fn new<P: AsRef<Path>>(root: P, path: P) -> Post {
-        let metadata = fs::metadata(root.as_ref().join(&path.as_ref())).unwrap();
+        let metadata = fs::metadata(root.as_ref().join(&path.as_ref())).expect("get post metadata error");
         let (ctime, ctime_nsec) = (metadata.ctime(), metadata.ctime_nsec());
         let (mtime, mtime_nsec) = (metadata.mtime(), metadata.mtime_nsec());
         Post {

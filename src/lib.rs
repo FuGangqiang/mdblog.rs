@@ -92,12 +92,15 @@ impl Mdblog {
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
-            let entry = entry.unwrap();
+            let entry = entry.expect("get walker entry error");
             if !is_markdown_file(&entry) {
                 continue;
             }
             let mut post = Post::new(&self.root,
-                                     &entry.path().strip_prefix(&self.root).unwrap().to_owned());
+                                     &entry.path()
+                                           .strip_prefix(&self.root)
+                                           .expect("create post path error")
+                                           .to_owned());
             post.load()?;
             let post = Rc::new(post);
             for tag in post.tags() {
@@ -112,7 +115,7 @@ impl Mdblog {
     }
 
     pub fn export_post_html(&self) -> ::std::io::Result<()> {
-        let tera = self.renderer.as_ref().unwrap();
+        let tera = self.renderer.as_ref().expect("get renderer error");
         for post in &self.publisheds {
             post.render_html(tera)?;
         }

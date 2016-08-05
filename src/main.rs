@@ -24,7 +24,7 @@ Usage:
 
 
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::init().expect("env_logger init error");
 
     let args: Vec<String> = env::args().collect();
 
@@ -81,7 +81,7 @@ fn init(args: &Vec<String>) {
         println!("`init` subcommand requires an argument.");
         ::std::process::exit(1);
     }
-    let mut root_dir = ::std::env::current_dir().unwrap();
+    let mut root_dir = ::std::env::current_dir().expect("can not get root dir");
     root_dir.push(&args[2]);
     let mb = Mdblog::new(&root_dir);
     if let Err(e) = mb.init(){
@@ -92,7 +92,7 @@ fn init(args: &Vec<String>) {
 
 fn build(matches: &Matches) {
     let theme = matches.opt_str("t").unwrap_or("simple".to_string());
-    let root_dir = ::std::env::current_dir().unwrap();
+    let root_dir = ::std::env::current_dir().expect("can not get root dir");
     let mut mb = Mdblog::new(&root_dir);
     if let Err(e) = mb.build(&theme) {
         panic!(e.to_string());

@@ -42,6 +42,14 @@ impl Post {
         s
     }
 
+    pub fn tags(&self) -> Vec<&str> {
+        if let Some(tag_str) = self.metadata.get("tags") {
+            tag_str.split(',').map(|x| x.trim()).filter(|x| x.len() != 0).collect()
+        } else {
+            Vec::new()
+        }
+    }
+
     pub fn load(&mut self) -> ::std::io::Result<()> {
         debug!("loading post: {}", self.path.display());
         let mut pf = File::open(self.root.join(&self.path))?;

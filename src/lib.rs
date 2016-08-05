@@ -13,6 +13,8 @@ mod utils;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Write;
+use std::collections::HashMap;
+use std::rc::Rc;
 use utils::create_error;
 use theme::Theme;
 use post::Post;
@@ -23,7 +25,8 @@ use tera::{Tera};
 pub struct Mdblog {
     root: PathBuf,
     theme: Theme,
-    posts: Vec<Post>,
+    posts: Vec<Rc<Post>>,
+    tags: HashMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
 }
 
@@ -34,6 +37,7 @@ impl Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
             posts: Vec::new(),
+            tags: HashMap::new(),
             renderer: None,
         }
     }
@@ -85,6 +89,7 @@ impl Mdblog {
     }
 
     pub fn load_posts(&mut self) -> ::std::io::Result<()> {
+        debug!("loading posts");
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
@@ -92,12 +97,17 @@ impl Mdblog {
             if !is_markdown_file(&entry) {
                 continue;
             }
-            self.posts.push(Post::new(&self.root,
-                                      &entry.path().strip_prefix(&self.root).unwrap().to_owned()));
-        }
-        for post in self.posts.iter_mut() {
+            let mut post = Post::new(&self.root,
+                                     &entry.path().strip_prefix(&self.root).unwrap().to_owned());
             post.load()?;
+            let post = Rc::new(post);
+            for tag in post.tags() {
+                let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
+                ps.push(post.clone());
+            }
+            self.posts.push(post.clone());
         }
+        debug!("Tags: {:?}", self.tags.keys().collect::<Vec<&String>>());
         Ok(())
     }
 

@@ -11,7 +11,7 @@ mod post;
 mod theme;
 mod utils;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -29,7 +29,7 @@ pub struct Mdblog {
     theme: Theme,
     publisheds: Vec<Rc<Post>>,
     modifieds: Vec<Rc<Post>>,
-    tags: HashMap<String, Vec<Rc<Post>>>,
+    tags: BTreeMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
 }
 
@@ -41,7 +41,7 @@ impl Mdblog {
             theme: Theme::new(&root),
             publisheds: Vec::new(),
             modifieds: Vec::new(),
-            tags: HashMap::new(),
+            tags: BTreeMap::new(),
             renderer: None,
         }
     }
@@ -110,6 +110,8 @@ impl Mdblog {
             self.publisheds.push(post.clone());
             self.modifieds.push(post.clone());
         }
+        self.publisheds.sort_by_key(|p| p.publish_datetime);
+        self.modifieds.sort_by_key(|p| p.modify_datetime);
         debug!("Tags: {:?}", self.tags.keys().collect::<Vec<&String>>());
         Ok(())
     }

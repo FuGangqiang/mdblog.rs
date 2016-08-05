@@ -70,7 +70,12 @@ impl Post {
 
     pub fn tags(&self) -> Vec<&str> {
         if let Some(tag_str) = self.metadata.get("tags") {
-            tag_str.split(',').map(|x| x.trim()).filter(|x| x.len() != 0).collect()
+            let mut res = tag_str.split(',')
+                                 .map(|x| x.trim())
+                                 .filter(|x| x.len() != 0)
+                                 .collect::<Vec<&str>>();
+            res.sort();
+            res
         } else {
             Vec::new()
         }

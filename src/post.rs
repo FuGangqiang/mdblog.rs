@@ -29,6 +29,10 @@ impl Post {
         }
     }
 
+    pub fn src(&self) -> PathBuf {
+        self.root.join(&self.path)
+    }
+
     pub fn dest(&self) -> PathBuf {
         self.root.join("builds").join(self.path.with_extension("html"))
     }
@@ -52,7 +56,7 @@ impl Post {
 
     pub fn load(&mut self) -> ::std::io::Result<()> {
         debug!("loading post: {}", self.path.display());
-        let mut pf = File::open(self.root.join(&self.path))?;
+        let mut pf = File::open(self.src())?;
         let mut content = String::new();
         pf.read_to_string(&mut content)?;
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();

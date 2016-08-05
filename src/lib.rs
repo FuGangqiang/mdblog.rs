@@ -11,11 +11,10 @@ mod post;
 mod utils;
 
 use std::path::{Path, PathBuf};
-use std::fs::File;
 use std::io::Write;
 use std::collections::HashMap;
 use std::rc::Rc;
-use utils::create_error;
+use utils::{create_error, create_file};
 use theme::Theme;
 use post::Post;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
@@ -46,18 +45,14 @@ impl Mdblog {
         if self.root.exists() {
             return create_error(format!("{root} directory already existed.", root=self.root.display()));
         }
-        ::std::fs::create_dir_all(&self.root)?;
 
-        let posts_dir = self.root.join("posts");
-        ::std::fs::create_dir(&posts_dir)?;
+        let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
+        hello_post.write_all(b"published: 2016-06-05 17:14:43\n")?;
+        hello_post.write_all(b"tags: hello, world\n")?;
+        hello_post.write_all(b"\n")?;
+        hello_post.write_all(b"# hello\n\nhello world!\n")?;
 
-        let mut hello = File::create(posts_dir.join("hello.md"))?;
-        hello.write_all(b"published: 2016-06-05 17:14:43\n")?;
-        hello.write_all(b"tags: [hello]\n")?;
-        hello.write_all(b"\n")?;
-        hello.write_all(b"# hello\n\nhello world!\n")?;
-
-        let mut config = File::create(self.root.join("config.toml"))?;
+        let mut config = create_file(&self.root.join("config.toml"))?;
         config.write_all(b"[blog]\ntheme = simple\n")?;
 
         Ok(())

@@ -2,23 +2,25 @@
 
 #[macro_use]
 extern crate log;
-extern crate walkdir;
-extern crate tera;
 extern crate pulldown_cmark;
+extern crate tera;
+extern crate walkdir;
 
-mod theme;
 mod post;
+mod theme;
 mod utils;
 
-use std::path::{Path, PathBuf};
-use std::io::Write;
 use std::collections::HashMap;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use utils::{create_error, create_file};
-use theme::Theme;
-use post::Post;
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+
 use tera::{Tera};
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+
+use post::Post;
+use theme::Theme;
+use utils::{create_error, create_file};
 
 
 pub struct Mdblog {

@@ -1,12 +1,14 @@
 use std::collections::HashMap;
-use std::fs::File;
+use std::error::Error;
+use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use utils::{create_file, create_error};
-use theme::Theme;
-use tera::{Tera, Context};
-use std::error::Error;
+
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
+use tera::{Tera, Context};
+
+use theme::Theme;
+use utils::{create_file, create_error};
 
 
 pub struct Post {

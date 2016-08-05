@@ -1,5 +1,6 @@
 #![feature(question_mark)]
 
+extern crate chrono;
 #[macro_use]
 extern crate log;
 extern crate pulldown_cmark;
@@ -26,7 +27,8 @@ use utils::{create_error, create_file};
 pub struct Mdblog {
     root: PathBuf,
     theme: Theme,
-    posts: Vec<Rc<Post>>,
+    publisheds: Vec<Rc<Post>>,
+    modifieds: Vec<Rc<Post>>,
     tags: HashMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
 }
@@ -37,7 +39,8 @@ impl Mdblog {
         Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
-            posts: Vec::new(),
+            publisheds: Vec::new(),
+            modifieds: Vec::new(),
             tags: HashMap::new(),
             renderer: None,
         }
@@ -49,7 +52,6 @@ impl Mdblog {
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
-        hello_post.write_all(b"published: 2016-06-05 17:14:43\n")?;
         hello_post.write_all(b"tags: hello, world\n")?;
         hello_post.write_all(b"\n")?;
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
@@ -102,7 +104,8 @@ impl Mdblog {
                 let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
                 ps.push(post.clone());
             }
-            self.posts.push(post.clone());
+            self.publisheds.push(post.clone());
+            self.modifieds.push(post.clone());
         }
         debug!("Tags: {:?}", self.tags.keys().collect::<Vec<&String>>());
         Ok(())
@@ -110,7 +113,7 @@ impl Mdblog {
 
     pub fn export_post_html(&self) -> ::std::io::Result<()> {
         let tera = self.renderer.as_ref().unwrap();
-        for post in &self.posts {
+        for post in &self.publisheds {
             post.render_html(tera)?;
         }
         Ok(())

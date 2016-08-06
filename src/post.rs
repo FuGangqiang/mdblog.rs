@@ -48,6 +48,17 @@ impl Post {
         self.root.join("builds").join(self.path.with_extension("html"))
     }
 
+    pub fn title(&self) -> &str {
+        self.path
+            .file_stem()
+            .and_then(|x| x.to_str())
+            .expect(&format!("post filename format error: {}", self.path.display()))
+    }
+
+    pub fn url(&self) -> PathBuf {
+        Path::new("/").join(&self.path)
+    }
+
     pub fn content(&self) -> String {
         let mut opts = Options::empty();
         opts.insert(OPTION_ENABLE_TABLES);

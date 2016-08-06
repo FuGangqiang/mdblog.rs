@@ -13,9 +13,7 @@ static SIMPLE_HIGHLIGHT_JS: &'static [u8] = include_bytes!("simple/static/js/hig
 static SIMPLE_BASE: &'static [u8] = include_bytes!("simple/templates/base.tpl");
 static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple/templates/index.tpl");
 static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
-static SIMPLE_POSTS: &'static [u8] = include_bytes!("simple/templates/posts.tpl");
 static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
-static SIMPLE_TAGS: &'static [u8] = include_bytes!("simple/templates/tags.tpl");
 
 
 pub struct Theme {
@@ -30,9 +28,7 @@ pub struct Theme {
     pub base: Vec<u8>,
     pub index: Vec<u8>,
     pub post: Vec<u8>,
-    pub posts: Vec<u8>,
     pub tag: Vec<u8>,
-    pub tags: Vec<u8>,
 }
 
 
@@ -50,9 +46,7 @@ impl Theme {
             base: Vec::new(),
             index: Vec::new(),
             post: Vec::new(),
-            posts: Vec::new(),
             tag: Vec::new(),
-            tags: Vec::new(),
         }
     }
 
@@ -67,9 +61,7 @@ impl Theme {
         self.base.clear();
         self.index.clear();
         self.post.clear();
-        self.posts.clear();
         self.tag.clear();
-        self.tags.clear();
     }
 
     pub fn load(&mut self, name: &str) -> ::std::io::Result<()> {
@@ -85,9 +77,7 @@ impl Theme {
             let mut base_file = File::open(src_dir.join("templates/base.tpl"))?;
             let mut index_file = File::open(src_dir.join("templates/index.tpl"))?;
             let mut post_file = File::open(src_dir.join("templates/post.tpl"))?;
-            let mut posts_file = File::open(src_dir.join("templates/posts.tpl"))?;
             let mut tag_file = File::open(src_dir.join("templates/tag.tpl"))?;
-            let mut tags_file = File::open(src_dir.join("templates/tags.tpl"))?;
             self.clear();
             self.name.push_str(name);
             favicon_file.read_to_end(&mut self.favicon)?;
@@ -99,9 +89,7 @@ impl Theme {
             base_file.read_to_end(&mut self.base)?;
             index_file.read_to_end(&mut self.index)?;
             post_file.read_to_end(&mut self.post)?;
-            posts_file.read_to_end(&mut self.posts)?;
             tag_file.read_to_end(&mut self.tag)?;
-            tags_file.read_to_end(&mut self.tags)?;
         } else {
             if name == "simple" {
                 self.clear();
@@ -115,9 +103,7 @@ impl Theme {
                 self.base.extend_from_slice(&SIMPLE_BASE);
                 self.index.extend_from_slice(&SIMPLE_INDEX);
                 self.post.extend_from_slice(&SIMPLE_POST);
-                self.posts.extend_from_slice(&SIMPLE_POSTS);
                 self.tag.extend_from_slice(&SIMPLE_TAG);
-                self.tags.extend_from_slice(&SIMPLE_TAGS);
                 self.export()?;
             } else {
                return create_error(format!("{} theme not found", name));
@@ -132,7 +118,6 @@ impl Theme {
             return Ok(());
         }
         debug!("exporting theme: {}", self.name);
-        ::std::fs::create_dir_all(&dest_dir)?;
 
         let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;
         favicon.write_all(&self.favicon)?;
@@ -161,14 +146,8 @@ impl Theme {
         let mut post = create_file(&dest_dir.join("templates/post.tpl"))?;
         post.write_all(&self.post)?;
 
-        let mut posts = create_file(&dest_dir.join("templates/posts.tpl"))?;
-        posts.write_all(&self.posts)?;
-
         let mut tag = create_file(&dest_dir.join("templates/tag.tpl"))?;
         tag.write_all(&self.tag)?;
-
-        let mut tags = create_file(&dest_dir.join("templates/tags.tpl"))?;
-        tags.write_all(&self.tags)?;
 
         Ok(())
     }

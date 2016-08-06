@@ -12,11 +12,12 @@ mod theme;
 mod utils;
 
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use tera::{Tera};
+use tera::{Tera, Context};
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 use post::Post;
@@ -31,6 +32,13 @@ pub struct Mdblog {
     modifieds: Vec<Rc<Post>>,
     tags: BTreeMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
+}
+
+
+#[derive(Debug)]
+pub enum Index {
+    Publish,
+    Modify,
 }
 
 
@@ -73,13 +81,7 @@ impl Mdblog {
         println!("server blog at localhost:{}", port);
     }
 
-    pub fn export(&self) -> ::std::io::Result<()> {
-        self.export_post_html()?;
-        Ok(())
-    }
-
     pub fn load_theme(&mut self, theme: &str) -> ::std::io::Result<()> {
-        debug!("loading theme: {}", theme);
         self.theme.load(theme)?;
         let template_dir = self.root.join("themes").join(&theme).join("templates");
         debug!("template dir: {}", template_dir.display());
@@ -88,7 +90,6 @@ impl Mdblog {
     }
 
     pub fn load_posts(&mut self) -> ::std::io::Result<()> {
-        debug!("loading posts");
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
@@ -116,12 +117,124 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn export_post_html(&self) -> ::std::io::Result<()> {
-        let tera = self.renderer.as_ref().expect("get renderer error");
+    pub fn export(&self) -> ::std::io::Result<()> {
+        self.export_publisheds()?;
+        self.export_indexs()?;
+        self.export_tags()?;
+        Ok(())
+    }
+
+    pub fn export_publisheds(&self) -> ::std::io::Result<()> {
         for post in &self.publisheds {
-            post.render_html(tera)?;
+            let dest = post.dest();
+            let mut f = create_file(&dest)?;
+            match self.render_post(post) {
+                Ok(s) => {
+                    f.write(s.as_bytes())?;
+                    debug!("created html: {:?}", dest.display());
+                },
+                Err(e) => {
+                    return Err(e);
+                }
+            }
         }
         Ok(())
+    }
+
+    pub fn export_indexs(&self) -> ::std::io::Result<()> {
+        for index in &[Index::Publish, Index::Modify] {
+            let dest = self.index_dest(index);
+            let mut f = create_file(&dest)?;
+            match self.render_index(index) {
+                Ok(s) => {
+                    f.write(s.as_bytes())?;
+                    debug!("created html: {:?}", dest.display());
+                },
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+        }
+    Ok(())
+    }
+
+    pub fn export_tags(&self) -> ::std::io::Result<()> {
+        for tag in self.tags.keys() {
+            let dest = self.root.join(format!("builds/blog/tags/{}.html", tag));
+            let mut f = create_file(&dest)?;
+            match self.render_tag(tag) {
+                Ok(s) => {
+                    f.write(s.as_bytes())?;
+                    debug!("created html: {:?}", dest.display());
+                },
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn render_post(&self, post: &Post) -> ::std::io::Result<String> {
+        debug!("rendering post: {}", post.path.display());
+        let tera = self.renderer.as_ref().expect("get renderer error");
+        let mut context = Context::new();
+        context.add("content", &post.content());
+        match tera.render("post.tpl", context) {
+            Ok(s) => {
+                return Ok(s);
+            },
+            Err(e) => {
+                return create_error(format!("post({path}) render error: {descrition}",
+                                            path=post.path.display(),
+                                            descrition=e.description()));
+            }
+        }
+    }
+
+    pub fn index_dest(&self, index: &Index) -> PathBuf {
+        match *index {
+            Index::Publish => self.root.join("builds/index.html"),
+            Index::Modify => self.root.join("builds/blog/modified.html"),
+        }
+    }
+
+    pub fn render_index(&self, index: &Index) -> ::std::io::Result<String> {
+        debug!("rendering index: {:?}", index);
+        let tera = self.renderer.as_ref().expect("get renderer error");
+        let mut context = Context::new();
+        let posts = match *index {
+            Index::Publish => &self.publisheds,
+            Index::Modify => &self.modifieds,
+        };
+        context.add("content", &format!("{:?}", index));
+        match tera.render("index.tpl", context) {
+            Ok(s) => {
+                return Ok(s);
+            },
+            Err(e) => {
+                return create_error(format!("index({index:?}) render error: {descrition}",
+                                            index=index,
+                                            descrition=e.description()));
+            }
+        }
+    }
+
+    pub fn render_tag(&self, tag:&str) -> ::std::io::Result<String> {
+        debug!("rendering tag: {}", tag);
+        let tera = self.renderer.as_ref().expect("get renderer error");
+        let mut context = Context::new();
+        context.add("content", &tag);
+        match tera.render("tag.tpl", context) {
+            Ok(s) => {
+                return Ok(s);
+            },
+            Err(e) => {
+                return create_error(format!("tag({tag}) render error: {descrition}",
+                                            tag=tag,
+                                            descrition=e.description()));
+            }
+        }
     }
 }
 
@@ -132,6 +245,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .map(|s| s.starts_with("."))
         .unwrap_or(false)
 }
+
 
 fn is_markdown_file(entry: &DirEntry) -> bool {
     if !entry.path().is_file() {

@@ -11,6 +11,6 @@ pub fn create_file(path: &Path) -> ::std::io::Result<File> {
 }
 
 
-pub fn create_error(s: String) -> Result<(), Error> {
+pub fn create_error<T>(s: String) -> Result<T, Error> {
     Err(Error::new(ErrorKind::Other, s))
 }

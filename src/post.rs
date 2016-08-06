@@ -1,16 +1,13 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local, TimeZone};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
-use tera::{Tera, Context};
 
-use theme::Theme;
-use utils::{create_file, create_error};
+use utils::create_error;
 
 
 pub struct Post {
@@ -45,7 +42,7 @@ impl Post {
     }
 
     pub fn dest(&self) -> PathBuf {
-        self.root.join("builds").join(self.path.with_extension("html"))
+        self.root.join("builds/blog").join(self.path.with_extension("html"))
     }
 
     pub fn title(&self) -> &str {
@@ -56,7 +53,7 @@ impl Post {
     }
 
     pub fn url(&self) -> PathBuf {
-        Path::new("/").join(&self.path)
+        Path::new("/blog").join(&self.path)
     }
 
     pub fn content(&self) -> String {
@@ -83,8 +80,8 @@ impl Post {
 
     pub fn load(&mut self) -> ::std::io::Result<()> {
         debug!("loading post: {}", self.path.display());
-        debug!("published: {:?}", self.publish_datetime);
-        debug!("modified: {:?}", self.modify_datetime);
+        debug!("    published: {:?}", self.publish_datetime);
+        debug!("    modified: {:?}", self.modify_datetime);
         let mut pf = File::open(self.src())?;
         let mut content = String::new();
         pf.read_to_string(&mut content)?;
@@ -105,26 +102,5 @@ impl Post {
             self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }
         Ok(())
-    }
-
-    pub fn render_html(&self, tera: &Tera) -> ::std::io::Result<()> {
-        debug!("rendering post: {}", self.path.display());
-        let dest = self.dest();
-        let mut f = create_file(&dest)?;
-        let mut context = Context::new();
-        let content = self.content();
-        context.add("content", &content);
-        match tera.render("post.tpl", context) {
-            Ok(s) => {
-                f.write(s.as_bytes())?;
-                debug!("created html: {:?}", dest.display());
-                return Ok(());
-            }
-            Err(e) => {
-                return create_error(format!("post({path}) render error: {descrition}",
-                                            path=self.path.display(),
-                                            descrition=e.description()));
-            }
-        }
     }
 }

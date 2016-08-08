@@ -4,6 +4,7 @@ extern crate chrono;
 #[macro_use]
 extern crate log;
 extern crate pulldown_cmark;
+extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
 
@@ -17,6 +18,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use serde_json::Map;
 use tera::{Tera, Context};
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
@@ -187,7 +189,28 @@ impl Mdblog {
         debug!("rendering post: {}", post.path.display());
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = Context::new();
+        context.add("title", &post.title());
         context.add("content", &post.content());
+        let mut all_tags = Vec::new();
+        for (tag_key, tag_posts) in &self.tags {
+            let mut tag = Map::new();
+            tag.insert("name", tag_key.to_string());
+            let tag_len = format!("{:?}", &tag_posts.len());
+            tag.insert("num", tag_len);
+            all_tags.push(tag);
+        }
+        context.add("all_tags", &all_tags);
+        context.add("published_datetime", &post.publish_datetime.format("%Y-%m-%d %H:%M").to_string());
+        let mut post_tags = Vec::new();
+        for tag_key in post.tags() {
+            let mut tag = Map::new();
+            tag.insert("name", tag_key.to_string());
+            let tag_len = format!("{:?}", self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key)).len());
+            tag.insert("num", tag_len);
+            post_tags.push(tag);
+        }
+        context.add("post_tags", &post_tags);
+
         match tera.render("post.tpl", context) {
             Ok(s) => {
                 return Ok(s);

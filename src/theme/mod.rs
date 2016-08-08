@@ -66,7 +66,7 @@ impl Theme {
 
     pub fn load(&mut self, name: &str) -> ::std::io::Result<()> {
         debug!("loading theme: {}", name);
-        let src_dir = self.root.join("themes").join(name);
+        let src_dir = self.root.join("_themes").join(name);
         if src_dir.exists() {
             let mut favicon_file = File::open(src_dir.join("static/img/favicon.png"))?;
             let mut logo_file = File::open(src_dir.join("static/img/logo.png"))?;
@@ -104,7 +104,6 @@ impl Theme {
                 self.index.extend_from_slice(&SIMPLE_INDEX);
                 self.post.extend_from_slice(&SIMPLE_POST);
                 self.tag.extend_from_slice(&SIMPLE_TAG);
-                self.export()?;
             } else {
                return create_error(format!("{} theme not found", name));
             }
@@ -112,8 +111,8 @@ impl Theme {
         Ok(())
     }
 
-    pub fn export(&self) -> ::std::io::Result<()> {
-        let dest_dir = self.root.join("themes").join(&self.name);
+    pub fn init_dir(&self) -> ::std::io::Result<()> {
+        let dest_dir = self.root.join("_themes").join(&self.name);
         if dest_dir.exists() {
             return Ok(());
         }
@@ -148,6 +147,31 @@ impl Theme {
 
         let mut tag = create_file(&dest_dir.join("templates/tag.tpl"))?;
         tag.write_all(&self.tag)?;
+
+        Ok(())
+    }
+
+    pub fn export_static(&self) -> ::std::io::Result<()> {
+        debug!("exporting static: {}", self.name);
+        let dest_dir = self.root.join("_builds");
+
+        let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;
+        favicon.write_all(&self.favicon)?;
+
+        let mut logo = create_file(&dest_dir.join("static/img/logo.png"))?;
+        logo.write_all(&self.logo)?;
+
+        let mut main_css = create_file(&dest_dir.join("static/css/main.css"))?;
+        main_css.write_all(&self.main_css)?;
+
+        let mut highlight_css = create_file(&dest_dir.join("static/css/highlight.css"))?;
+        highlight_css.write_all(&self.highlight_css)?;
+
+        let mut main_js = create_file(&dest_dir.join("static/js/main.js"))?;
+        main_js.write_all(&self.main_js)?;
+
+        let mut highlight_js = create_file(&dest_dir.join("static/js/highlight.js"))?;
+        highlight_js.write_all(&self.highlight_js)?;
 
         Ok(())
     }

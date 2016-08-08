@@ -67,6 +67,9 @@ impl Mdblog {
         let mut config = create_file(&self.root.join("config.toml"))?;
         config.write_all(b"[blog]\ntheme = simple\n")?;
 
+        let mut theme = Theme::new(&self.root);
+        theme.load("simple")?;
+        theme.init_dir()?;
         Ok(())
     }
 
@@ -83,7 +86,7 @@ impl Mdblog {
 
     pub fn load_theme(&mut self, theme: &str) -> ::std::io::Result<()> {
         self.theme.load(theme)?;
-        let template_dir = self.root.join("themes").join(&theme).join("templates");
+        let template_dir = self.root.join("_themes").join(&theme).join("templates");
         debug!("template dir: {}", template_dir.display());
         self.renderer = Some(Tera::new(&format!("{}/*", template_dir.display())));
         Ok(())
@@ -118,10 +121,15 @@ impl Mdblog {
     }
 
     pub fn export(&self) -> ::std::io::Result<()> {
+        self.export_static()?;
         self.export_publisheds()?;
         self.export_indexs()?;
         self.export_tags()?;
         Ok(())
+    }
+
+    pub fn export_static(&self) -> ::std::io::Result<()> {
+        self.theme.export_static()
     }
 
     pub fn export_publisheds(&self) -> ::std::io::Result<()> {
@@ -160,7 +168,7 @@ impl Mdblog {
 
     pub fn export_tags(&self) -> ::std::io::Result<()> {
         for tag in self.tags.keys() {
-            let dest = self.root.join(format!("builds/blog/tags/{}.html", tag));
+            let dest = self.root.join(format!("_builds/blog/tags/{}.html", tag));
             let mut f = create_file(&dest)?;
             match self.render_tag(tag) {
                 Ok(s) => {
@@ -194,8 +202,8 @@ impl Mdblog {
 
     pub fn index_dest(&self, index: &Index) -> PathBuf {
         match *index {
-            Index::Publish => self.root.join("builds/index.html"),
-            Index::Modify => self.root.join("builds/blog/modified.html"),
+            Index::Publish => self.root.join("_builds/index.html"),
+            Index::Modify => self.root.join("_builds/blog/modified.html"),
         }
     }
 

@@ -42,7 +42,7 @@ impl Post {
     }
 
     pub fn dest(&self) -> PathBuf {
-        self.root.join("builds/blog").join(self.path.with_extension("html"))
+        self.root.join("_builds/blog").join(self.path.with_extension("html"))
     }
 
     pub fn title(&self) -> &str {

@@ -1,12 +1,21 @@
-# mdblog
+# Mdblog
 
 Create blog from markdown files.
 
-# unstable
 
-This project is at a very early stage and the API is a subject of changes.
+# Unstable
 
-## commands
+This project is at an early stage and the API is a subject of changes.
+
+
+# Install
+
+```
+cargo install mdblog
+```
+
+
+# Commands
 
 ```
 mdblog init blog
@@ -14,44 +23,110 @@ mdblog build [-t theme]
 mdblog server [-p port]
 ```
 
-## directory struct
+
+# Usage
+
+### init blog directory
 
 ```
-- blog
-    - posts
-        - p0.md
-        - d1
-            - p1.md
-        - d2
-            - d3
-                - p2.md
-    - config.toml
-    - builds
-        - index.html
-        - blog
-            - post
-                - p0.html
-                - d1
-                    - p1.html
-                - d2
-                    - d3
-                        - p2.html
-            - tag
-                - index.html
-                - t1.html
-            - static
-                - css
-                    - main.css
-                    - highlight.css
-                - js
-                    - main.js
-                    - highlight.js
-                - images
-                    - logo.png
-                    - favicon.png
+$ mdblog init myblog
 ```
 
-## config.toml
+### blog init directory tree
+
+```
+$ tree myblog
+myblog
+├── config.toml
+├── posts
+│   └── hello.md
+└── _themes
+    └── simple
+        ├── static
+        │   ├── css
+        │   │   ├── highlight.css
+        │   │   └── main.css
+        │   ├── img
+        │   │   ├── favicon.png
+        │   │   └── logo.png
+        │   └── js
+        │       ├── highlight.js
+        │       └── main.js
+        └── templates
+            ├── base.tpl
+            ├── index.tpl
+            ├── post.tpl
+            └── tag.tpl
+
+8 directories, 12 files
+```
+
+
+### build blog
+
+```
+$ cd myblog
+$ mdblog build
+```
+
+
+### build blog directory tree
+
+```
+$ tree .
+.
+├── _builds
+│   ├── blog
+│   │   ├── modified.html
+│   │   ├── posts
+│   │   │   └── hello.html
+│   │   └── tags
+│   │       ├── hello.html
+│   │       └── world.html
+│   ├── index.html
+│   └── static
+│       ├── css
+│       │   ├── highlight.css
+│       │   └── main.css
+│       ├── img
+│       │   ├── favicon.png
+│       │   └── logo.png
+│       └── js
+│           ├── highlight.js
+│           └── main.js
+├── config.toml
+├── posts
+│   └── hello.md
+└── _themes
+    └── simple
+        ├── static
+        │   ├── css
+        │   │   ├── highlight.css
+        │   │   └── main.css
+        │   ├── img
+        │   │   ├── favicon.png
+        │   │   └── logo.png
+        │   └── js
+        │       ├── highlight.js
+        │       └── main.js
+        └── templates
+            ├── base.tpl
+            ├── index.tpl
+            ├── post.tpl
+            └── tag.tpl
+
+16 directories, 23 files
+```
+
+### check blog in web broswer: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+```
+$ cd _builds
+$ python3 -m http.server --bind localhost 8000
+```
+
+
+# config.toml
 
 ```toml
 [blog]

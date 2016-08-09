@@ -1,4 +1,5 @@
 #![feature(question_mark)]
+#![allow(unused_variables)]
 
 extern crate log;
 extern crate env_logger;

@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local, TimeZone};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
+use serde_json::Map;
 
 use utils::create_error;
 
@@ -53,7 +54,7 @@ impl Post {
     }
 
     pub fn url(&self) -> PathBuf {
-        Path::new("/blog").join(&self.path)
+        Path::new("/blog").join(&self.path).with_extension("html")
     }
 
     pub fn content(&self) -> String {
@@ -76,6 +77,15 @@ impl Post {
         } else {
             Vec::new()
         }
+    }
+
+    pub fn map(&self) -> Map<&str, String> {
+        let mut map = Map::new();
+        map.insert("title", self.title().to_string());
+        map.insert("url", format!("{}", self.url().display()));
+        map.insert("published_datetime", self.publish_datetime.format("%Y-%m-%d %H:%M").to_string());
+
+        map
     }
 
     pub fn load(&mut self) -> ::std::io::Result<()> {

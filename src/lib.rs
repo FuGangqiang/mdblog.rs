@@ -185,29 +185,41 @@ impl Mdblog {
         Ok(())
     }
 
+    fn tag_url(&self, name: &str) -> String {
+        format!("/blog/tags/{}.html", &name)
+    }
+
+    fn tag_map<T>(&self, name:&str, posts: &Vec<T>) -> Map<&str, String> {
+        let mut map = Map::new();
+        map.insert("name", name.to_string());
+        let tag_len = format!("{:?}", &posts.len());
+        map.insert("num", tag_len);
+        map.insert("url", self.tag_url(&name));
+        map
+    }
+
+    pub fn base_context(&self, title: &str) -> Context {
+        let mut context = Context::new();
+        context.add("title", &title);
+        let mut all_tags = Vec::new();
+        for (tag_key, tag_posts) in &self.tags {
+            all_tags.push(self.tag_map(&tag_key, &tag_posts));
+        }
+        context.add("all_tags", &all_tags);
+
+        context
+    }
+
     pub fn render_post(&self, post: &Post) -> ::std::io::Result<String> {
         debug!("rendering post: {}", post.path.display());
         let tera = self.renderer.as_ref().expect("get renderer error");
-        let mut context = Context::new();
-        context.add("title", &post.title());
+        let mut context = self.base_context(&post.title());
         context.add("content", &post.content());
-        let mut all_tags = Vec::new();
-        for (tag_key, tag_posts) in &self.tags {
-            let mut tag = Map::new();
-            tag.insert("name", tag_key.to_string());
-            let tag_len = format!("{:?}", &tag_posts.len());
-            tag.insert("num", tag_len);
-            all_tags.push(tag);
-        }
-        context.add("all_tags", &all_tags);
         context.add("published_datetime", &post.publish_datetime.format("%Y-%m-%d %H:%M").to_string());
         let mut post_tags = Vec::new();
         for tag_key in post.tags() {
-            let mut tag = Map::new();
-            tag.insert("name", tag_key.to_string());
-            let tag_len = format!("{:?}", self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key)).len());
-            tag.insert("num", tag_len);
-            post_tags.push(tag);
+            let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));
+            post_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
         context.add("post_tags", &post_tags);
 
@@ -233,7 +245,7 @@ impl Mdblog {
     pub fn render_index(&self, index: &Index) -> ::std::io::Result<String> {
         debug!("rendering index: {:?}", index);
         let tera = self.renderer.as_ref().expect("get renderer error");
-        let mut context = Context::new();
+        let mut context = self.base_context("Fu");
         let posts = match *index {
             Index::Publish => &self.publisheds,
             Index::Modify => &self.modifieds,
@@ -251,11 +263,21 @@ impl Mdblog {
         }
     }
 
+    fn posts_maps<'a>(&self, posts: &'a Vec<Rc<Post>>) -> Vec<Map<&'a str, String>> {
+        let mut maps = Vec::new();
+        for post in posts {
+            maps.push(post.map());
+        }
+
+        maps
+    }
+
     pub fn render_tag(&self, tag:&str) -> ::std::io::Result<String> {
         debug!("rendering tag: {}", tag);
         let tera = self.renderer.as_ref().expect("get renderer error");
-        let mut context = Context::new();
-        context.add("content", &tag);
+        let mut context = self.base_context(&tag);
+        let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
+        context.add("posts", &self.posts_maps(&posts));
         match tera.render("tag.tpl", context) {
             Ok(s) => {
                 return Ok(s);

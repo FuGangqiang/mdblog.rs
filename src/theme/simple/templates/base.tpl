@@ -34,7 +34,7 @@
       <h1>Tags</h1>
       <ul>
       {% for tag in all_tags %}
-        <li><a href="/blog/tag/{{ tag.name }}.html">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
+        <li><a href="{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
       {% endfor %}
       </ul>
     </section>

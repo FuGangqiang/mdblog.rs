@@ -250,7 +250,7 @@ impl Mdblog {
             Index::Publish => &self.publisheds,
             Index::Modify => &self.modifieds,
         };
-        context.add("content", &format!("{:?}", index));
+        context.add("posts", &self.posts_maps(posts));
         match tera.render("index.tpl", context) {
             Ok(s) => {
                 return Ok(s);

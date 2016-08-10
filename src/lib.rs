@@ -13,6 +13,7 @@ mod utils;
 
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -63,6 +64,9 @@ impl Mdblog {
         let mut theme = Theme::new(&self.root);
         theme.load("simple")?;
         theme.init_dir()?;
+
+        fs::create_dir_all(self.root.join("media"))?;
+
         Ok(())
     }
 
@@ -115,10 +119,30 @@ impl Mdblog {
     }
 
     pub fn export(&self) -> ::std::io::Result<()> {
+        self.export_media()?;
         self.export_static()?;
         self.export_posts()?;
         self.export_index()?;
         self.export_tags()?;
+        Ok(())
+    }
+
+    pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> PathBuf {
+        let relpath = media.as_ref().strip_prefix(&self.root.join("media")).expect("create post path error").to_owned();
+        self.root.join("_builds/media").join(relpath)
+    }
+
+    pub fn export_media(&self) -> ::std::io::Result<()> {
+        let walker = WalkDir::new(&self.root.join("media")).into_iter();
+        for entry in walker.filter_entry(|e| !is_hidden(e)) {
+            let entry = entry.expect("get walker entry error");
+            let src_path = entry.path();
+            if src_path.is_dir() {
+                fs::create_dir_all(self.media_dest(src_path))?;
+                continue;
+            }
+            fs::copy(src_path, self.media_dest(src_path))?;
+        }
         Ok(())
     }
 

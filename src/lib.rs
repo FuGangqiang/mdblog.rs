@@ -47,7 +47,7 @@ impl Mdblog {
         }
     }
 
-    pub fn init(&self) -> ::std::io::Result<()> {
+    pub fn init(&self, theme: &str) -> ::std::io::Result<()> {
         if self.root.exists() {
             return create_error(format!("{root} directory already existed.", root=self.root.display()));
         }
@@ -61,9 +61,9 @@ impl Mdblog {
         let mut config = create_file(&self.root.join("config.toml"))?;
         config.write_all(b"[blog]\ntheme = simple\n")?;
 
-        let mut theme = Theme::new(&self.root);
-        theme.load("simple")?;
-        theme.init_dir()?;
+        let mut t = Theme::new(&self.root);
+        t.load(theme)?;
+        t.init_dir()?;
 
         fs::create_dir_all(self.root.join("media"))?;
 

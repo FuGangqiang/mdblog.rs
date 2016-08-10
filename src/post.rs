@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Read;
-use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Local, TimeZone};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
 use serde_json::Map;
 
@@ -16,24 +14,17 @@ pub struct Post {
     pub path: PathBuf,
     pub head: String,
     pub body: String,
-    pub publish_datetime: DateTime<Local>,
-    pub modify_datetime: DateTime<Local>,
     pub metadata: HashMap<String, String>,
 }
 
 
 impl Post {
     pub fn new<P: AsRef<Path>>(root: P, path: P) -> Post {
-        let metadata = fs::metadata(root.as_ref().join(&path.as_ref())).expect("get post metadata error");
-        let (ctime, ctime_nsec) = (metadata.ctime(), metadata.ctime_nsec());
-        let (mtime, mtime_nsec) = (metadata.mtime(), metadata.mtime_nsec());
         Post {
             root: root.as_ref().to_owned(),
             path: path.as_ref().to_owned(),
             head: String::new(),
             body: String::new(),
-            publish_datetime: Local.timestamp(ctime, ctime_nsec as u32),
-            modify_datetime: Local.timestamp(mtime, mtime_nsec as u32),
             metadata: HashMap::new(),
         }
     }
@@ -51,6 +42,10 @@ impl Post {
             .file_stem()
             .and_then(|x| x.to_str())
             .expect(&format!("post filename format error: {}", self.path.display()))
+    }
+
+    pub fn datetime(&self) -> &str {
+        self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()))
     }
 
     pub fn url(&self) -> PathBuf {
@@ -83,15 +78,13 @@ impl Post {
         let mut map = Map::new();
         map.insert("title", self.title().to_string());
         map.insert("url", format!("{}", self.url().display()));
-        map.insert("published_datetime", self.publish_datetime.format("%Y-%m-%d %H:%M").to_string());
+        map.insert("datetime", self.datetime().to_string());
 
         map
     }
 
     pub fn load(&mut self) -> ::std::io::Result<()> {
         debug!("loading post: {}", self.path.display());
-        debug!("    published: {:?}", self.publish_datetime);
-        debug!("    modified: {:?}", self.modify_datetime);
         let mut pf = File::open(self.src())?;
         let mut content = String::new();
         pf.read_to_string(&mut content)?;

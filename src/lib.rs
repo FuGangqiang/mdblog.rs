@@ -1,6 +1,5 @@
 #![feature(question_mark)]
 
-extern crate chrono;
 #[macro_use]
 extern crate log;
 extern crate pulldown_cmark;
@@ -30,17 +29,9 @@ use utils::{create_error, create_file};
 pub struct Mdblog {
     root: PathBuf,
     theme: Theme,
-    publisheds: Vec<Rc<Post>>,
-    modifieds: Vec<Rc<Post>>,
+    posts: Vec<Rc<Post>>,
     tags: BTreeMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
-}
-
-
-#[derive(Debug)]
-pub enum Index {
-    Publish,
-    Modify,
 }
 
 
@@ -49,8 +40,7 @@ impl Mdblog {
         Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
-            publisheds: Vec::new(),
-            modifieds: Vec::new(),
+            posts: Vec::new(),
             tags: BTreeMap::new(),
             renderer: None,
         }
@@ -62,6 +52,7 @@ impl Mdblog {
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
+        hello_post.write_all(b"date: 1970-01-01\n")?;
         hello_post.write_all(b"tags: hello, world\n")?;
         hello_post.write_all(b"\n")?;
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
@@ -113,19 +104,20 @@ impl Mdblog {
                 let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
                 ps.push(post.clone());
             }
-            self.publisheds.push(post.clone());
-            self.modifieds.push(post.clone());
+            self.posts.push(post.clone());
         }
-        self.publisheds.sort_by_key(|p| p.publish_datetime);
-        self.modifieds.sort_by_key(|p| p.modify_datetime);
+        self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        for (_, tag_posts) in self.tags.iter_mut() {
+            tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        }
         debug!("Tags: {:?}", self.tags.keys().collect::<Vec<&String>>());
         Ok(())
     }
 
     pub fn export(&self) -> ::std::io::Result<()> {
         self.export_static()?;
-        self.export_publisheds()?;
-        self.export_indexs()?;
+        self.export_posts()?;
+        self.export_index()?;
         self.export_tags()?;
         Ok(())
     }
@@ -134,8 +126,8 @@ impl Mdblog {
         self.theme.export_static()
     }
 
-    pub fn export_publisheds(&self) -> ::std::io::Result<()> {
-        for post in &self.publisheds {
+    pub fn export_posts(&self) -> ::std::io::Result<()> {
+        for post in &self.posts {
             let dest = post.dest();
             let mut f = create_file(&dest)?;
             match self.render_post(post) {
@@ -151,18 +143,16 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn export_indexs(&self) -> ::std::io::Result<()> {
-        for index in &[Index::Publish, Index::Modify] {
-            let dest = self.index_dest(index);
-            let mut f = create_file(&dest)?;
-            match self.render_index(index) {
-                Ok(s) => {
-                    f.write(s.as_bytes())?;
-                    debug!("created html: {:?}", dest.display());
-                },
-                Err(e) => {
-                    return Err(e);
-                }
+    pub fn export_index(&self) -> ::std::io::Result<()> {
+        let dest = self.root.join("_builds/index.html");
+        let mut f = create_file(&dest)?;
+        match self.render_index() {
+            Ok(s) => {
+                f.write(s.as_bytes())?;
+                debug!("created html: {:?}", dest.display());
+            },
+            Err(e) => {
+                return Err(e);
             }
         }
     Ok(())
@@ -215,7 +205,7 @@ impl Mdblog {
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&post.title());
         context.add("content", &post.content());
-        context.add("published_datetime", &post.publish_datetime.format("%Y-%m-%d %H:%M").to_string());
+        context.add("datetime", &post.datetime().to_string());
         let mut post_tags = Vec::new();
         for tag_key in post.tags() {
             let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));
@@ -235,30 +225,17 @@ impl Mdblog {
         }
     }
 
-    pub fn index_dest(&self, index: &Index) -> PathBuf {
-        match *index {
-            Index::Publish => self.root.join("_builds/index.html"),
-            Index::Modify => self.root.join("_builds/blog/modified.html"),
-        }
-    }
-
-    pub fn render_index(&self, index: &Index) -> ::std::io::Result<String> {
-        debug!("rendering index: {:?}", index);
+    pub fn render_index(&self) -> ::std::io::Result<String> {
+        debug!("rendering index");
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context("Fu");
-        let posts = match *index {
-            Index::Publish => &self.publisheds,
-            Index::Modify => &self.modifieds,
-        };
-        context.add("posts", &self.posts_maps(posts));
+        context.add("posts", &self.posts_maps(&self.posts));
         match tera.render("index.tpl", context) {
             Ok(s) => {
                 return Ok(s);
             },
             Err(e) => {
-                return create_error(format!("index({index:?}) render error: {descrition}",
-                                            index=index,
-                                            descrition=e.description()));
+                return create_error(format!("index render error: {}", descrition=e.description()));
             }
         }
     }

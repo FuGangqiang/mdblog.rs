@@ -8,7 +8,7 @@
 
       <ul id="article_footer">
         <li>tags: {% for tag in post_tags %}<a href="{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
-        <li>published: {{ published_datetime }}</li>
+        <li>date: {{ datetime }}</li>
       </ul>
     </article>
 {% endblock main %}

@@ -19,8 +19,7 @@
 
   <nav>
     <ul>
-      <li><a href="/index.html">Archives</a></li>
-      <li><a href="/blog/modified.html">Last Modified</a></li>
+      <li><a href="/index.html">Blog</a></li>
     </ul>
   </nav>
 </header>

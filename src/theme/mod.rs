@@ -1,7 +1,9 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
-use utils::{create_file, create_error};
+
+use error::{Error, Result};
+use utils::create_file;
 
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
@@ -64,7 +66,7 @@ impl Theme {
         self.tag.clear();
     }
 
-    pub fn load(&mut self, name: &str) -> ::std::io::Result<()> {
+    pub fn load(&mut self, name: &str) -> Result<()> {
         debug!("loading theme: {}", name);
         let src_dir = self.root.join("_themes").join(name);
         if src_dir.exists() {
@@ -105,18 +107,18 @@ impl Theme {
                 self.post.extend_from_slice(&SIMPLE_POST);
                 self.tag.extend_from_slice(&SIMPLE_TAG);
             } else {
-               return create_error(format!("{} theme not found", name));
+               return Err(Error::ThemeNotFound);
             }
         }
         Ok(())
     }
 
-    pub fn init_dir(&self) -> ::std::io::Result<()> {
+    pub fn init_dir(&self) -> Result<()> {
         let dest_dir = self.root.join("_themes").join(&self.name);
         if dest_dir.exists() {
             return Ok(());
         }
-        debug!("exporting theme: {}", self.name);
+        debug!("init theme({}) ...", self.name);
 
         let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;
         favicon.write_all(&self.favicon)?;
@@ -151,8 +153,8 @@ impl Theme {
         Ok(())
     }
 
-    pub fn export_static(&self) -> ::std::io::Result<()> {
-        debug!("exporting static: {}", self.name);
+    pub fn export_static(&self) -> Result<()> {
+        debug!("exporting theme({}) static ...", self.name);
         let dest_dir = self.root.join("_builds");
 
         let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;

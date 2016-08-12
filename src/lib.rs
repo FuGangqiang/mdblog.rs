@@ -7,12 +7,12 @@ extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
 
+mod error;
 mod post;
 mod theme;
 mod utils;
 
 use std::collections::BTreeMap;
-use std::error::Error;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -22,9 +22,10 @@ use serde_json::Map;
 use tera::{Tera, Context};
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
+use error::{Error, Result};
 use post::Post;
 use theme::Theme;
-use utils::{create_error, create_file};
+use utils::create_file;
 
 
 pub struct Mdblog {
@@ -47,9 +48,9 @@ impl Mdblog {
         }
     }
 
-    pub fn init(&self, theme: &str) -> ::std::io::Result<()> {
+    pub fn init(&self, theme: &str) -> Result<()> {
         if self.root.exists() {
-            return create_error(format!("{root} directory already existed.", root=self.root.display()));
+            return Err(Error::RootDirExisted);
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
@@ -66,11 +67,10 @@ impl Mdblog {
         t.init_dir()?;
 
         fs::create_dir_all(self.root.join("media"))?;
-
         Ok(())
     }
 
-    pub fn build(&mut self, theme: &str) -> ::std::io::Result<()> {
+    pub fn build(&mut self, theme: &str) -> Result<()> {
         self.load_theme(&theme)?;
         self.load_posts()?;
         self.export()?;
@@ -81,7 +81,7 @@ impl Mdblog {
         println!("server blog at localhost:{}", port);
     }
 
-    pub fn load_theme(&mut self, theme: &str) -> ::std::io::Result<()> {
+    pub fn load_theme(&mut self, theme: &str) -> Result<()> {
         self.theme.load(theme)?;
         let template_dir = self.root.join("_themes").join(&theme).join("templates");
         debug!("template dir: {}", template_dir.display());
@@ -89,7 +89,7 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn load_posts(&mut self) -> ::std::io::Result<()> {
+    pub fn load_posts(&mut self) -> Result<()> {
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
@@ -114,11 +114,10 @@ impl Mdblog {
         for (_, tag_posts) in self.tags.iter_mut() {
             tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         }
-        debug!("Tags: {:?}", self.tags.keys().collect::<Vec<&String>>());
         Ok(())
     }
 
-    pub fn export(&self) -> ::std::io::Result<()> {
+    pub fn export(&self) -> Result<()> {
         self.export_media()?;
         self.export_static()?;
         self.export_posts()?;
@@ -132,7 +131,8 @@ impl Mdblog {
         self.root.join("_builds/media").join(relpath)
     }
 
-    pub fn export_media(&self) -> ::std::io::Result<()> {
+    pub fn export_media(&self) -> Result<()> {
+        debug!("exporting media ...");
         let walker = WalkDir::new(&self.root.join("media")).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.expect("get walker entry error");
@@ -146,55 +146,34 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn export_static(&self) -> ::std::io::Result<()> {
+    pub fn export_static(&self) -> Result<()> {
         self.theme.export_static()
     }
 
-    pub fn export_posts(&self) -> ::std::io::Result<()> {
+    pub fn export_posts(&self) -> Result<()> {
         for post in &self.posts {
             let dest = post.dest();
             let mut f = create_file(&dest)?;
-            match self.render_post(post) {
-                Ok(s) => {
-                    f.write(s.as_bytes())?;
-                    debug!("created html: {:?}", dest.display());
-                },
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+            let html = self.render_post(post)?;
+            f.write(html.as_bytes())?;
         }
         Ok(())
     }
 
-    pub fn export_index(&self) -> ::std::io::Result<()> {
+    pub fn export_index(&self) -> Result<()> {
         let dest = self.root.join("_builds/index.html");
         let mut f = create_file(&dest)?;
-        match self.render_index() {
-            Ok(s) => {
-                f.write(s.as_bytes())?;
-                debug!("created html: {:?}", dest.display());
-            },
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    Ok(())
+        let html = self.render_index()?;
+        f.write(html.as_bytes())?;
+        Ok(())
     }
 
-    pub fn export_tags(&self) -> ::std::io::Result<()> {
+    pub fn export_tags(&self) -> Result<()> {
         for tag in self.tags.keys() {
             let dest = self.root.join(format!("_builds/blog/tags/{}.html", tag));
             let mut f = create_file(&dest)?;
-            match self.render_tag(tag) {
-                Ok(s) => {
-                    f.write(s.as_bytes())?;
-                    debug!("created html: {:?}", dest.display());
-                },
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+            let html = self.render_tag(tag)?;
+            f.write(html.as_bytes())?;
         }
         Ok(())
     }
@@ -220,12 +199,11 @@ impl Mdblog {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
         context.add("all_tags", &all_tags);
-
         context
     }
 
-    pub fn render_post(&self, post: &Post) -> ::std::io::Result<String> {
-        debug!("rendering post: {}", post.path.display());
+    pub fn render_post(&self, post: &Post) -> Result<String> {
+        debug!("rendering post({}) ...", post.path.display());
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&post.title());
         context.add("content", &post.content());
@@ -236,32 +214,15 @@ impl Mdblog {
             post_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
         context.add("post_tags", &post_tags);
-
-        match tera.render("post.tpl", context) {
-            Ok(s) => {
-                return Ok(s);
-            },
-            Err(e) => {
-                return create_error(format!("post({path}) render error: {descrition}",
-                                            path=post.path.display(),
-                                            descrition=e.description()));
-            }
-        }
+        tera.render("post.tpl", context).map_err(|e| Error::Render(e))
     }
 
-    pub fn render_index(&self) -> ::std::io::Result<String> {
-        debug!("rendering index");
+    pub fn render_index(&self) -> Result<String> {
+        debug!("rendering index ...");
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context("Fu");
         context.add("posts", &self.posts_maps(&self.posts));
-        match tera.render("index.tpl", context) {
-            Ok(s) => {
-                return Ok(s);
-            },
-            Err(e) => {
-                return create_error(format!("index render error: {}", descrition=e.description()));
-            }
-        }
+        tera.render("index.tpl", context).map_err(|e| Error::Render(e))
     }
 
     fn posts_maps<'a>(&self, posts: &'a Vec<Rc<Post>>) -> Vec<Map<&'a str, String>> {
@@ -269,26 +230,16 @@ impl Mdblog {
         for post in posts {
             maps.push(post.map());
         }
-
         maps
     }
 
-    pub fn render_tag(&self, tag:&str) -> ::std::io::Result<String> {
-        debug!("rendering tag: {}", tag);
+    pub fn render_tag(&self, tag:&str) -> Result<String> {
+        debug!("rendering tag({}) ...", tag);
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&tag);
         let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.posts_maps(&posts));
-        match tera.render("tag.tpl", context) {
-            Ok(s) => {
-                return Ok(s);
-            },
-            Err(e) => {
-                return create_error(format!("tag({tag}) render error: {descrition}",
-                                            tag=tag,
-                                            descrition=e.description()));
-            }
-        }
+        tera.render("tag.tpl", context).map_err(|e| Error::Render(e))
     }
 }
 

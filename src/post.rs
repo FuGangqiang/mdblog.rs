@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
 use serde_json::Map;
 
-use utils::create_error;
+use error::{Error, Result};
 
 
 pub struct Post {
@@ -83,24 +83,21 @@ impl Post {
         map
     }
 
-    pub fn load(&mut self) -> ::std::io::Result<()> {
+    pub fn load(&mut self) -> Result<()> {
         debug!("loading post: {}", self.path.display());
         let mut pf = File::open(self.src())?;
         let mut content = String::new();
         pf.read_to_string(&mut content)?;
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            return create_error(format!("post({path}) must both have `head` and `body` parts",
-                                        path=self.path.display()));
+            return Err(Error::PostBody);
         }
         self.head = v[0].to_string();
         self.body = v[1].to_string();
         for line in self.head.lines() {
             let pair: Vec<&str> = line.splitn(2, ':').collect();
             if pair.len() != 2 {
-                return create_error(format!("post({path}) `head` part parse error: {line}",
-                                            path=self.path.display(),
-                                            line=line));
+                return Err(Error::PostHead);
             }
             self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }

@@ -4,6 +4,7 @@ version = "0.1.1"
 authors = ["FuGangqiang <fu_gangqiang@qq.com>"]
 description = "create blog from markdown files."
 repository = "https://github.com/FuGangqiang/mdblog.rs"
+homepage = "https://github.com/FuGangqiang/mdblog.rs"
 keywords = ["blog", "markdown", "static", "site", "generator"]
 license = "MIT"
 readme = "README.md"

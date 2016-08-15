@@ -168,7 +168,7 @@ article h4 {
     font-size: 1em;
 }
 
-article h1
+article h1,
 article h2,
 article h3,
 article p {
@@ -197,14 +197,6 @@ main p img {
     display: block;
     margin-left: auto;
     margin-right: auto;
-}
-
-main p code,
-main li > code {
-    border: 1px solid #ddd;
-    padding: 0px 4px;
-    border-radius: 4px;
-    background-color: #f9f9f9;
 }
 
 #article_footer {
@@ -250,4 +242,21 @@ aside .tags li {
     aside section {
         margin: 1em;
     }
+}
+
+main p code,
+main li > code {
+    border: 1px solid #ddd;
+    padding: 0px 4px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+pre code {
+    font-family: monospace;
+    line-height: 1.2em;
+    margin-left: 2em;
+    padding-left: 0.5em;
+    overflow: auto;
+    border-radius: 0.5em;
 }

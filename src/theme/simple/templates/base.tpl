@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <link rel="icon" href="/static/img/favicon.png">
   <link rel="stylesheet" href="/static/css/main.css">
+  {% block css %}{% endblock css %}
   <title>{{ title }}</title>
 </head>
 <body>
@@ -52,6 +53,6 @@
     Keep It Simple, Stupid!
   </p>
 </footer>
-{% block math %}{% endblock math %}
+{% block js %}{% endblock js %}
 </body>
 </html>

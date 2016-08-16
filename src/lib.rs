@@ -1,7 +1,7 @@
 #![feature(question_mark)]
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
+extern crate chrono;
 extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate tera;
@@ -54,7 +54,7 @@ impl Mdblog {
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
-        hello_post.write_all(b"date: 1970-01-01\n")?;
+        hello_post.write_all(b"date: 1970-01-01 00:00:00\n")?;
         hello_post.write_all(b"tags: hello, world\n")?;
         hello_post.write_all(b"\n")?;
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
@@ -207,7 +207,7 @@ impl Mdblog {
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&post.title());
         context.add("content", &post.content());
-        context.add("datetime", &post.datetime().to_string());
+        context.add("datetime", &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
         let mut post_tags = Vec::new();
         for tag_key in post.tags() {
             let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));

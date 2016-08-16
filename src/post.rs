@@ -2,7 +2,9 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::error::Error as StdError;
 
+use chrono::{DateTime, Local, TimeZone};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
 use serde_json::Map;
 
@@ -25,6 +27,7 @@ impl Post {
             path: path.as_ref().to_owned(),
             head: String::new(),
             body: String::new(),
+
             metadata: HashMap::new(),
         }
     }
@@ -44,8 +47,12 @@ impl Post {
             .expect(&format!("post filename format error: {}", self.path.display()))
     }
 
-    pub fn datetime(&self) -> &str {
-        self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()))
+    pub fn datetime(&self) -> DateTime<Local> {
+        let date_str = self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()));
+        match Local.datetime_from_str(&date_str, "%Y-%m-%d %H:%M:%S") {
+            Ok(datetime) => datetime,
+            Err(why) => panic!("post({}) date header parse error: {}", &self.path.display(), why.description()),
+        }
     }
 
     pub fn url(&self) -> PathBuf {
@@ -78,7 +85,7 @@ impl Post {
         let mut map = Map::new();
         map.insert("title", self.title().to_string());
         map.insert("url", format!("{}", self.url().display()));
-        map.insert("datetime", self.datetime().to_string());
+        map.insert("datetime", self.datetime().format("%Y-%m-%d").to_string());
 
         map
     }

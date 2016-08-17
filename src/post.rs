@@ -48,10 +48,19 @@ impl Post {
     }
 
     pub fn datetime(&self) -> DateTime<Local> {
-        let date_str = self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()));
-        match Local.datetime_from_str(&date_str, "%Y-%m-%d %H:%M:%S") {
+        let date_value = self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()));
+        match Local.datetime_from_str(&date_value, "%Y-%m-%d %H:%M:%S") {
             Ok(datetime) => datetime,
             Err(why) => panic!("post({}) date header parse error: {}", &self.path.display(), why.description()),
+        }
+    }
+
+    pub fn is_hidden(&self) -> Result<bool> {
+        let hidden_value = self.metadata.get("hidden").unwrap_or(&"false".to_string()).to_lowercase();
+        match hidden_value.as_ref() {
+            "false" | "f" => Ok(false),
+            "true" | "t" => Ok(true),
+            _ => Err(Error::PostHead),
         }
     }
 

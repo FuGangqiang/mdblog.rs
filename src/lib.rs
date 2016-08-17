@@ -103,6 +103,9 @@ impl Mdblog {
                                            .expect("create post path error")
                                            .to_owned());
             post.load()?;
+            if post.is_hidden()? {
+                continue;
+            }
             let post = Rc::new(post);
             for tag in post.tags() {
                 let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());

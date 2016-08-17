@@ -1,5 +1,5 @@
 #![feature(question_mark)]
-#![allow(unused_variables)]
+//#![allow(unused_variables)]
 
 extern crate log;
 extern crate env_logger;
@@ -83,9 +83,9 @@ fn init(matches: &Matches) {
     let dir = env::current_dir()
         .unwrap()
         .join(&matches.free[1]);
-    let theme = matches.opt_str("theme").unwrap_or("simple".to_string());
     let mb = Mdblog::new(dir);
-    match mb.init(&theme) {
+    let theme = matches.opt_str("theme");
+    match mb.init(theme) {
         Ok(_) => exit(0),
         Err(why) => panic!(why.to_string()),
     }
@@ -93,10 +93,10 @@ fn init(matches: &Matches) {
 
 
 fn build(matches: &Matches) {
-    let theme = matches.opt_str("theme").unwrap_or("simple".to_string());
     let root_dir = env::current_dir().unwrap();
     let mut mb = Mdblog::new(&root_dir);
-    match mb.build(&theme) {
+    let theme = matches.opt_str("theme");
+    match mb.build(theme) {
         Ok(_) => exit(0),
         Err(why) => panic!(why.to_string()),
     }

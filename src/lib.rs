@@ -5,6 +5,7 @@ extern crate chrono;
 extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate tera;
+extern crate toml;
 extern crate walkdir;
 
 mod error;
@@ -13,8 +14,8 @@ mod theme;
 mod utils;
 
 use std::collections::BTreeMap;
-use std::fs;
-use std::io::Write;
+use std::fs::{self, File};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -34,21 +35,28 @@ pub struct Mdblog {
     posts: Vec<Rc<Post>>,
     tags: BTreeMap<String, Vec<Rc<Post>>>,
     renderer: Option<Tera>,
+    config: toml::Value,
 }
 
 
 impl Mdblog {
     pub fn new<P: AsRef<Path>>(root: P) -> Mdblog {
+        let mut content = String::new();
+        let config_path = root.as_ref().join("config.toml");
+        let mut f = File::open(&config_path).unwrap();
+        f.read_to_string(&mut content).unwrap();
+
         Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
             posts: Vec::new(),
             tags: BTreeMap::new(),
             renderer: None,
+            config: content.parse().unwrap(),
         }
     }
 
-    pub fn init(&self, theme: &str) -> Result<()> {
+    pub fn init(&self, theme: Option<String>) -> Result<()> {
         if self.root.exists() {
             return Err(Error::RootDirExisted);
         }
@@ -62,16 +70,18 @@ impl Mdblog {
         let mut config = create_file(&self.root.join("config.toml"))?;
         config.write_all(b"[blog]\ntheme = simple\n")?;
 
+        let name = theme.unwrap_or(self.get_config_theme());
         let mut t = Theme::new(&self.root);
-        t.load(theme)?;
+        t.load(&name)?;
         t.init_dir()?;
 
         fs::create_dir_all(self.root.join("media"))?;
         Ok(())
     }
 
-    pub fn build(&mut self, theme: &str) -> Result<()> {
-        self.load_theme(&theme)?;
+    pub fn build(&mut self, theme: Option<String>) -> Result<()> {
+        let name = theme.unwrap_or(self.get_config_theme());
+        self.load_theme(&name)?;
         self.load_posts()?;
         self.export()?;
         Ok(())
@@ -79,6 +89,14 @@ impl Mdblog {
 
     pub fn server(&self, port: u16) {
         println!("server blog at localhost:{}", port);
+    }
+
+    pub fn get_config_theme(&self) -> String {
+        self.config
+            .lookup("blog.theme")
+            .and_then(|v| v.as_str())
+            .map(|x| x.to_string())
+            .unwrap_or("simple".to_string())
     }
 
     pub fn load_theme(&mut self, theme: &str) -> Result<()> {

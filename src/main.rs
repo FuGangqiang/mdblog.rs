@@ -59,7 +59,7 @@ fn main() {
         print_usage(opts);
         exit(0);
     } else if matches.opt_present("v") {
-        println!("{}", env!("CARGO_PKG_VERSION"));
+        println!("mdblog {}", env!("CARGO_PKG_VERSION"));
         exit(0);
     } else if matches.free.len() < 1 {
         print_usage(opts);

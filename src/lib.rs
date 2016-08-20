@@ -1,3 +1,19 @@
+//! create blog from markdown files.
+//!
+//! # features
+//!
+//! * markdown format
+//! * TeX style math support
+//! * highlight code block
+//! * post tags index
+//! * hidden post
+//! * post title is the title of markdown file
+//! * post url is some to path of markdown file
+
+#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
+       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+       html_root_url = "http://fugangqiang.github.io/doc/mdblog.rs")]
+
 #![feature(question_mark)]
 
 #[macro_use] extern crate log;
@@ -23,23 +39,31 @@ use serde_json::Map;
 use tera::{Tera, Context};
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
-use error::{Error, Result};
-use post::Post;
-use theme::Theme;
-use utils::create_file;
+pub use error::{Error, Result};
+pub use post::Post;
+pub use theme::Theme;
+pub use utils::create_file;
 
 
+/// blog object
 pub struct Mdblog {
+    /// blog root path
     root: PathBuf,
+    /// blog theme
     theme: Theme,
+    /// collection of blog posts
     posts: Vec<Rc<Post>>,
+    /// tagged posts
     tags: BTreeMap<String, Vec<Rc<Post>>>,
+    /// blog render
     renderer: Option<Tera>,
+    /// blog config
     config: toml::Value,
 }
 
 
 impl Mdblog {
+    /// create Mdblog from the `root` path
     pub fn new<P: AsRef<Path>>(root: P) -> Mdblog {
         let mut content = String::new();
         let config_path = root.as_ref().join("config.toml");
@@ -56,6 +80,10 @@ impl Mdblog {
         }
     }
 
+    /// init Mdblog with `theme`.
+    ///
+    /// theme directory is created at `root/_theme` directory.
+    /// if `theme` is `None`, use the default theme(`simple`).
     pub fn init(&self, theme: Option<String>) -> Result<()> {
         if self.root.exists() {
             return Err(Error::RootDirExisted);
@@ -79,6 +107,9 @@ impl Mdblog {
         Ok(())
     }
 
+    /// create the blog html files to `root/_build/` directory.
+    ///
+    /// if `theme` is `None`, use the default theme(`simple`).
     pub fn build(&mut self, theme: Option<String>) -> Result<()> {
         let name = theme.unwrap_or(self.get_config_theme());
         self.load_theme(&name)?;
@@ -87,10 +118,12 @@ impl Mdblog {
         Ok(())
     }
 
+    /// unimplemented.
     pub fn server(&self, port: u16) {
         println!("server blog at localhost:{}", port);
     }
 
+    /// fetch the config theme from the `config.toml` file
     pub fn get_config_theme(&self) -> String {
         self.config
             .lookup("blog.theme")

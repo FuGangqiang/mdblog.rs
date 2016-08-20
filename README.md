@@ -3,6 +3,17 @@
 create blog from markdown files.
 
 
+# features
+
+* markdown format
+* TeX style math support
+* highlight code block
+* post tags index
+* hidden post
+* post title is the title of markdown file
+* post url is some to path of markdown file
+
+
 # Install
 
 nightly rust needed

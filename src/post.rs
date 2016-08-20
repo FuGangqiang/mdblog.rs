@@ -10,13 +10,27 @@ use serde_json::Map;
 
 use error::{Error, Result};
 
-
+/// blog post object
+///
+/// every blog post is composed of `head` part and `body` part.
+/// the two part is separated by the first blank line.
+///
+/// the blog header part supported headers:
+///
+/// * date: the publish datetime, required, `date: 1970-01-01 00:00:00`
+/// * tags: the tags of blog post, required, `tags: hello, world`
+/// * hidden: whether hidden blog post or not, optional, default `true`, `hidden: false`
 pub struct Post {
-    pub root: PathBuf,
+    /// root path of blog
+    root: PathBuf,
+    /// relative path of post from blog root directory
     pub path: PathBuf,
-    pub head: String,
-    pub body: String,
-    pub metadata: HashMap<String, String>,
+    /// post origin head part
+    head: String,
+    /// post origin body part
+    body: String,
+    /// headers from parsing the post origin head part
+    metadata: HashMap<String, String>,
 }
 
 
@@ -32,14 +46,17 @@ impl Post {
         }
     }
 
+    /// the absolute path of blog post markdown file
     pub fn src(&self) -> PathBuf {
         self.root.join(&self.path)
     }
 
+    /// the absolute path of blog post html file
     pub fn dest(&self) -> PathBuf {
         self.root.join("_builds/blog").join(self.path.with_extension("html"))
     }
 
+    /// blog title
     pub fn title(&self) -> &str {
         self.path
             .file_stem()
@@ -47,6 +64,7 @@ impl Post {
             .expect(&format!("post filename format error: {}", self.path.display()))
     }
 
+    /// blog publish time
     pub fn datetime(&self) -> DateTime<Local> {
         let date_value = self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()));
         match Local.datetime_from_str(&date_value, "%Y-%m-%d %H:%M:%S") {
@@ -55,6 +73,7 @@ impl Post {
         }
     }
 
+    /// wether blog post is hidden or not
     pub fn is_hidden(&self) -> Result<bool> {
         let hidden_value = self.metadata.get("hidden").unwrap_or(&"false".to_string()).to_lowercase();
         match hidden_value.as_ref() {
@@ -64,10 +83,12 @@ impl Post {
         }
     }
 
+    /// the post url
     pub fn url(&self) -> PathBuf {
         Path::new("/blog").join(&self.path).with_extension("html")
     }
 
+    /// the rendered html content of post body port
     pub fn content(&self) -> String {
         let mut opts = Options::empty();
         opts.insert(OPTION_ENABLE_TABLES);
@@ -77,6 +98,7 @@ impl Post {
         s
     }
 
+    /// the post tags
     pub fn tags(&self) -> Vec<&str> {
         if let Some(tag_str) = self.metadata.get("tags") {
             let mut res = tag_str.split(',')
@@ -90,6 +112,7 @@ impl Post {
         }
     }
 
+    /// post context for render
     pub fn map(&self) -> Map<&str, String> {
         let mut map = Map::new();
         map.insert("title", self.title().to_string());
@@ -99,6 +122,7 @@ impl Post {
         map
     }
 
+    /// load post head part and body part
     pub fn load(&mut self) -> Result<()> {
         debug!("loading post: {}", self.path.display());
         let mut pf = File::open(self.src())?;

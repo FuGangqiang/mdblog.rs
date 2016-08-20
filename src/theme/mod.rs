@@ -18,19 +18,20 @@ static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
 static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
 
 
+/// theme object
 pub struct Theme {
-    pub root: PathBuf,
-    pub name: String,
-    pub favicon: Vec<u8>,
-    pub logo: Vec<u8>,
-    pub main_css: Vec<u8>,
-    pub highlight_css: Vec<u8>,
-    pub main_js: Vec<u8>,
-    pub highlight_js: Vec<u8>,
-    pub base: Vec<u8>,
-    pub index: Vec<u8>,
-    pub post: Vec<u8>,
-    pub tag: Vec<u8>,
+    root: PathBuf,
+    name: String,
+    favicon: Vec<u8>,
+    logo: Vec<u8>,
+    main_css: Vec<u8>,
+    highlight_css: Vec<u8>,
+    main_js: Vec<u8>,
+    highlight_js: Vec<u8>,
+    base: Vec<u8>,
+    index: Vec<u8>,
+    post: Vec<u8>,
+    tag: Vec<u8>,
 }
 
 

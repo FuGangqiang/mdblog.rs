@@ -1,14 +1,11 @@
 # Mdblog
 
-Create blog from markdown files.
-
-
-# Unstable
-
-This project is at an early stage and the API is a subject of changes.
+create blog from markdown files.
 
 
 # Install
+
+nightly rust needed
 
 ```
 cargo install mdblog
@@ -20,7 +17,7 @@ cargo install mdblog
 ```
 mdblog init blog
 mdblog build [-t theme]
-mdblog server [-p port]
+mdblog server [-p port]   # unimplemented
 ```
 
 
@@ -32,12 +29,13 @@ mdblog server [-p port]
 $ mdblog init myblog
 ```
 
-### blog init directory tree
+and the init blog directory tree is:
 
 ```
 $ tree myblog
 myblog
 ├── config.toml
+├── media
 ├── posts
 │   └── hello.md
 └── _themes
@@ -58,7 +56,7 @@ myblog
             ├── post.tpl
             └── tag.tpl
 
-8 directories, 12 files
+9 directories, 12 files
 ```
 
 
@@ -68,22 +66,20 @@ myblog
 $ cd myblog
 $ mdblog build
 ```
-
-
-### build blog directory tree
+and the result blog directory tree is:
 
 ```
 $ tree .
 .
 ├── _builds
 │   ├── blog
-│   │   ├── modified.html
 │   │   ├── posts
 │   │   │   └── hello.html
 │   │   └── tags
 │   │       ├── hello.html
 │   │       └── world.html
 │   ├── index.html
+│   ├── media
 │   └── static
 │       ├── css
 │       │   ├── highlight.css
@@ -95,6 +91,7 @@ $ tree .
 │           ├── highlight.js
 │           └── main.js
 ├── config.toml
+├── media
 ├── posts
 │   └── hello.md
 └── _themes
@@ -115,7 +112,7 @@ $ tree .
             ├── post.tpl
             └── tag.tpl
 
-16 directories, 23 files
+18 directories, 22 files
 ```
 
 ### check blog in web broswer: [http://127.0.0.1:8000](http://127.0.0.1:8000)

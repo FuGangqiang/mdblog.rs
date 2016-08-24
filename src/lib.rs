@@ -154,15 +154,15 @@ impl Mdblog {
                                            .expect("create post path error")
                                            .to_owned());
             post.load()?;
-            if post.is_hidden()? {
-                continue;
-            }
             let post = Rc::new(post);
-            for tag in post.tags() {
-                let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
-                ps.push(post.clone());
-            }
             self.posts.push(post.clone());
+            if !post.is_hidden()? {
+                for tag in post.tags() {
+                    let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
+                    ps.push(post.clone());
+                }
+            }
+
         }
         self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         for (_, tag_posts) in self.tags.iter_mut() {
@@ -261,12 +261,17 @@ impl Mdblog {
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&post.title());
         context.add("content", &post.content());
-        context.add("datetime", &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
         let mut post_tags = Vec::new();
-        for tag_key in post.tags() {
-            let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));
-            post_tags.push(self.tag_map(&tag_key, &tag_posts));
+        if !post.is_hidden()? {
+            context.add("datetime", &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
+            for tag_key in post.tags() {
+                let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));
+                post_tags.push(self.tag_map(&tag_key, &tag_posts));
+            }
+        } else {
+            context.add("datetime", &"".to_string());
         }
+
         context.add("post_tags", &post_tags);
         tera.render("post.tpl", context).map_err(|e| Error::Render(e))
     }
@@ -281,7 +286,7 @@ impl Mdblog {
 
     fn posts_maps<'a>(&self, posts: &'a Vec<Rc<Post>>) -> Vec<Map<&'a str, String>> {
         let mut maps = Vec::new();
-        for post in posts {
+        for post in posts.iter().filter(|p| !p.is_hidden().unwrap()) {
             maps.push(post.map());
         }
         maps

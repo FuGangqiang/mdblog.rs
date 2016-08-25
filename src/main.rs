@@ -96,6 +96,7 @@ fn build(matches: &Matches) {
     let root_dir = env::current_dir().unwrap();
     let mut mb = Mdblog::new(&root_dir);
     let theme = matches.opt_str("theme");
+    mb.load_config().unwrap();
     match mb.build(theme) {
         Ok(_) => exit(0),
         Err(why) => panic!(why.to_string()),

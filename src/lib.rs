@@ -58,25 +58,20 @@ pub struct Mdblog {
     /// blog render
     renderer: Option<Tera>,
     /// blog config
-    config: toml::Value,
+    config: Option<toml::Value>,
 }
 
 
 impl Mdblog {
     /// create Mdblog from the `root` path
     pub fn new<P: AsRef<Path>>(root: P) -> Mdblog {
-        let mut content = String::new();
-        let config_path = root.as_ref().join("config.toml");
-        let mut f = File::open(&config_path).unwrap();
-        f.read_to_string(&mut content).unwrap();
-
         Mdblog {
             root: root.as_ref().to_owned(),
             theme: Theme::new(&root),
             posts: Vec::new(),
             tags: BTreeMap::new(),
             renderer: None,
-            config: content.parse().unwrap(),
+            config: None,
         }
     }
 
@@ -126,10 +121,20 @@ impl Mdblog {
     /// fetch the config theme from the `config.toml` file
     pub fn get_config_theme(&self) -> String {
         self.config
-            .lookup("blog.theme")
+            .as_ref()
+            .and_then(|v| v.lookup("blog.theme"))
             .and_then(|v| v.as_str())
             .map(|x| x.to_string())
             .unwrap_or("simple".to_string())
+    }
+
+    pub fn load_config(&mut self) -> Result<()> {
+        let mut content = String::new();
+        let config_path = self.root.join("config.toml");
+        let mut f = File::open(&config_path).unwrap();
+        f.read_to_string(&mut content).unwrap();
+        self.config = content.parse().ok();
+        Ok(())
     }
 
     pub fn load_theme(&mut self, theme: &str) -> Result<()> {
@@ -162,7 +167,6 @@ impl Mdblog {
                     ps.push(post.clone());
                 }
             }
-
         }
         self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         for (_, tag_posts) in self.tags.iter_mut() {

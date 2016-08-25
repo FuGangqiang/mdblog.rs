@@ -202,9 +202,12 @@ main p img {
 }
 
 #article_footer {
-    margin-top: 1em;
     padding-left: 0;
     list-style-type: none;
+}
+
+#article_footer li:first-child{
+    margin-top: 1em;
 }
 
 aside h1 {

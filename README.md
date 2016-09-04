@@ -3,6 +3,11 @@
 create blog from markdown files.
 
 
+# Api documentation
+
+* [master](https://fugangqiang.github.io/docs/mdblog.rs/mdblog/)
+
+
 # features
 
 * markdown format

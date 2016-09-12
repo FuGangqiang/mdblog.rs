@@ -256,6 +256,8 @@ impl Mdblog {
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
+        all_tags.sort_by(|a, b| a.get("name").map(|s| s.to_lowercase())
+                                 .cmp(&b.get("name").map(|s| s.to_lowercase())));
         context.add("all_tags", &all_tags);
         context
     }

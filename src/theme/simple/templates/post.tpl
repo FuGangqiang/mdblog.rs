@@ -26,7 +26,7 @@
 {% block js %}
 <script src="/static/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
        tex2jax: {

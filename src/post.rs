@@ -132,6 +132,12 @@ impl Post {
         if v.len() != 2 {
             return Err(Error::PostBody);
         }
+        if v[0].trim().is_empty() {
+            return Err(Error::PostHead);
+        }
+        if v[1].trim().is_empty() {
+            return Err(Error::PostBody);
+        }
         self.head = v[0].to_string();
         self.body = v[1].to_string();
         for line in self.head.lines() {

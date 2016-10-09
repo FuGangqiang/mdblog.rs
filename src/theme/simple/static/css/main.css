@@ -36,7 +36,6 @@ footer {
     background: #1f1f1f;
 }
 
-
 header section#imglogo {
     float: left;
 }
@@ -265,4 +264,19 @@ pre code {
     padding-left: 0.5em;
     overflow: auto;
     border-radius: 0.5em;
+}
+
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+table thead {
+    font-weight: bold;
+}
+
+table td {
+    text-align: center;
+    border: 1px solid #888;
+    min-width: 4em;
 }

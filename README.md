@@ -21,7 +21,7 @@ create blog from markdown files.
 
 # Install
 
-nightly rust needed
+rustc 1.13 or later needed
 
 ```
 cargo install mdblog

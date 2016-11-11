@@ -14,8 +14,6 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "http://fugangqiang.github.io/doc/mdblog.rs")]
 
-#![feature(question_mark)]
-
 #[macro_use] extern crate log;
 extern crate chrono;
 extern crate pulldown_cmark;

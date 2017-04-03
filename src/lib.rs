@@ -14,9 +14,13 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "http://fugangqiang.github.io/doc/mdblog.rs")]
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate chrono;
 extern crate pulldown_cmark;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
 extern crate tera;
 extern crate toml;
@@ -33,7 +37,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use serde_json::Map;
+use serde_json::{Map, Value};
 use tera::{Tera, Context};
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
@@ -41,6 +45,20 @@ pub use error::{Error, Result};
 pub use post::Post;
 pub use theme::Theme;
 pub use utils::create_file;
+
+
+// blog config
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+    pub blog: Blog,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename = "blog")]
+struct Blog {
+    pub theme: String,
+}
 
 
 /// blog object
@@ -56,7 +74,7 @@ pub struct Mdblog {
     /// blog render
     renderer: Option<Tera>,
     /// blog config
-    config: Option<toml::Value>,
+    config: Option<Config>,
 }
 
 
@@ -88,8 +106,8 @@ impl Mdblog {
         hello_post.write_all(b"\n")?;
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
 
-        let mut config = create_file(&self.root.join("config.toml"))?;
-        config.write_all(b"[blog]\ntheme = simple\n")?;
+        let mut config_file = create_file(&self.root.join("config.toml"))?;
+        config_file.write_all(b"[blog]\ntheme = simple\n")?;
 
         let name = theme.unwrap_or(self.get_config_theme());
         let mut t = Theme::new(&self.root);
@@ -118,11 +136,8 @@ impl Mdblog {
 
     /// fetch the config theme from the `config.toml` file
     pub fn get_config_theme(&self) -> String {
-        self.config
-            .as_ref()
-            .and_then(|v| v.lookup("blog.theme"))
-            .and_then(|v| v.as_str())
-            .map(|x| x.to_string())
+        self.config.as_ref()
+            .map(|c| c.blog.theme.to_string())
             .unwrap_or("simple".to_string())
     }
 
@@ -131,7 +146,7 @@ impl Mdblog {
         let config_path = self.root.join("config.toml");
         let mut f = File::open(&config_path).unwrap();
         f.read_to_string(&mut content).unwrap();
-        self.config = content.parse().ok();
+        self.config = toml::from_str(&content).ok();
         Ok(())
     }
 
@@ -139,7 +154,7 @@ impl Mdblog {
         self.theme.load(theme)?;
         let template_dir = self.root.join("_themes").join(&theme).join("templates");
         debug!("template dir: {}", template_dir.display());
-        self.renderer = Some(Tera::new(&format!("{}/*", template_dir.display())));
+        self.renderer = Tera::new(&format!("{}/*", template_dir.display())).ok();
         Ok(())
     }
 
@@ -238,12 +253,12 @@ impl Mdblog {
         format!("/blog/tags/{}.html", &name)
     }
 
-    fn tag_map<T>(&self, name:&str, posts: &Vec<T>) -> Map<&str, String> {
+    fn tag_map<T>(&self, name:&str, posts: &Vec<T>) -> Map<String, Value> {
         let mut map = Map::new();
-        map.insert("name", name.to_string());
+        map.insert("name".to_string(), Value::String(name.to_string()));
         let tag_len = format!("{:?}", &posts.len());
-        map.insert("num", tag_len);
-        map.insert("url", self.tag_url(&name));
+        map.insert("num".to_string(), Value::String(tag_len));
+        map.insert("url".to_string(), Value::String(self.tag_url(&name)));
         map
     }
 
@@ -254,8 +269,8 @@ impl Mdblog {
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
-        all_tags.sort_by(|a, b| a.get("name").map(|s| s.to_lowercase())
-                                 .cmp(&b.get("name").map(|s| s.to_lowercase())));
+        all_tags.sort_by(|a, b| a.get("name").unwrap().as_str().unwrap().to_lowercase()
+                                 .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase()));
         context.add("all_tags", &all_tags);
         context
     }
@@ -277,7 +292,7 @@ impl Mdblog {
         }
 
         context.add("post_tags", &post_tags);
-        tera.render("post.tpl", context).map_err(|e| Error::Render(e))
+        tera.render("post.tpl", &context).map_err(|e| Error::Render(e))
     }
 
     pub fn render_index(&self) -> Result<String> {
@@ -285,10 +300,10 @@ impl Mdblog {
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context("Fu");
         context.add("posts", &self.posts_maps(&self.posts));
-        tera.render("index.tpl", context).map_err(|e| Error::Render(e))
+        tera.render("index.tpl", &context).map_err(|e| Error::Render(e))
     }
 
-    fn posts_maps<'a>(&self, posts: &'a Vec<Rc<Post>>) -> Vec<Map<&'a str, String>> {
+    fn posts_maps(&self, posts: &Vec<Rc<Post>>) -> Vec<Map<String, Value>> {
         let mut maps = Vec::new();
         for post in posts.iter().filter(|p| !p.is_hidden().unwrap()) {
             maps.push(post.map());
@@ -302,7 +317,7 @@ impl Mdblog {
         let mut context = self.base_context(&tag);
         let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.posts_maps(&posts));
-        tera.render("tag.tpl", context).map_err(|e| Error::Render(e))
+        tera.render("tag.tpl", &context).map_err(|e| Error::Render(e))
     }
 }
 

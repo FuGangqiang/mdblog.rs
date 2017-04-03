@@ -2,8 +2,8 @@ use std::error::Error as StdError;
 use std::fmt::{self, Error as FmtError};
 use std::io::Error as IoError;
 
-use tera::TeraError;
-use toml;
+use tera::Error as TeraError;
+use toml::de::Error as TomlError;
 
 use self::Error::{
     RootDirExisted,
@@ -27,7 +27,7 @@ pub enum Error {
     PostBody,
     Render(TeraError),
     Io(IoError),
-    Toml(Vec<toml::ParserError>),
+    Toml(TomlError),
     Fmt(FmtError),
 }
 
@@ -37,12 +37,7 @@ impl fmt::Display for Error {
         match *self {
             Render(ref err) => err.fmt(f),
             Io(ref err) => err.fmt(f),
-            Toml(ref errs) => {
-                for err in errs {
-                    f.write_str(err.description())?;
-                }
-                Ok(())
-            }
+            Toml(ref err) => err.fmt(f),
             Fmt(ref err) => err.fmt(f),
             ref err => f.write_str(err.description()),
         }
@@ -59,7 +54,7 @@ impl StdError for Error {
             PostBody => "post must have body part",
             Render(ref err) => err.description(),
             Io(ref err) => err.description(),
-            Toml(ref errs) => errs[0].description(),
+            Toml(ref err) => err.description(),
             Fmt(ref err) => err.description(),
         }
     }
@@ -68,7 +63,7 @@ impl StdError for Error {
         match *self {
             Render(ref err) => Some(err),
             Io(ref err) => Some(err),
-            Toml(ref errs) => errs[0].cause(),
+            Toml(ref err) => Some(err),
             Fmt(ref err) => Some(err),
             _ => None,
         }
@@ -97,8 +92,8 @@ impl From<FmtError> for Error {
 }
 
 
-impl From<Vec<toml::ParserError>> for Error {
-    fn from(errs: Vec<toml::ParserError>) -> Error {
-        Error::Toml(errs)
+impl From<TomlError> for Error {
+    fn from(err: TomlError) -> Error {
+        Error::Toml(err)
     }
 }

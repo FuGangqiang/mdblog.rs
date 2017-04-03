@@ -6,7 +6,7 @@ use std::error::Error as StdError;
 
 use chrono::{DateTime, Local, TimeZone};
 use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
-use serde_json::Map;
+use serde_json::{Map, Value};
 
 use error::{Error, Result};
 
@@ -113,11 +113,12 @@ impl Post {
     }
 
     /// post context for render
-    pub fn map(&self) -> Map<&str, String> {
+    pub fn map(&self) -> Map<String, Value> {
         let mut map = Map::new();
-        map.insert("title", self.title().to_string());
-        map.insert("url", format!("{}", self.url().display()));
-        map.insert("datetime", self.datetime().format("%Y-%m-%d").to_string());
+        map.insert("title".to_string(), Value::String(self.title().to_string()));
+        map.insert("url".to_string(), Value::String(format!("{}", self.url().display())));
+        map.insert("datetime".to_string(),
+                   Value::String(self.datetime().format("%Y-%m-%d").to_string()));
 
         map
     }

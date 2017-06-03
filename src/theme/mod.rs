@@ -1,10 +1,8 @@
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::io::{Read, Write};
-
 use error::{Error, Result};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use utils::create_file;
-
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
 static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple/static/img/logo.png");
@@ -16,7 +14,6 @@ static SIMPLE_BASE: &'static [u8] = include_bytes!("simple/templates/base.tpl");
 static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple/templates/index.tpl");
 static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
 static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
-
 
 /// theme object
 pub struct Theme {
@@ -33,7 +30,6 @@ pub struct Theme {
     post: Vec<u8>,
     tag: Vec<u8>,
 }
-
 
 impl Theme {
     pub fn new<P: AsRef<Path>>(root: P) -> Theme {
@@ -108,7 +104,7 @@ impl Theme {
                 self.post.extend_from_slice(&SIMPLE_POST);
                 self.tag.extend_from_slice(&SIMPLE_TAG);
             } else {
-               return Err(Error::ThemeNotFound);
+                return Err(Error::ThemeNotFound);
             }
         }
         Ok(())

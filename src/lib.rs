@@ -31,21 +31,19 @@ mod post;
 mod theme;
 mod utils;
 
+pub use error::{Error, Result};
+pub use post::Post;
+
+use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-
-use serde_json::{Map, Value};
-use tera::{Tera, Context};
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
-
-pub use error::{Error, Result};
-pub use post::Post;
+use tera::{Context, Tera};
 pub use theme::Theme;
 pub use utils::create_file;
-
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 // blog config
 #[derive(Serialize, Deserialize, Debug)]
@@ -53,13 +51,11 @@ struct Config {
     pub blog: Blog,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename = "blog")]
 struct Blog {
     pub theme: String,
 }
-
 
 /// blog object
 pub struct Mdblog {
@@ -76,7 +72,6 @@ pub struct Mdblog {
     /// blog config
     config: Option<Config>,
 }
-
 
 impl Mdblog {
     /// create Mdblog from the `root` path
@@ -136,7 +131,8 @@ impl Mdblog {
 
     /// fetch the config theme from the `config.toml` file
     pub fn get_config_theme(&self) -> String {
-        self.config.as_ref()
+        self.config
+            .as_ref()
             .map(|c| c.blog.theme.to_string())
             .unwrap_or("simple".to_string())
     }
@@ -181,7 +177,8 @@ impl Mdblog {
                 }
             }
         }
-        self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        self.posts
+            .sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         for (_, tag_posts) in self.tags.iter_mut() {
             tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         }
@@ -198,7 +195,10 @@ impl Mdblog {
     }
 
     pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> PathBuf {
-        let relpath = media.as_ref().strip_prefix(&self.root.join("media")).expect("create post path error").to_owned();
+        let relpath = media.as_ref()
+                           .strip_prefix(&self.root.join("media"))
+                           .expect("create post path error")
+                           .to_owned();
         self.root.join("_builds/media").join(relpath)
     }
 
@@ -253,7 +253,7 @@ impl Mdblog {
         format!("/blog/tags/{}.html", &name)
     }
 
-    fn tag_map<T>(&self, name:&str, posts: &Vec<T>) -> Map<String, Value> {
+    fn tag_map<T>(&self, name: &str, posts: &Vec<T>) -> Map<String, Value> {
         let mut map = Map::new();
         map.insert("name".to_string(), Value::String(name.to_string()));
         let tag_len = format!("{:?}", &posts.len());
@@ -269,8 +269,14 @@ impl Mdblog {
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
-        all_tags.sort_by(|a, b| a.get("name").unwrap().as_str().unwrap().to_lowercase()
-                                 .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase()));
+        all_tags.sort_by(|a, b| {
+            a.get("name")
+             .unwrap()
+             .as_str()
+             .unwrap()
+             .to_lowercase()
+             .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase())
+        });
         context.add("all_tags", &all_tags);
         context
     }
@@ -282,9 +288,13 @@ impl Mdblog {
         context.add("content", &post.content());
         let mut post_tags = Vec::new();
         if !post.is_hidden()? {
-            context.add("datetime", &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
+            context.add("datetime",
+                        &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
             for tag_key in post.tags() {
-                let tag_posts = self.tags.get(tag_key).expect(&format!("post tag({}) does not add to blog tags", tag_key));
+                let tag_posts = self.tags
+                                    .get(tag_key)
+                                    .expect(&format!("post tag({}) does not add to blog tags",
+                                                    tag_key));
                 post_tags.push(self.tag_map(&tag_key, &tag_posts));
             }
         } else {
@@ -292,7 +302,8 @@ impl Mdblog {
         }
 
         context.add("post_tags", &post_tags);
-        tera.render("post.tpl", &context).map_err(|e| Error::Render(e))
+        tera.render("post.tpl", &context)
+            .map_err(|e| Error::Render(e))
     }
 
     pub fn render_index(&self) -> Result<String> {
@@ -300,7 +311,8 @@ impl Mdblog {
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context("Fu");
         context.add("posts", &self.posts_maps(&self.posts));
-        tera.render("index.tpl", &context).map_err(|e| Error::Render(e))
+        tera.render("index.tpl", &context)
+            .map_err(|e| Error::Render(e))
     }
 
     fn posts_maps(&self, posts: &Vec<Rc<Post>>) -> Vec<Map<String, Value>> {
@@ -311,24 +323,25 @@ impl Mdblog {
         maps
     }
 
-    pub fn render_tag(&self, tag:&str) -> Result<String> {
+    pub fn render_tag(&self, tag: &str) -> Result<String> {
         debug!("rendering tag({}) ...", tag);
         let tera = self.renderer.as_ref().expect("get renderer error");
         let mut context = self.base_context(&tag);
-        let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
+        let posts = self.tags
+                        .get(tag)
+                        .expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.posts_maps(&posts));
-        tera.render("tag.tpl", &context).map_err(|e| Error::Render(e))
+        tera.render("tag.tpl", &context)
+            .map_err(|e| Error::Render(e))
     }
 }
 
-
 fn is_hidden(entry: &DirEntry) -> bool {
     entry.file_name()
-        .to_str()
-        .map(|s| s.starts_with("."))
-        .unwrap_or(false)
+         .to_str()
+         .map(|s| s.starts_with("."))
+         .unwrap_or(false)
 }
-
 
 fn is_markdown_file(entry: &DirEntry) -> bool {
     if !entry.path().is_file() {
@@ -347,6 +360,6 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
             } else {
                 return false;
             }
-        }
+        },
     }
 }

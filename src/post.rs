@@ -1,14 +1,12 @@
+use chrono::{DateTime, Local, TimeZone};
+use error::{Error, Result};
+use pulldown_cmark::{OPTION_ENABLE_TABLES, Options, Parser, html};
+use serde_json::{Map, Value};
 use std::collections::HashMap;
+use std::error::Error as StdError;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::error::Error as StdError;
-
-use chrono::{DateTime, Local, TimeZone};
-use pulldown_cmark::{html, Parser, Options, OPTION_ENABLE_TABLES};
-use serde_json::{Map, Value};
-
-use error::{Error, Result};
 
 /// blog post object
 ///
@@ -33,7 +31,6 @@ pub struct Post {
     metadata: HashMap<String, String>,
 }
 
-
 impl Post {
     pub fn new<P: AsRef<Path>>(root: P, path: P) -> Post {
         Post {
@@ -53,7 +50,9 @@ impl Post {
 
     /// the absolute path of blog post html file
     pub fn dest(&self) -> PathBuf {
-        self.root.join("_builds/blog").join(self.path.with_extension("html"))
+        self.root
+            .join("_builds/blog")
+            .join(self.path.with_extension("html"))
     }
 
     /// blog title
@@ -66,16 +65,26 @@ impl Post {
 
     /// blog publish time
     pub fn datetime(&self) -> DateTime<Local> {
-        let date_value = self.metadata.get("date").expect(&format!("post({}) require date header", &self.path.display()));
+        let date_value = self.metadata
+                             .get("date")
+                             .expect(&format!("post({}) require date header",
+                                             &self.path.display()));
         match Local.datetime_from_str(&date_value, "%Y-%m-%d %H:%M:%S") {
             Ok(datetime) => datetime,
-            Err(why) => panic!("post({}) date header parse error: {}", &self.path.display(), why.description()),
+            Err(why) => {
+                panic!("post({}) date header parse error: {}",
+                       &self.path.display(),
+                       why.description())
+            },
         }
     }
 
     /// wether blog post is hidden or not
     pub fn is_hidden(&self) -> Result<bool> {
-        let hidden_value = self.metadata.get("hidden").unwrap_or(&"false".to_string()).to_lowercase();
+        let hidden_value = self.metadata
+                               .get("hidden")
+                               .unwrap_or(&"false".to_string())
+                               .to_lowercase();
         match hidden_value.as_ref() {
             "false" | "f" => Ok(false),
             "true" | "t" => Ok(true),
@@ -116,7 +125,8 @@ impl Post {
     pub fn map(&self) -> Map<String, Value> {
         let mut map = Map::new();
         map.insert("title".to_string(), Value::String(self.title().to_string()));
-        map.insert("url".to_string(), Value::String(format!("{}", self.url().display())));
+        map.insert("url".to_string(),
+                   Value::String(format!("{}", self.url().display())));
         map.insert("datetime".to_string(),
                    Value::String(self.datetime().format("%Y-%m-%d").to_string()));
 
@@ -146,7 +156,8 @@ impl Post {
             if pair.len() != 2 {
                 return Err(Error::PostHead);
             }
-            self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
+            self.metadata
+                .insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }
         Ok(())
     }

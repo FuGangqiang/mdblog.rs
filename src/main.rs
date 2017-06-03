@@ -5,11 +5,10 @@ extern crate env_logger;
 extern crate getopts;
 extern crate mdblog;
 
-use getopts::{Options, Occur, HasArg, Matches};
+use getopts::{HasArg, Matches, Occur, Options};
 use mdblog::Mdblog;
 use std::env;
 use std::process::exit;
-
 
 fn print_usage(opts: Options) {
     let brief = "\
@@ -22,7 +21,6 @@ Usage:
 ";
     print!("{}", opts.usage(brief));
 }
-
 
 fn main() {
     env_logger::init().expect("env_logger init error");
@@ -74,7 +72,6 @@ fn main() {
     exit(0);
 }
 
-
 fn init(matches: &Matches) {
     if matches.free.len() != 2 {
         panic!("`init` subcommand requires one argument.");
@@ -90,7 +87,6 @@ fn init(matches: &Matches) {
     }
 }
 
-
 fn build(matches: &Matches) {
     let root_dir = env::current_dir().unwrap();
     let mut mb = Mdblog::new(&root_dir);
@@ -101,7 +97,6 @@ fn build(matches: &Matches) {
         Err(why) => panic!(why.to_string()),
     }
 }
-
 
 fn server(matches: &Matches) {
     println!("server command");

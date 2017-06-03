@@ -1,23 +1,11 @@
+use self::Error::{Fmt, Io, PostBody, PostHead, Render, RootDirExisted, ThemeNotFound, Toml};
 use std::error::Error as StdError;
 use std::fmt::{self, Error as FmtError};
 use std::io::Error as IoError;
-
 use tera::Error as TeraError;
 use toml::de::Error as TomlError;
 
-use self::Error::{
-    RootDirExisted,
-    ThemeNotFound,
-    PostHead,
-    PostBody,
-    Render,
-    Io,
-    Toml,
-    Fmt,
-};
-
 pub type Result<T> = ::std::result::Result<T, Error>;
-
 
 #[derive(Debug)]
 pub enum Error {
@@ -31,7 +19,6 @@ pub enum Error {
     Fmt(FmtError),
 }
 
-
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -43,7 +30,6 @@ impl fmt::Display for Error {
         }
     }
 }
-
 
 impl StdError for Error {
     fn description(&self) -> &str {
@@ -70,13 +56,11 @@ impl StdError for Error {
     }
 }
 
-
 impl From<IoError> for Error {
     fn from(err: IoError) -> Error {
         Error::Io(err)
     }
 }
-
 
 impl From<TeraError> for Error {
     fn from(err: TeraError) -> Error {
@@ -84,13 +68,11 @@ impl From<TeraError> for Error {
     }
 }
 
-
 impl From<FmtError> for Error {
     fn from(err: FmtError) -> Error {
         Error::Fmt(err)
     }
 }
-
 
 impl From<TomlError> for Error {
     fn from(err: TomlError) -> Error {

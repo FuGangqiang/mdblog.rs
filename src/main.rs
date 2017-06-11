@@ -15,7 +15,7 @@ fn print_usage(opts: Options) {
 Usage:
     mdblog init <blog> [-t <theme>]
     mdblog build [-t <theme>]
-    mdblog server [-p <port>]
+    mdblog server [-p <port>]  # unimplemented
     mdblog -v | --version
     mdblog -h | --help\
 ";

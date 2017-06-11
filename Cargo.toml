@@ -2,11 +2,12 @@
 name = "mdblog"
 version = "0.1.8"
 authors = ["FuGangqiang <fu_gangqiang@qq.com>"]
-description = "create blog from markdown files."
+description = "create static site blog from markdown files."
 repository = "https://github.com/FuGangqiang/mdblog.rs"
 homepage = "https://github.com/FuGangqiang/mdblog.rs"
-documentation = "http://fugangqiang.github.io/docs/mdblog.rs/mdblog/"
+documentation = "https://docs.rs/mdblog"
 keywords = ["blog", "markdown", "static", "site", "generator"]
+categories = ["Command line utilities"]
 license = "MIT"
 readme = "README.md"
 

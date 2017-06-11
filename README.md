@@ -1,14 +1,6 @@
 # Mdblog
 
-create blog from markdown files.
-
-
-# Api documentation
-
-* [master](https://fugangqiang.github.io/docs/mdblog.rs/mdblog/)
-
-
-# features
+Create static site blog from markdown files with features:
 
 * markdown format
 * TeX style math support
@@ -21,31 +13,42 @@ create blog from markdown files.
 
 # Install
 
-rustc 1.13 or later needed
+`mdblog` is implemented by rust language, so you need cargo command:
 
 ```
 cargo install mdblog
 ```
 
+`mdblog` will be installed in your cargo binary directory(`~/.cargo/bin/`).
 
-# Commands
+
+# CLI
+
+`mdblog` can be use as a command:
 
 ```
-mdblog init blog
-mdblog build [-t theme]
-mdblog server [-p port]   # unimplemented
+$ mdblog -h
+Usage:
+    mdblog init <blog> [-t <theme>]
+    mdblog build [-t <theme>]
+    mdblog server [-p <port>]  # unimplemented
+    mdblog -v | --version
+    mdblog -h | --help
+
+Options:
+    -h, --help          Display this message
+    -v, --version       Print version info and exit
+    -t, --theme <theme> Build with specified theme
+    -p, --port <port>   Server with port number
 ```
 
-
-# Usage
-
-### init blog directory
+### init blog
 
 ```
 $ mdblog init myblog
 ```
 
-and the init blog directory tree is:
+blog directory(`myblog`) layout is initialized:
 
 ```
 $ tree myblog
@@ -82,7 +85,8 @@ myblog
 $ cd myblog
 $ mdblog build
 ```
-and the result blog directory tree is:
+
+the blog static files are build into the subdir `_build`, the current blog directory(`myblog`) layout is:
 
 ```
 $ tree .

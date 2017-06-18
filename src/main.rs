@@ -69,7 +69,7 @@ fn main() {
         "init" => init(&matches),
         "build" => build(&matches),
         "server" => server(&matches),
-        _ => print_usage_and_exit(&opts, 3)
+        _ => print_usage_and_exit(&opts, 3),
     };
 
     if let Err(ref e) = res {
@@ -86,7 +86,7 @@ fn main() {
     }
 }
 
-fn init(matches: &Matches) -> Result<()>{
+fn init(matches: &Matches) -> Result<()> {
     if matches.free.len() != 2 {
         panic!("`init` subcommand requires one argument.");
     }
@@ -98,7 +98,7 @@ fn init(matches: &Matches) -> Result<()>{
     mb.init(theme)
 }
 
-fn build(matches: &Matches) -> Result<()>{
+fn build(matches: &Matches) -> Result<()> {
     let root_dir = env::current_dir().unwrap();
     let mut mb = Mdblog::new(&root_dir);
     let theme = matches.opt_str("theme");

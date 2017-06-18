@@ -35,6 +35,9 @@ mod post;
 mod theme;
 mod utils;
 
+
+pub use error::*;
+pub use post::Post;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
@@ -42,12 +45,9 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tera::{Context, Tera};
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
-
-pub use error::*;
-pub use post::Post;
 pub use theme::Theme;
 pub use utils::create_file;
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 // blog config
 #[derive(Deserialize, Debug)]
@@ -95,7 +95,7 @@ impl Mdblog {
     /// if `theme` is `None`, use the default theme(`simple`).
     pub fn init(&self, theme: Option<String>) -> Result<()> {
         if self.root.exists() {
-             bail!(ErrorKind::RootDirExisted(self.root.clone()));
+            bail!(ErrorKind::RootDirExisted(self.root.clone()));
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;

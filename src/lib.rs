@@ -46,13 +46,12 @@ pub use utils::create_file;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 // blog config
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 struct Config {
     pub blog: Blog,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename = "blog")]
+#[derive(Deserialize, Debug)]
 struct Blog {
     pub theme: String,
 }

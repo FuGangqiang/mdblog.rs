@@ -1,12 +1,12 @@
 use chrono::{DateTime, Local, TimeZone};
-use error::{Error, Result};
 use pulldown_cmark::{OPTION_ENABLE_TABLES, Options, Parser, html};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
-use std::error::Error as StdError;
 use std::fs::File;
 use std::io::Read;
+use std::error::Error;
 use std::path::{Path, PathBuf};
+use super::{Result, ErrorKind};
 
 /// blog post object
 ///
@@ -88,7 +88,7 @@ impl Post {
         match hidden_value.as_ref() {
             "false" | "f" => Ok(false),
             "true" | "t" => Ok(true),
-            _ => Err(Error::PostHead),
+            _ => bail!(ErrorKind::PostHead(self.path.clone())),
         }
     }
 
@@ -141,20 +141,20 @@ impl Post {
         pf.read_to_string(&mut content)?;
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            return Err(Error::PostBody);
+            bail!(ErrorKind::PostNoBody(self.path.clone()));
         }
         if v[0].trim().is_empty() {
-            return Err(Error::PostHead);
+            bail!(ErrorKind::PostHead(self.path.clone()));
         }
         if v[1].trim().is_empty() {
-            return Err(Error::PostBody);
+            bail!(ErrorKind::PostNoBody(self.path.clone()));
         }
         self.head = v[0].to_string();
         self.body = v[1].to_string();
         for line in self.head.lines() {
             let pair: Vec<&str> = line.splitn(2, ':').collect();
             if pair.len() != 2 {
-                return Err(Error::PostHead);
+                bail!(ErrorKind::PostHead(self.path.clone()));
             }
             self.metadata
                 .insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());

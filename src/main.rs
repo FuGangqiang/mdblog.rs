@@ -6,11 +6,10 @@ extern crate getopts;
 extern crate mdblog;
 
 use getopts::{HasArg, Matches, Occur, Options};
-use mdblog::Mdblog;
+use mdblog::{Mdblog, Result};
 use std::env;
-use std::process::exit;
 
-fn print_usage(opts: Options) {
+fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
     let brief = "\
 Usage:
     mdblog init <blog> [-t <theme>]
@@ -19,7 +18,12 @@ Usage:
     mdblog -v | --version
     mdblog -h | --help\
 ";
-    print!("{}", opts.usage(brief));
+    if exit_code == 0 {
+        eprint!("{}", opts.usage(brief));
+    } else {
+        print!("{}", opts.usage(brief));
+    }
+    ::std::process::exit(exit_code);
 }
 
 fn main() {
@@ -46,33 +50,43 @@ fn main() {
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(why) => {
-            println!("{}", why);
-            println!("run `mdblog -h` to get the usage.");
-            exit(1);
+            eprintln!("{}", why);
+            eprintln!("run `mdblog -h` to get the usage.");
+            ::std::process::exit(1);
         },
     };
 
     if matches.opt_present("h") {
-        print_usage(opts);
-        exit(0);
+        print_usage_and_exit(&opts, 0);
     } else if matches.opt_present("v") {
         println!("mdblog {}", env!("CARGO_PKG_VERSION"));
-        exit(0);
+        ::std::process::exit(0);
     } else if matches.free.len() < 1 {
-        print_usage(opts);
-        exit(2);
+        print_usage_and_exit(&opts, 2);
     }
 
-    match matches.free[0].as_ref() {
+    let res = match matches.free[0].as_ref() {
         "init" => init(&matches),
         "build" => build(&matches),
         "server" => server(&matches),
-        _ => print_usage(opts),
+        _ => print_usage_and_exit(&opts, 3)
+    };
+
+    if let Err(ref e) = res {
+        eprintln!("error: {}", e);
+
+        for e in e.iter().skip(1) {
+            eprintln!("caused by: {}", e);
+        }
+
+        if let Some(backtrace) = e.backtrace() {
+            eprintln!("backtrace: {:?}", backtrace);
+        }
+        ::std::process::exit(1);
     }
-    exit(0);
 }
 
-fn init(matches: &Matches) {
+fn init(matches: &Matches) -> Result<()>{
     if matches.free.len() != 2 {
         panic!("`init` subcommand requires one argument.");
     }
@@ -81,23 +95,18 @@ fn init(matches: &Matches) {
         .join(&matches.free[1]);
     let mb = Mdblog::new(dir);
     let theme = matches.opt_str("theme");
-    match mb.init(theme) {
-        Ok(_) => exit(0),
-        Err(why) => panic!(why.to_string()),
-    }
+    mb.init(theme)
 }
 
-fn build(matches: &Matches) {
+fn build(matches: &Matches) -> Result<()>{
     let root_dir = env::current_dir().unwrap();
     let mut mb = Mdblog::new(&root_dir);
     let theme = matches.opt_str("theme");
     mb.load_config().unwrap();
-    match mb.build(theme) {
-        Ok(_) => exit(0),
-        Err(why) => panic!(why.to_string()),
-    }
+    mb.build(theme)
 }
 
-fn server(matches: &Matches) {
+fn server(matches: &Matches) -> Result<()> {
     println!("server command");
+    Ok(())
 }

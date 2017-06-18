@@ -1,81 +1,32 @@
-use self::Error::{Fmt, Io, PostBody, PostHead, Render, RootDirExisted, ThemeNotFound, Toml};
-use std::error::Error as StdError;
-use std::fmt::{self, Error as FmtError};
-use std::io::Error as IoError;
-use tera::Error as TeraError;
-use toml::de::Error as TomlError;
+use std::path::PathBuf;
 
-pub type Result<T> = ::std::result::Result<T, Error>;
+error_chain!{
+    links {
+        Template(::tera::Error, ::tera::ErrorKind);
+    }
 
-#[derive(Debug)]
-pub enum Error {
-    RootDirExisted,
-    ThemeNotFound,
-    PostHead,
-    PostBody,
-    Render(TeraError),
-    Io(IoError),
-    Toml(TomlError),
-    Fmt(FmtError),
-}
+    foreign_links {
+        Io(::std::io::Error) #[doc = "Error during IO"];
+        Fmt(::std::fmt::Error) #[doc = "Error during format"];
+        Toml(::toml::de::Error) #[doc = "Error during deserialize toml config file"];
+    }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Render(ref err) => err.fmt(f),
-            Io(ref err) => err.fmt(f),
-            Toml(ref err) => err.fmt(f),
-            Fmt(ref err) => err.fmt(f),
-            ref err => f.write_str(err.description()),
+    errors {
+        RootDirExisted(path: PathBuf) {
+             description("Blog root directory already exists")
+             display("Blog root directory `{}` already exists", path.display())
         }
-    }
-}
-
-impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self {
-            RootDirExisted => "blog root directory already exists",
-            ThemeNotFound => "theme not found",
-            PostHead => "post head part parse error",
-            PostBody => "post must have body part",
-            Render(ref err) => err.description(),
-            Io(ref err) => err.description(),
-            Toml(ref err) => err.description(),
-            Fmt(ref err) => err.description(),
+        ThemeNotFound(name: String) {
+            description("Theme not found")
+            display("Can not find theme `{}`", name)
         }
-    }
-
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            Render(ref err) => Some(err),
-            Io(ref err) => Some(err),
-            Toml(ref err) => Some(err),
-            Fmt(ref err) => Some(err),
-            _ => None,
+        PostHead(path: PathBuf) {
+            description("Post head part parse error")
+            display("Can not parse post `{}` head part", path.display())
         }
-    }
-}
-
-impl From<IoError> for Error {
-    fn from(err: IoError) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<TeraError> for Error {
-    fn from(err: TeraError) -> Error {
-        Error::Render(err)
-    }
-}
-
-impl From<FmtError> for Error {
-    fn from(err: FmtError) -> Error {
-        Error::Fmt(err)
-    }
-}
-
-impl From<TomlError> for Error {
-    fn from(err: TomlError) -> Error {
-        Error::Toml(err)
+        PostNoBody(path: PathBuf) {
+            description("Post must have body part")
+            display("Post `{}` has not body part", path.display())
+        }
     }
 }

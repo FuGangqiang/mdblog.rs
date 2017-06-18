@@ -1,8 +1,8 @@
-use error::{Error, Result};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use utils::create_file;
+use super::{Result, ErrorKind};
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
 static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple/static/img/logo.png");
@@ -104,7 +104,7 @@ impl Theme {
                 self.post.extend_from_slice(&SIMPLE_POST);
                 self.tag.extend_from_slice(&SIMPLE_TAG);
             } else {
-                return Err(Error::ThemeNotFound);
+                bail!(ErrorKind::ThemeNotFound(self.name.clone()));
             }
         }
         Ok(())

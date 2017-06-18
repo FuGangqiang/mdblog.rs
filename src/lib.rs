@@ -14,9 +14,13 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/mdblog")]
 
+#![recursion_limit = "1024"]
+
 #[macro_use]
 extern crate log;
 extern crate chrono;
+#[macro_use]
+extern crate error_chain;
 extern crate pulldown_cmark;
 extern crate serde;
 #[macro_use]
@@ -31,9 +35,6 @@ mod post;
 mod theme;
 mod utils;
 
-pub use error::{Error, Result};
-pub use post::Post;
-
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
@@ -41,9 +42,12 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tera::{Context, Tera};
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+
+pub use error::*;
+pub use post::Post;
 pub use theme::Theme;
 pub use utils::create_file;
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 // blog config
 #[derive(Deserialize, Debug)]
@@ -91,7 +95,7 @@ impl Mdblog {
     /// if `theme` is `None`, use the default theme(`simple`).
     pub fn init(&self, theme: Option<String>) -> Result<()> {
         if self.root.exists() {
-            return Err(Error::RootDirExisted);
+             bail!(ErrorKind::RootDirExisted(self.root.clone()));
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
@@ -302,7 +306,7 @@ impl Mdblog {
 
         context.add("post_tags", &post_tags);
         tera.render("post.tpl", &context)
-            .map_err(|e| Error::Render(e))
+            .chain_err(|| "Template `post.tpl` render error")
     }
 
     pub fn render_index(&self) -> Result<String> {
@@ -311,7 +315,7 @@ impl Mdblog {
         let mut context = self.base_context("Fu");
         context.add("posts", &self.posts_maps(&self.posts));
         tera.render("index.tpl", &context)
-            .map_err(|e| Error::Render(e))
+            .chain_err(|| "Template `index.tpl` render error")
     }
 
     fn posts_maps(&self, posts: &Vec<Rc<Post>>) -> Vec<Map<String, Value>> {
@@ -331,7 +335,7 @@ impl Mdblog {
                         .expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.posts_maps(&posts));
         tera.render("tag.tpl", &context)
-            .map_err(|e| Error::Render(e))
+            .chain_err(|| "Template `tag.tpl` render error")
     }
 }
 

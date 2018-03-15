@@ -56,8 +56,12 @@ struct Config {
 }
 
 #[derive(Deserialize, Debug)]
-struct Blog {
+pub struct Blog {
     pub theme: String,
+    pub site_logo: String,
+    pub site_name: String,
+    pub site_motto: String,
+    pub footer_note: String,
 }
 
 /// blog object
@@ -105,7 +109,13 @@ impl Mdblog {
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
 
         let mut config_file = create_file(&self.root.join("config.toml"))?;
-        config_file.write_all(b"[blog]\ntheme = simple\n")?;
+        config_file.write_all(b"[blog]\n\
+                                theme = \"simple\"\n\
+                                site_logo = \"/static/img/logo.png\"\n\
+                                site_name = \"Mdblog\"\n\
+                                site_motto = \"Simple is Beautiful!\"\n\
+                                footer_note = \"Keep It Simple, Stupid!\"\n\
+                                ")?;
 
         let name = theme.unwrap_or(self.get_config_theme());
         let mut t = Theme::new(&self.root);
@@ -138,6 +148,13 @@ impl Mdblog {
             .as_ref()
             .map(|c| c.blog.theme.to_string())
             .unwrap_or("simple".to_string())
+    }
+
+    pub fn get_blog_config(&self) -> &Blog {
+        self.config
+            .as_ref()
+            .map(|c| &c.blog)
+            .expect("config error")
     }
 
     pub fn load_config(&mut self) -> Result<()> {
@@ -268,6 +285,11 @@ impl Mdblog {
     pub fn base_context(&self, title: &str) -> Context {
         let mut context = Context::new();
         context.add("title", &title);
+        let blog_config = self.get_blog_config();
+        context.add("site_logo", &blog_config.site_logo);
+        context.add("site_name", &blog_config.site_name);
+        context.add("site_motto", &blog_config.site_motto);
+        context.add("footer_note", &blog_config.footer_note);
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
@@ -312,7 +334,8 @@ impl Mdblog {
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
         let tera = self.renderer.as_ref().expect("get renderer error");
-        let mut context = self.base_context("Fu");
+        let blog_config = self.get_blog_config();
+        let mut context = self.base_context(&blog_config.site_name);
         context.add("posts", &self.posts_maps(&self.posts));
         tera.render("index.tpl", &context)
             .chain_err(|| "Template `index.tpl` render error")

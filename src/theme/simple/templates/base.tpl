@@ -10,12 +10,12 @@
 <body>
 <header class="clearfix">
   <section id="imglogo">
-    <a href="/index.html" title="Fu"><img src="/static/img/logo.png"></a>
+    <a href="/index.html" title="{{ site_name }}"><img src="{{ site_logo }}"></a>
   </section>
 
   <section id="textlogo">
-    <h1 id="site-name"><a href="/index.html" title="Fu">Fu</a></h1>
-    <h2 id="site-motto">Simple is Beautiful!</h2>
+    <h1 id="site-name"><a href="/index.html" title="{{ site_name }}">{{ site_name }}</a></h1>
+    <h2 id="site-motto">{{ site_motto }}</h2>
   </section>
 
   <nav>
@@ -50,7 +50,7 @@
 
 <footer>
   <p>
-    Keep It Simple, Stupid!
+    {{ footer_note }}
   </p>
 </footer>
 {% block js %}{% endblock js %}

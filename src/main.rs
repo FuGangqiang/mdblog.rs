@@ -35,14 +35,12 @@ fn main() {
     let mut opts = Options::new();
     opts.optflag("h", "help", "Display this message");
     opts.optflag("v", "version", "Print version info and exit");
-    opts.opt(
-        "p",
-        "port",
-        "Server with port number",
-        "<port>",
-        HasArg::Yes,
-        Occur::Optional,
-    );
+    opts.opt("p",
+             "port",
+             "Server with port number",
+             "<port>",
+             HasArg::Yes,
+             Occur::Optional);
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,

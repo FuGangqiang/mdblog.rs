@@ -11,7 +11,8 @@
 //! * post url is some to path of markdown file
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico", html_root_url = "https://docs.rs/mdblog")]
+       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+       html_root_url = "https://docs.rs/mdblog")]
 #![recursion_limit = "1024"]
 
 extern crate chrono;
@@ -81,27 +82,16 @@ impl Mdblog {
     pub fn get_settings() -> Result<Config> {
         let mut settings = Config::default();
         settings.set_default("theme", "simple").unwrap();
-        settings
-            .set_default("site_logo", "/static/img/logo.png")
-            .unwrap();
+        settings.set_default("site_logo", "/static/img/logo.png").unwrap();
         settings.set_default("site_name", "Mdblog").unwrap();
-        settings
-            .set_default("site_motto", "Simple is Beautiful!")
-            .unwrap();
-        settings
-            .set_default("footer_note", "Keep It Simple, Stupid!")
-            .unwrap();
-
+        settings.set_default("site_motto", "Simple is Beautiful!").unwrap();
+        settings.set_default("footer_note", "Keep It Simple, Stupid!").unwrap();
         Ok(settings)
     }
 
     pub fn load_settings(&mut self) -> Result<()> {
-        self.settings
-            .merge(config::File::with_name("Config.toml"))
-            .unwrap();
-        self.settings
-            .merge(config::Environment::with_prefix("BLOG"))
-            .unwrap();
+        self.settings.merge(config::File::with_name("Config.toml")).unwrap();
+        self.settings.merge(config::Environment::with_prefix("BLOG")).unwrap();
         Ok(())
     }
 
@@ -114,9 +104,9 @@ impl Mdblog {
 
     pub fn get_renderer<P: AsRef<Path>>(root: P, theme_name: &str) -> Result<Tera> {
         let template_dir = root.as_ref()
-            .join("_themes")
-            .join(theme_name)
-            .join("templates");
+                               .join("_themes")
+                               .join(theme_name)
+                               .join("templates");
         debug!("template dir: {}", template_dir.display());
         let renderer = Tera::new(&format!("{}/*", template_dir.display()))?;
         Ok(renderer)
@@ -131,14 +121,11 @@ impl Mdblog {
             if !is_markdown_file(&entry) {
                 continue;
             }
-            let mut post = Post::new(
-                &self.root,
-                &entry
-                    .path()
-                    .strip_prefix(&self.root)
-                    .expect("create post path error")
-                    .to_owned(),
-            );
+            let mut post = Post::new(&self.root,
+                                     &entry.path()
+                                           .strip_prefix(&self.root)
+                                           .expect("create post path error")
+                                           .to_owned());
             post.load()?;
             let post = Rc::new(post);
             self.posts.push(post.clone());
@@ -149,8 +136,7 @@ impl Mdblog {
                 }
             }
         }
-        self.posts
-            .sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         for (_, tag_posts) in self.tags.iter_mut() {
             tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         }
@@ -173,14 +159,12 @@ impl Mdblog {
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
 
         let mut config_file = create_file(&self.root.join("Config.toml"))?;
-        config_file.write_all(
-            b"theme = \"simple\"\n\
+        config_file.write_all(b"theme = \"simple\"\n\
                                 site_logo = \"/static/img/logo.png\"\n\
                                 site_name = \"Mdblog\"\n\
                                 site_motto = \"Simple is Beautiful!\"\n\
                                 footer_note = \"Keep It Simple, Stupid!\"\n\
-                                ",
-        )?;
+                                ")?;
         self.theme.load(&self.settings.get_str("theme").unwrap())?;
         self.theme.init_dir()?;
         std::fs::create_dir_all(self.root.join("media"))?;
@@ -210,11 +194,10 @@ impl Mdblog {
     }
 
     pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> PathBuf {
-        let relpath = media
-            .as_ref()
-            .strip_prefix(&self.root.join("media"))
-            .expect("create post path error")
-            .to_owned();
+        let relpath = media.as_ref()
+                           .strip_prefix(&self.root.join("media"))
+                           .expect("create post path error")
+                           .to_owned();
         self.root.join("_builds/media").join(relpath)
     }
 
@@ -284,22 +267,19 @@ impl Mdblog {
         context.add("site_logo", &self.settings.get_str("site_logo").unwrap());
         context.add("site_name", &self.settings.get_str("site_name").unwrap());
         context.add("site_motto", &self.settings.get_str("site_motto").unwrap());
-        context.add(
-            "footer_note",
-            &self.settings.get_str("footer_note").unwrap(),
-        );
+        context.add("footer_note",
+                    &self.settings.get_str("footer_note").unwrap());
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
         }
         all_tags.sort_by(|a, b| {
-            a.get("name")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_lowercase()
-                .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase())
-        });
+                             a.get("name").unwrap()
+                              .as_str()
+                              .unwrap()
+                              .to_lowercase()
+                              .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase())
+                         });
         context.add("all_tags", &all_tags);
         context
     }
@@ -310,14 +290,12 @@ impl Mdblog {
         context.add("content", &post.content());
         let mut post_tags = Vec::new();
         if !post.is_hidden()? {
-            context.add(
-                "datetime",
-                &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string(),
-            );
+            context.add("datetime",
+                        &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
             for tag_key in post.tags() {
-                let tag_posts = self.tags
-                    .get(tag_key)
-                    .expect(&format!("post tag({}) does not add to blog tags", tag_key));
+                let tag_posts = self.tags.get(tag_key)
+                                    .expect(&format!("post tag({}) does not add to blog tags",
+                                                     tag_key));
                 post_tags.push(self.tag_map(&tag_key, &tag_posts));
             }
         } else {
@@ -325,8 +303,7 @@ impl Mdblog {
         }
 
         context.add("post_tags", &post_tags);
-        self.renderer
-            .render("post.tpl", &context)
+        self.renderer.render("post.tpl", &context)
             .chain_err(|| "Template `post.tpl` render error")
     }
 
@@ -334,8 +311,7 @@ impl Mdblog {
         debug!("rendering index ...");
         let mut context = self.base_context(&self.settings.get_str("site_name").unwrap());
         context.add("posts", &self.posts_maps(&self.posts));
-        self.renderer
-            .render("index.tpl", &context)
+        self.renderer.render("index.tpl", &context)
             .chain_err(|| "Template `index.tpl` render error")
     }
 
@@ -351,8 +327,8 @@ impl Mdblog {
         debug!("rendering tag({}) ...", tag);
         let mut context = self.base_context(&tag);
         let posts = self.tags
-            .get(tag)
-            .expect(&format!("get tag({}) error", &tag));
+                        .get(tag)
+                        .expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.posts_maps(&posts));
         self.renderer
             .render("tag.tpl", &context)
@@ -361,11 +337,10 @@ impl Mdblog {
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.starts_with("."))
-        .unwrap_or(false)
+    entry.file_name()
+         .to_str()
+         .map(|s| s.starts_with("."))
+         .unwrap_or(false)
 }
 
 fn is_markdown_file(entry: &DirEntry) -> bool {

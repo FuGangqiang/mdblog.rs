@@ -1,8 +1,9 @@
 #![allow(unused_variables)]
+#[allow(unused_doc_comment)]
 
-extern crate log;
 extern crate env_logger;
 extern crate getopts;
+extern crate log;
 extern crate mdblog;
 
 use getopts::{HasArg, Matches, Occur, Options};
@@ -12,8 +13,8 @@ use std::env;
 fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
     let brief = "\
 Usage:
-    mdblog init <blog> [-t <theme>]
-    mdblog build [-t <theme>]
+    mdblog init <blog>
+    mdblog build
     mdblog server [-p <port>]  # unimplemented
     mdblog -v | --version
     mdblog -h | --help\
@@ -34,18 +35,14 @@ fn main() {
     let mut opts = Options::new();
     opts.optflag("h", "help", "Display this message");
     opts.optflag("v", "version", "Print version info and exit");
-    opts.opt("t",
-             "theme",
-             "Build with specified theme",
-             "<theme>",
-             HasArg::Yes,
-             Occur::Optional);
-    opts.opt("p",
-             "port",
-             "Server with port number",
-             "<port>",
-             HasArg::Yes,
-             Occur::Optional);
+    opts.opt(
+        "p",
+        "port",
+        "Server with port number",
+        "<port>",
+        HasArg::Yes,
+        Occur::Optional,
+    );
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
@@ -90,20 +87,18 @@ fn init(matches: &Matches) -> Result<()> {
     if matches.free.len() != 2 {
         panic!("`init` subcommand requires one argument.");
     }
-    let dir = env::current_dir()
-        .unwrap()
-        .join(&matches.free[1]);
-    let mb = Mdblog::new(dir);
-    let theme = matches.opt_str("theme");
-    mb.init(theme)
+    let dir = env::current_dir().unwrap().join(&matches.free[1]);
+    let mut mb = Mdblog::new(dir).unwrap();
+    mb.init().unwrap();
+    Ok(())
 }
 
 fn build(matches: &Matches) -> Result<()> {
     let root_dir = env::current_dir().unwrap();
-    let mut mb = Mdblog::new(&root_dir);
-    let theme = matches.opt_str("theme");
-    mb.load_config().unwrap();
-    mb.build(theme)
+    let mut mb = Mdblog::new(&root_dir).unwrap();
+    mb.load().unwrap();
+    mb.build().unwrap();
+    Ok(())
 }
 
 fn server(matches: &Matches) -> Result<()> {

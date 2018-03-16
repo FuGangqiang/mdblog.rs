@@ -8,7 +8,6 @@ error_chain!{
     foreign_links {
         Io(::std::io::Error) #[doc = "Error during IO"];
         Fmt(::std::fmt::Error) #[doc = "Error during format"];
-        Toml(::toml::de::Error) #[doc = "Error during deserialize toml config file"];
     }
 
     errors {

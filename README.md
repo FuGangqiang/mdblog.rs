@@ -29,8 +29,8 @@ cargo install mdblog
 ```
 $ mdblog -h
 Usage:
-    mdblog init <blog> [-t <theme>]
-    mdblog build [-t <theme>]
+    mdblog init <blog>
+    mdblog build
     mdblog server [-p <port>]  # unimplemented
     mdblog -v | --version
     mdblog -h | --help
@@ -38,7 +38,6 @@ Usage:
 Options:
     -h, --help          Display this message
     -v, --version       Print version info and exit
-    -t, --theme <theme> Build with specified theme
     -p, --port <port>   Server with port number
 ```
 
@@ -53,7 +52,7 @@ blog directory(`myblog`) layout is initialized:
 ```
 $ tree myblog
 myblog
-├── config.toml
+├── Config.toml
 ├── media
 ├── posts
 │   └── hello.md
@@ -110,7 +109,7 @@ $ tree .
 │       └── js
 │           ├── highlight.js
 │           └── main.js
-├── config.toml
+├── Config.toml
 ├── media
 ├── posts
 │   └── hello.md
@@ -143,9 +142,12 @@ $ python3 -m http.server --bind localhost 8000
 ```
 
 
-# config.toml
+# Config.toml
 
 ```toml
-[blog]
-theme = simple
+theme = "simple"
+site_logo = "/static/img/logo.png"
+site_name = "Mdblog"
+site_motto = "Simple is Beautiful!"
+footer_note = "Keep It Simple, Stupid!"
 ```

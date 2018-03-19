@@ -1,5 +1,4 @@
 #![allow(unused_variables)]
-#[allow(unused_doc_comment)]
 
 extern crate env_logger;
 extern crate getopts;

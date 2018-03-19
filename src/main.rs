@@ -32,7 +32,7 @@ Usage:
 }
 
 fn main() {
-    env_logger::init().expect("env_logger init error");
+    env_logger::init();
 
     let args: Vec<_> = env::args().collect();
 

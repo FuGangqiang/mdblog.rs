@@ -36,7 +36,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use tera::{Context, Tera};
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
 
 use config::Config;

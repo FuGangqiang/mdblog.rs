@@ -13,12 +13,11 @@
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/mdblog")]
-#![recursion_limit = "1024"]
 
 extern crate chrono;
 extern crate config;
 #[macro_use]
-extern crate error_chain;
+extern crate failure;
 #[macro_use]
 extern crate log;
 extern crate pulldown_cmark;
@@ -26,23 +25,26 @@ extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
 
-mod error;
+mod errors;
 mod post;
 mod theme;
 mod utils;
 
-use config::Config;
-pub use error::*;
-pub use post::Post;
-use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+
 use tera::{Context, Tera};
-pub use theme::Theme;
-pub use utils::create_file;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use serde_json::{Map, Value};
+
+use config::Config;
+pub use errors::{Error, Result};
+pub use theme::Theme;
+pub use post::Post;
+pub use utils::create_file;
+
 
 /// blog object
 pub struct Mdblog {
@@ -64,10 +66,10 @@ impl Mdblog {
     /// create Mdblog from the `root` path
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Mdblog> {
         let root = root.as_ref();
-        let settings = Mdblog::get_settings().unwrap();
-        let theme_name: String = settings.get("theme").unwrap();
-        let theme = Mdblog::get_theme(root, &theme_name).unwrap();
-        let renderer = Mdblog::get_renderer(root, &theme_name).unwrap();
+        let settings = Mdblog::get_default_settings()?;
+        let theme_name: String = settings.get("theme")?;
+        let theme = Mdblog::get_theme(root, &theme_name)?;
+        let renderer = Mdblog::get_renderer(root, &theme_name)?;
         Ok(Mdblog {
             root: root.to_owned(),
             settings: settings,
@@ -78,27 +80,27 @@ impl Mdblog {
         })
     }
 
-    /// get settings
-    pub fn get_settings() -> Result<Config> {
+    /// get default settings
+    pub fn get_default_settings() -> Result<Config> {
         let mut settings = Config::default();
-        settings.set_default("theme", "simple").unwrap();
-        settings.set_default("site_logo", "/static/img/logo.png").unwrap();
-        settings.set_default("site_name", "Mdblog").unwrap();
-        settings.set_default("site_motto", "Simple is Beautiful!").unwrap();
-        settings.set_default("footer_note", "Keep It Simple, Stupid!").unwrap();
+        settings.set_default("theme", "simple")?;
+        settings.set_default("site_logo", "/static/img/logo.png")?;
+        settings.set_default("site_name", "Mdblog")?;
+        settings.set_default("site_motto", "Simple is Beautiful!")?;
+        settings.set_default("footer_note", "Keep It Simple, Stupid!")?;
         Ok(settings)
     }
 
-    pub fn load_settings(&mut self) -> Result<()> {
-        self.settings.merge(config::File::with_name("Config.toml")).unwrap();
-        self.settings.merge(config::Environment::with_prefix("BLOG")).unwrap();
+    pub fn load_customize_settings(&mut self) -> Result<()> {
+        self.settings.merge(config::File::with_name("Config.toml"))?;
+        self.settings.merge(config::Environment::with_prefix("BLOG"))?;
         Ok(())
     }
 
     /// get theme
     pub fn get_theme<P: AsRef<Path>>(root: P, name: &str) -> Result<Theme> {
         let mut theme = Theme::new(root.as_ref());
-        theme.load(name).unwrap();
+        theme.load(name)?;
         Ok(theme)
     }
 
@@ -113,7 +115,7 @@ impl Mdblog {
     }
 
     pub fn load(&mut self) -> Result<()> {
-        self.load_settings().unwrap();
+        self.load_customize_settings()?;
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
@@ -129,7 +131,7 @@ impl Mdblog {
             post.load()?;
             let post = Rc::new(post);
             self.posts.push(post.clone());
-            if !post.is_hidden()? {
+            if !post.is_hidden() {
                 for tag in post.tags() {
                     let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
                     ps.push(post.clone());
@@ -149,7 +151,7 @@ impl Mdblog {
     /// if `theme` is `None`, use the default theme(`simple`).
     pub fn init(&mut self) -> Result<()> {
         if self.root.exists() {
-            bail!(ErrorKind::RootDirExisted(self.root.clone()));
+            return Err(Error::RootDirExisted(self.root.clone()));
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
@@ -261,14 +263,13 @@ impl Mdblog {
         map
     }
 
-    pub fn base_context(&self, title: &str) -> Context {
+    pub fn get_base_context(&self, title: &str) -> Result<Context> {
         let mut context = Context::new();
         context.add("title", &title);
-        context.add("site_logo", &self.settings.get_str("site_logo").unwrap());
-        context.add("site_name", &self.settings.get_str("site_name").unwrap());
-        context.add("site_motto", &self.settings.get_str("site_motto").unwrap());
-        context.add("footer_note",
-                    &self.settings.get_str("footer_note").unwrap());
+        context.add("site_logo", &self.settings.get_str("site_logo")?);
+        context.add("site_name", &self.settings.get_str("site_name")?);
+        context.add("site_motto", &self.settings.get_str("site_motto")?);
+        context.add("footer_note", &self.settings.get_str("footer_note")?);
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
@@ -276,20 +277,24 @@ impl Mdblog {
         all_tags.sort_by(|a, b| {
                              a.get("name").unwrap()
                               .as_str()
-                              .unwrap()
+                              .expect("get name error")
                               .to_lowercase()
-                              .cmp(&b.get("name").unwrap().as_str().unwrap().to_lowercase())
+                              .cmp(&b.get("name")
+                                     .expect("get name error")
+                                     .as_str()
+                                     .expect("get name error")
+                                     .to_lowercase())
                          });
         context.add("all_tags", &all_tags);
-        context
+        Ok(context)
     }
 
     pub fn render_post(&self, post: &Post) -> Result<String> {
         debug!("rendering post({}) ...", post.path.display());
-        let mut context = self.base_context(&post.title());
+        let mut context = self.get_base_context(&post.title())?;
         context.add("content", &post.content());
         let mut post_tags = Vec::new();
-        if !post.is_hidden()? {
+        if !post.is_hidden() {
             context.add("datetime",
                         &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
             for tag_key in post.tags() {
@@ -303,36 +308,32 @@ impl Mdblog {
         }
 
         context.add("post_tags", &post_tags);
-        self.renderer.render("post.tpl", &context)
-            .chain_err(|| "Template `post.tpl` render error")
+        Ok(self.renderer.render("post.tpl", &context)?)
     }
 
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
-        let mut context = self.base_context(&self.settings.get_str("site_name").unwrap());
-        context.add("posts", &self.posts_maps(&self.posts));
-        self.renderer.render("index.tpl", &context)
-            .chain_err(|| "Template `index.tpl` render error")
+        let mut context = self.get_base_context(&self.settings.get_str("site_name")?)?;
+        context.add("posts", &self.get_posts_maps(&self.posts)?);
+        Ok(self.renderer.render("index.tpl", &context)?)
     }
 
-    fn posts_maps(&self, posts: &Vec<Rc<Post>>) -> Vec<Map<String, Value>> {
+    fn get_posts_maps(&self, posts: &Vec<Rc<Post>>) -> Result<Vec<Map<String, Value>>> {
         let mut maps = Vec::new();
-        for post in posts.iter().filter(|p| !p.is_hidden().unwrap()) {
+        for post in posts.iter().filter(|p| !p.is_hidden()) {
             maps.push(post.map());
         }
-        maps
+        Ok(maps)
     }
 
     pub fn render_tag(&self, tag: &str) -> Result<String> {
         debug!("rendering tag({}) ...", tag);
-        let mut context = self.base_context(&tag);
+        let mut context = self.get_base_context(&tag)?;
         let posts = self.tags
                         .get(tag)
                         .expect(&format!("get tag({}) error", &tag));
-        context.add("posts", &self.posts_maps(&posts));
-        self.renderer
-            .render("tag.tpl", &context)
-            .chain_err(|| "Template `tag.tpl` render error")
+        context.add("posts", &self.get_posts_maps(&posts)?);
+        Ok(self.renderer.render("tag.tpl", &context)?)
     }
 }
 

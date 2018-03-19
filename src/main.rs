@@ -4,11 +4,15 @@
 extern crate env_logger;
 extern crate getopts;
 extern crate log;
+extern crate failure;
 extern crate mdblog;
 
-use getopts::{HasArg, Matches, Occur, Options};
-use mdblog::{Mdblog, Result};
 use std::env;
+
+use getopts::{HasArg, Matches, Occur, Options};
+use failure::Fail;
+
+use mdblog::{Mdblog, Result};
 
 fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
     let brief = "\
@@ -70,8 +74,8 @@ fn main() {
     if let Err(ref e) = res {
         eprintln!("error: {}", e);
 
-        for e in e.iter().skip(1) {
-            eprintln!("caused by: {}", e);
+        for cause in e.causes() {
+            eprintln!("{}", cause);
         }
 
         if let Some(backtrace) = e.backtrace() {

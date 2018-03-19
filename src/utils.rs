@@ -1,4 +1,4 @@
-use error::Result;
+use errors::Result;
 use std::fs::File;
 use std::path::Path;
 

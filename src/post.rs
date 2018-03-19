@@ -1,12 +1,14 @@
-use super::{ErrorKind, Result};
-use chrono::{DateTime, Local, TimeZone};
-use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
-use serde_json::{Map, Value};
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::error::Error as StdError;
+
+use chrono::{DateTime, Local, TimeZone};
+use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
+use serde_json::{Map, Value};
+
+use errors::{Error, Result};
 
 /// blog post object
 ///
@@ -77,15 +79,14 @@ impl Post {
     }
 
     /// wether blog post is hidden or not
-    pub fn is_hidden(&self) -> Result<bool> {
+    pub fn is_hidden(&self) -> bool {
         let hidden_value = self.metadata
                                .get("hidden")
                                .unwrap_or(&"false".to_string())
                                .to_lowercase();
         match hidden_value.as_ref() {
-            "false" | "f" => Ok(false),
-            "true" | "t" => Ok(true),
-            _ => bail!(ErrorKind::PostHead(self.path.clone())),
+            "true" | "t" => true,
+            _ => false,
         }
     }
 
@@ -138,20 +139,20 @@ impl Post {
         pf.read_to_string(&mut content)?;
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            bail!(ErrorKind::PostNoBody(self.path.clone()));
+            return Err(Error::PostNoBody(self.path.clone()));
         }
         if v[0].trim().is_empty() {
-            bail!(ErrorKind::PostHead(self.path.clone()));
+            return Err(Error::PostHead(self.path.clone()));
         }
         if v[1].trim().is_empty() {
-            bail!(ErrorKind::PostNoBody(self.path.clone()));
+            return Err(Error::PostNoBody(self.path.clone()));
         }
         self.head = v[0].to_string();
         self.body = v[1].to_string();
         for line in self.head.lines() {
             let pair: Vec<&str> = line.splitn(2, ':').collect();
             if pair.len() != 2 {
-                bail!(ErrorKind::PostHead(self.path.clone()));
+                return Err(Error::PostHead(self.path.clone()));
             }
             self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
         }

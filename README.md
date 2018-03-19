@@ -4,7 +4,6 @@ Create static site blog from markdown files with features:
 
 * markdown format
 * TeX style math support
-* highlight code block
 * post tags index
 * hidden post
 * post title is the title of markdown file
@@ -59,22 +58,17 @@ myblog
 └── _themes
     └── simple
         ├── static
-        │   ├── css
-        │   │   ├── highlight.css
-        │   │   └── main.css
-        │   ├── img
-        │   │   ├── favicon.png
-        │   │   └── logo.png
-        │   └── js
-        │       ├── highlight.js
-        │       └── main.js
+        │   ├── favicon.png
+        │   ├── logo.png
+        │   ├── main.css
+        │   └── main.js
         └── templates
             ├── base.tpl
             ├── index.tpl
             ├── post.tpl
             └── tag.tpl
 
-9 directories, 12 files
+6 directories, 10 files
 ```
 
 
@@ -100,15 +94,10 @@ $ tree .
 │   ├── index.html
 │   ├── media
 │   └── static
-│       ├── css
-│       │   ├── highlight.css
-│       │   └── main.css
-│       ├── img
-│       │   ├── favicon.png
-│       │   └── logo.png
-│       └── js
-│           ├── highlight.js
-│           └── main.js
+│       ├── favicon.png
+│       ├── logo.png
+│       ├── main.css
+│       └── main.js
 ├── Config.toml
 ├── media
 ├── posts
@@ -116,22 +105,17 @@ $ tree .
 └── _themes
     └── simple
         ├── static
-        │   ├── css
-        │   │   ├── highlight.css
-        │   │   └── main.css
-        │   ├── img
-        │   │   ├── favicon.png
-        │   │   └── logo.png
-        │   └── js
-        │       ├── highlight.js
-        │       └── main.js
+        │   ├── favicon.png
+        │   ├── logo.png
+        │   ├── main.css
+        │   └── main.js
         └── templates
             ├── base.tpl
             ├── index.tpl
             ├── post.tpl
             └── tag.tpl
 
-18 directories, 22 files
+12 directories, 18 files
 ```
 
 ### check blog in web broswer: [http://127.0.0.1:8000](http://127.0.0.1:8000)
@@ -146,7 +130,7 @@ $ python3 -m http.server --bind localhost 8000
 
 ```toml
 theme = "simple"
-site_logo = "/static/img/logo.png"
+site_logo = "/static/logo.png"
 site_name = "Mdblog"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"

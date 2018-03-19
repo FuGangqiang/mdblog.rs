@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <link rel="icon" href="/static/img/favicon.png">
-  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="icon" href="/static/favicon.png">
+  <link rel="stylesheet" href="/static/main.css">
   {% block css %}{% endblock css %}
   <title>{{ title }}</title>
 </head>

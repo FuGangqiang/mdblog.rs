@@ -4,7 +4,6 @@
 //!
 //! * markdown format
 //! * TeX style math support
-//! * highlight code block
 //! * post tags index
 //! * hidden post
 //! * post title is the title of markdown file
@@ -84,7 +83,7 @@ impl Mdblog {
     pub fn get_default_settings() -> Result<Config> {
         let mut settings = Config::default();
         settings.set_default("theme", "simple")?;
-        settings.set_default("site_logo", "/static/img/logo.png")?;
+        settings.set_default("site_logo", "/static/logo.png")?;
         settings.set_default("site_name", "Mdblog")?;
         settings.set_default("site_motto", "Simple is Beautiful!")?;
         settings.set_default("footer_note", "Keep It Simple, Stupid!")?;
@@ -160,9 +159,10 @@ impl Mdblog {
         hello_post.write_all(b"\n")?;
         hello_post.write_all(b"# hello\n\nhello world!\n")?;
 
+        let settings = Mdblog::get_default_settings()?;
         let mut config_file = create_file(&self.root.join("Config.toml"))?;
         config_file.write_all(b"theme = \"simple\"\n\
-                                site_logo = \"/static/img/logo.png\"\n\
+                                site_logo = \"/static/logo.png\"\n\
                                 site_name = \"Mdblog\"\n\
                                 site_motto = \"Simple is Beautiful!\"\n\
                                 footer_note = \"Keep It Simple, Stupid!\"\n\

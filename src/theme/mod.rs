@@ -4,12 +4,10 @@ use std::path::{Path, PathBuf};
 use utils::create_file;
 use errors::{Error, Result};
 
-static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/img/favicon.png");
-static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple/static/img/logo.png");
-static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple/static/css/main.css");
-static SIMPLE_HIGHLIGHT_CSS: &'static [u8] = include_bytes!("simple/static/css/highlight.css");
-static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple/static/js/main.js");
-static SIMPLE_HIGHLIGHT_JS: &'static [u8] = include_bytes!("simple/static/js/highlight.js");
+static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/favicon.png");
+static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple/static/logo.png");
+static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple/static/main.css");
+static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple/static/main.js");
 static SIMPLE_BASE: &'static [u8] = include_bytes!("simple/templates/base.tpl");
 static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple/templates/index.tpl");
 static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
@@ -22,9 +20,7 @@ pub struct Theme {
     favicon: Vec<u8>,
     logo: Vec<u8>,
     main_css: Vec<u8>,
-    highlight_css: Vec<u8>,
     main_js: Vec<u8>,
-    highlight_js: Vec<u8>,
     base: Vec<u8>,
     index: Vec<u8>,
     post: Vec<u8>,
@@ -39,9 +35,7 @@ impl Theme {
             favicon: Vec::new(),
             logo: Vec::new(),
             main_css: Vec::new(),
-            highlight_css: Vec::new(),
             main_js: Vec::new(),
-            highlight_js: Vec::new(),
             base: Vec::new(),
             index: Vec::new(),
             post: Vec::new(),
@@ -54,9 +48,7 @@ impl Theme {
         self.favicon.clear();
         self.logo.clear();
         self.main_css.clear();
-        self.highlight_css.clear();
         self.main_js.clear();
-        self.highlight_js.clear();
         self.base.clear();
         self.index.clear();
         self.post.clear();
@@ -67,12 +59,10 @@ impl Theme {
         debug!("loading theme: {}", name);
         let src_dir = self.root.join("_themes").join(name);
         if src_dir.exists() {
-            let mut favicon_file = File::open(src_dir.join("static/img/favicon.png"))?;
-            let mut logo_file = File::open(src_dir.join("static/img/logo.png"))?;
-            let mut main_css_file = File::open(src_dir.join("static/css/main.css"))?;
-            let mut highlight_css_file = File::open(src_dir.join("static/css/highlight.css"))?;
-            let mut main_js_file = File::open(src_dir.join("static/js/main.js"))?;
-            let mut highlight_js_file = File::open(src_dir.join("static/js/highlight.js"))?;
+            let mut favicon_file = File::open(src_dir.join("static/favicon.png"))?;
+            let mut logo_file = File::open(src_dir.join("static/logo.png"))?;
+            let mut main_css_file = File::open(src_dir.join("static/main.css"))?;
+            let mut main_js_file = File::open(src_dir.join("static/main.js"))?;
             let mut base_file = File::open(src_dir.join("templates/base.tpl"))?;
             let mut index_file = File::open(src_dir.join("templates/index.tpl"))?;
             let mut post_file = File::open(src_dir.join("templates/post.tpl"))?;
@@ -82,9 +72,7 @@ impl Theme {
             favicon_file.read_to_end(&mut self.favicon)?;
             logo_file.read_to_end(&mut self.logo)?;
             main_css_file.read_to_end(&mut self.main_css)?;
-            highlight_css_file.read_to_end(&mut self.highlight_css)?;
             main_js_file.read_to_end(&mut self.main_js)?;
-            highlight_js_file.read_to_end(&mut self.highlight_js)?;
             base_file.read_to_end(&mut self.base)?;
             index_file.read_to_end(&mut self.index)?;
             post_file.read_to_end(&mut self.post)?;
@@ -96,9 +84,7 @@ impl Theme {
                 self.favicon.extend_from_slice(&SIMPLE_FAVICON);
                 self.logo.extend_from_slice(&SIMPLE_LOGO);
                 self.main_css.extend_from_slice(&SIMPLE_MAIN_CSS);
-                self.highlight_css.extend_from_slice(&SIMPLE_HIGHLIGHT_CSS);
                 self.main_js.extend_from_slice(&SIMPLE_MAIN_JS);
-                self.highlight_js.extend_from_slice(&SIMPLE_HIGHLIGHT_JS);
                 self.base.extend_from_slice(&SIMPLE_BASE);
                 self.index.extend_from_slice(&SIMPLE_INDEX);
                 self.post.extend_from_slice(&SIMPLE_POST);
@@ -117,23 +103,17 @@ impl Theme {
         }
         debug!("init theme({}) ...", self.name);
 
-        let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;
+        let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
         favicon.write_all(&self.favicon)?;
 
-        let mut logo = create_file(&dest_dir.join("static/img/logo.png"))?;
+        let mut logo = create_file(&dest_dir.join("static/logo.png"))?;
         logo.write_all(&self.logo)?;
 
-        let mut main_css = create_file(&dest_dir.join("static/css/main.css"))?;
+        let mut main_css = create_file(&dest_dir.join("static/main.css"))?;
         main_css.write_all(&self.main_css)?;
 
-        let mut highlight_css = create_file(&dest_dir.join("static/css/highlight.css"))?;
-        highlight_css.write_all(&self.highlight_css)?;
-
-        let mut main_js = create_file(&dest_dir.join("static/js/main.js"))?;
+        let mut main_js = create_file(&dest_dir.join("static/main.js"))?;
         main_js.write_all(&self.main_js)?;
-
-        let mut highlight_js = create_file(&dest_dir.join("static/js/highlight.js"))?;
-        highlight_js.write_all(&self.highlight_js)?;
 
         let mut base = create_file(&dest_dir.join("templates/base.tpl"))?;
         base.write_all(&self.base)?;
@@ -154,23 +134,17 @@ impl Theme {
         debug!("exporting theme({}) static ...", self.name);
         let dest_dir = self.root.join("_builds");
 
-        let mut favicon = create_file(&dest_dir.join("static/img/favicon.png"))?;
+        let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
         favicon.write_all(&self.favicon)?;
 
-        let mut logo = create_file(&dest_dir.join("static/img/logo.png"))?;
+        let mut logo = create_file(&dest_dir.join("static/logo.png"))?;
         logo.write_all(&self.logo)?;
 
-        let mut main_css = create_file(&dest_dir.join("static/css/main.css"))?;
+        let mut main_css = create_file(&dest_dir.join("static/main.css"))?;
         main_css.write_all(&self.main_css)?;
 
-        let mut highlight_css = create_file(&dest_dir.join("static/css/highlight.css"))?;
-        highlight_css.write_all(&self.highlight_css)?;
-
-        let mut main_js = create_file(&dest_dir.join("static/js/main.js"))?;
+        let mut main_js = create_file(&dest_dir.join("static/main.js"))?;
         main_js.write_all(&self.main_js)?;
-
-        let mut highlight_js = create_file(&dest_dir.join("static/js/highlight.js"))?;
-        highlight_js.write_all(&self.highlight_js)?;
 
         Ok(())
     }

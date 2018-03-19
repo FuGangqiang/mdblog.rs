@@ -251,6 +251,7 @@ aside .tags li {
 
 main p code,
 main li > code {
+    font-family: monospace;
     border: 1px solid #ddd;
     padding: 0px 4px;
     border-radius: 4px;
@@ -258,12 +259,16 @@ main li > code {
 }
 
 pre code {
+    display: block;
+    border: 1px solid #ddd;
+    margin-left: 2em;
+    padding: 1em;
+    padding-left: 0.5em;
+    border-radius: 0.5em;
+    background-color: #eee;
     font-family: monospace;
     line-height: 1.2em;
-    margin-left: 2em;
-    padding-left: 0.5em;
     overflow: auto;
-    border-radius: 0.5em;
 }
 
 table {

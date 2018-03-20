@@ -38,7 +38,7 @@ use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
 
-use config::Config;
+use config::{Config, Source};
 pub use errors::{Error, Result};
 pub use theme::Theme;
 pub use post::Post;
@@ -161,12 +161,13 @@ impl Mdblog {
 
         let settings = Mdblog::get_default_settings()?;
         let mut config_file = create_file(&self.root.join("Config.toml"))?;
-        config_file.write_all(b"theme = \"simple\"\n\
-                                site_logo = \"/static/logo.png\"\n\
-                                site_name = \"Mdblog\"\n\
-                                site_motto = \"Simple is Beautiful!\"\n\
-                                footer_note = \"Keep It Simple, Stupid!\"\n\
-                                ")?;
+        let mut pairs = settings.collect()?
+                                .into_iter()
+                                .collect::<Vec<_>>();
+        pairs.sort_by(|a, b| a.0.cmp(&b.0));
+        for (key, value) in pairs {
+            config_file.write_fmt(format_args!("{} = \"{}\"\n", key, value))?;
+        }
         self.theme.load(&self.settings.get_str("theme").unwrap())?;
         self.theme.init_dir()?;
         std::fs::create_dir_all(self.root.join("media"))?;

@@ -129,9 +129,9 @@ $ python3 -m http.server --bind localhost 8000
 # Config.toml
 
 ```toml
-theme = "simple"
-site_logo = "/static/logo.png"
-site_name = "Mdblog"
-site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
+site_logo = "/static/logo.png"
+site_motto = "Simple is Beautiful!"
+site_name = "Mdblog"
+theme = "simple"
 ```

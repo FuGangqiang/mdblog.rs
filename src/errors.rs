@@ -16,8 +16,8 @@ pub enum Error {
     Template(String),
     // Template(#[cause] ::tera::Error),
 
-    #[fail(display = "Fmt error")]
-    Fmt(#[cause] ::std::fmt::Error),
+    #[fail(display = "Argument error: {}", _0)]
+    Argument(String),
 
     #[fail(display = "blog root directory `{:?}` already exists", _0)]
     RootDirExisted(PathBuf),

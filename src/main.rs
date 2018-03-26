@@ -11,7 +11,7 @@ use std::env;
 use getopts::{HasArg, Matches, Occur, Options};
 use failure::Fail;
 
-use mdblog::{Mdblog, Result};
+use mdblog::{Mdblog, Result, Error};
 
 fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
     let brief = "\
@@ -86,7 +86,7 @@ fn main() {
 
 fn init(matches: &Matches) -> Result<()> {
     if matches.free.len() != 2 {
-        panic!("`init` subcommand requires one argument.");
+        return Err(Error::Argument("`init` subcommand requires one argument.".to_string()));
     }
     let dir = env::current_dir().unwrap().join(&matches.free[1]);
     let mut mb = Mdblog::new(dir).unwrap();

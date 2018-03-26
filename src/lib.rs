@@ -55,7 +55,7 @@ pub use errors::{Error, Result};
 pub use theme::Theme;
 pub use post::Post;
 use service::HttpService;
-pub use utils::create_file;
+pub use utils::{create_file, print_error};
 
 
 /// blog object
@@ -242,8 +242,14 @@ impl Mdblog {
                             }
                             println!("Modified file: {}rebuild blog again...", fpath.display());
                             println!("Rebuild blog again...");
-                            self.load()?;
-                            self.build()?;
+                            if let Err(ref e) = self.load() {
+                                print_error(e);
+                                continue
+                            }
+                            if let Err(ref e) = self.build() {
+                                print_error(e);
+                                continue
+                            }
                             println!("Rebuild done!");
                         },
                         _ => {},

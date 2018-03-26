@@ -9,9 +9,8 @@ extern crate mdblog;
 use std::env;
 
 use getopts::{HasArg, Matches, Occur, Options};
-use failure::Fail;
 
-use mdblog::{Mdblog, Result, Error};
+use mdblog::{Mdblog, Result, Error, print_error};
 
 fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
     let brief = "\
@@ -71,15 +70,7 @@ fn main() {
     };
 
     if let Err(ref e) = res {
-        eprintln!("error: {}", e);
-
-        for cause in e.causes() {
-            eprintln!("{}", cause);
-        }
-
-        if let Some(backtrace) = e.backtrace() {
-            eprintln!("backtrace: {:?}", backtrace);
-        }
+        print_error(e);
         ::std::process::exit(1);
     }
 }

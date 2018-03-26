@@ -1,6 +1,7 @@
-use errors::Result;
+use errors::{Result, Error};
 use std::fs::File;
 use std::path::Path;
+use failure::Fail;
 
 /// create the file of `path`
 ///
@@ -10,4 +11,16 @@ pub fn create_file(path: &Path) -> Result<File> {
         ::std::fs::create_dir_all(p)?;
     }
     Ok(File::create(path)?)
+}
+
+pub fn print_error(err: &Error) {
+    eprintln!("error: {}", err);
+
+    for cause in err.causes() {
+        eprintln!("{}", cause);
+    }
+
+    if let Some(backtrace) = err.backtrace() {
+        eprintln!("backtrace: {:?}", backtrace);
+    }
 }

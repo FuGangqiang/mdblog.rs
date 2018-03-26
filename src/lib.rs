@@ -25,6 +25,7 @@ extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
+extern crate open;
 
 mod errors;
 mod post;
@@ -32,6 +33,7 @@ mod theme;
 mod utils;
 mod service;
 
+use std::thread;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -195,8 +197,16 @@ impl Mdblog {
         let root = self.root.clone();
         println!("server blog at {}", server_url);
 
-        let server = Http::new().bind(&addr, move || Ok(HttpService{root: root.clone()}))?;
-        server.run()?;
+        let child = thread::spawn(move || {
+            let server = Http::new()
+                .bind(&addr, move || Ok(HttpService{root: root.clone()}))
+                .expect("server start error");
+            server.run().unwrap();
+        });
+
+        open::that(server_url)?;
+        child.join().expect("Couldn't join the server thread");
+
         Ok(())
     }
 

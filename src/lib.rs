@@ -168,7 +168,7 @@ impl Mdblog {
         for (key, value) in pairs {
             config_file.write_fmt(format_args!("{} = \"{}\"\n", key, value))?;
         }
-        self.theme.load(&self.settings.get_str("theme").unwrap())?;
+        self.theme.load(&self.settings.get_str("theme")?)?;
         self.theme.init_dir()?;
         std::fs::create_dir_all(self.root.join("media"))?;
         Ok(())

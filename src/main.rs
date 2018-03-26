@@ -88,17 +88,17 @@ fn init(matches: &Matches) -> Result<()> {
     if matches.free.len() != 2 {
         return Err(Error::Argument("`init` subcommand requires one argument.".to_string()));
     }
-    let dir = env::current_dir().unwrap().join(&matches.free[1]);
-    let mut mb = Mdblog::new(dir).unwrap();
-    mb.init().unwrap();
+    let dir = env::current_dir()?.join(&matches.free[1]);
+    let mut mb = Mdblog::new(dir)?;
+    mb.init()?;
     Ok(())
 }
 
 fn build(matches: &Matches) -> Result<()> {
-    let root_dir = env::current_dir().unwrap();
-    let mut mb = Mdblog::new(&root_dir).unwrap();
-    mb.load().unwrap();
-    mb.build().unwrap();
+    let root_dir = env::current_dir()?;
+    let mut mb = Mdblog::new(&root_dir)?;
+    mb.load()?;
+    mb.build()?;
     Ok(())
 }
 

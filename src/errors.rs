@@ -12,9 +12,9 @@ pub enum Error {
     #[fail(display = "Config error")]
     Config(#[cause] ConfigError),
 
-     #[fail(display = "Template error: {}", _0)]
-     Template(String),
-     // Template(#[cause] ::tera::Error),
+    #[fail(display = "Template error: {}", _0)]
+    Template(String),
+    // Template(#[cause] ::tera::Error),
 
     #[fail(display = "Fmt error")]
     Fmt(#[cause] ::std::fmt::Error),

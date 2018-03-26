@@ -23,9 +23,9 @@ Usage:
     mdblog -h | --help\
 ";
     if exit_code == 0 {
-        eprint!("{}", opts.usage(brief));
-    } else {
         print!("{}", opts.usage(brief));
+    } else {
+        eprint!("{}", opts.usage(brief));
     }
     ::std::process::exit(exit_code);
 }

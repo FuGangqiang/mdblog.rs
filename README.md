@@ -30,7 +30,7 @@ $ mdblog -h
 Usage:
     mdblog init <blog>
     mdblog build
-    mdblog server [-p <port>]  # unimplemented
+    mdblog server [-p <port>]
     mdblog -v | --version
     mdblog -h | --help
 
@@ -118,11 +118,10 @@ $ tree .
 12 directories, 18 files
 ```
 
-### check blog in web broswer: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+### check blog in web broswer: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ```
-$ cd _builds
-$ python3 -m http.server --bind localhost 8000
+$ mdblog server
 ```
 
 

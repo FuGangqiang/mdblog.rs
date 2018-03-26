@@ -5,6 +5,8 @@ use std::net::AddrParseError;
 use config::ConfigError;
 use tera::Error as TeraError;
 use hyper::error::Error as HyperError;
+use notify::Error as NotifyError;
+use glob::PatternError;
 
 /// The error type used by this crate.
 #[derive(Debug, Fail)]
@@ -17,6 +19,12 @@ pub enum Error {
 
     #[fail(display = "Address Parse error")]
     AddrParse(#[cause] AddrParseError),
+
+    #[fail(display = "Notify error")]
+    Notify(#[cause] NotifyError),
+
+    #[fail(display = "Glob pattern error")]
+    Pattern(#[cause] PatternError),
 
     #[fail(display = "Config error")]
     Config(#[cause] ConfigError),
@@ -59,6 +67,18 @@ impl From<ParseIntError> for Error {
 impl From<AddrParseError> for Error {
      fn from(err: AddrParseError) -> Error {
          Error::AddrParse(err)
+     }
+}
+
+impl From<NotifyError> for Error {
+     fn from(err: NotifyError) -> Error {
+         Error::Notify(err)
+     }
+}
+
+impl From<PatternError> for Error {
+     fn from(err: PatternError) -> Error {
+         Error::Pattern(err)
      }
 }
 

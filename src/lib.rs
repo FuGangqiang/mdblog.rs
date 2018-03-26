@@ -26,6 +26,8 @@ extern crate serde_json;
 extern crate tera;
 extern crate walkdir;
 extern crate open;
+extern crate notify;
+extern crate glob;
 
 mod errors;
 mod post;
@@ -38,11 +40,15 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::time::Duration;
+use std::sync::mpsc::channel;
 
+use glob::Pattern;
 use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
+use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 use config::{Config, Source};
 pub use errors::{Error, Result};
@@ -122,8 +128,12 @@ impl Mdblog {
 
     pub fn load(&mut self) -> Result<()> {
         self.load_customize_settings()?;
+
+        let mut posts: Vec<Rc<Post>> = Vec::new();
+        let mut tags: BTreeMap<String, Vec<Rc<Post>>> = BTreeMap::new();
         let posts_dir = self.root.join("posts");
         let walker = WalkDir::new(&posts_dir).into_iter();
+
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.expect("get walker entry error");
             if !is_markdown_file(&entry) {
@@ -136,18 +146,20 @@ impl Mdblog {
                                            .to_owned());
             post.load()?;
             let post = Rc::new(post);
-            self.posts.push(post.clone());
+            posts.push(post.clone());
             if !post.is_hidden() {
                 for tag in post.tags() {
-                    let mut ps = self.tags.entry(tag.to_string()).or_insert(Vec::new());
+                    let mut ps = tags.entry(tag.to_string()).or_insert(Vec::new());
                     ps.push(post.clone());
                 }
             }
         }
-        self.posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
-        for (_, tag_posts) in self.tags.iter_mut() {
+        posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        for (_, tag_posts) in tags.iter_mut() {
             tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
         }
+        self.posts = posts;
+        self.tags = tags;
         Ok(())
     }
 
@@ -190,7 +202,7 @@ impl Mdblog {
     }
 
     /// server the blog static files built in `root/_build/` directory.
-    pub fn server(&self, port: u16) -> Result<()> {
+    pub fn server(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
         let server_url = format!("http://{}", &addr_str);
         let addr = addr_str.parse()?;
@@ -205,8 +217,41 @@ impl Mdblog {
         });
 
         open::that(server_url)?;
+        self.watch()?;
         child.join().expect("Couldn't join the server thread");
 
+        Ok(())
+    }
+
+    fn watch(&mut self) -> Result<()> {
+        let (tx, rx) = channel();
+        let build_pattern = Pattern::new("**/_builds/**")?;
+        let mut watcher = watcher(tx, Duration::new(2, 0))?;
+        watcher.watch(&self.root, RecursiveMode::Recursive)?;
+        loop {
+            match rx.recv() {
+                Err(why) => println!("watch error: {:?}", why),
+                Ok(event) => {
+                    match event {
+                        DebouncedEvent::Create(ref fpath) |
+                        DebouncedEvent::Write(ref fpath)  |
+                        DebouncedEvent::Remove(ref fpath) |
+                        DebouncedEvent::Rename(ref fpath, _) => {
+                            if build_pattern.matches_path(fpath) {
+                                continue;
+                            }
+                            println!("Modified file: {}rebuild blog again...", fpath.display());
+                            println!("Rebuild blog again...");
+                            self.load()?;
+                            self.build()?;
+                            println!("Rebuild done!");
+                        },
+                        _ => {},
+                    }
+                },
+            }
+        }
+        #[allow(unreachable_code)]
         Ok(())
     }
 

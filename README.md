@@ -2,12 +2,10 @@
 
 Create static site blog from markdown files with features:
 
-* markdown format
 * TeX style math support
-* post tags index
-* hidden post
-* post title is the title of markdown file
-* post url is some to path of markdown file
+* file path is the post url
+* file name is the post title
+* post can be hidden(link does not be insert into index/tag page)
 
 
 # Install
@@ -49,28 +47,19 @@ $ mdblog init myblog
 blog directory(`myblog`) layout is initialized:
 
 ```
-$ tree myblog
 myblog
 ├── Config.toml
 ├── media
 ├── posts
 │   └── hello.md
 └── _themes
-    └── simple
-        ├── static
-        │   ├── favicon.png
-        │   ├── logo.png
-        │   ├── main.css
-        │   └── main.js
-        └── templates
-            ├── base.tpl
-            ├── index.tpl
-            ├── post.tpl
-            └── tag.tpl
-
-6 directories, 10 files
 ```
 
+* `Config.toml`: blog config file
+* `media`: blog media directory
+* `posts`: blog posts directory
+* `posts/hello.md`: a markdown style post
+* `_themes`: blog themes directory
 
 ### build blog
 
@@ -82,47 +71,38 @@ $ mdblog build
 the blog static files are build into the subdir `_build`, the current blog directory(`myblog`) layout is:
 
 ```
-$ tree .
-.
+myblog
 ├── _builds
-│   ├── blog
-│   │   ├── posts
-│   │   │   └── hello.html
-│   │   └── tags
-│   │       ├── hello.html
-│   │       └── world.html
-│   ├── index.html
-│   ├── media
-│   └── static
-│       ├── favicon.png
-│       ├── logo.png
-│       ├── main.css
-│       └── main.js
 ├── Config.toml
 ├── media
 ├── posts
 │   └── hello.md
 └── _themes
-    └── simple
-        ├── static
-        │   ├── favicon.png
-        │   ├── logo.png
-        │   ├── main.css
-        │   └── main.js
-        └── templates
-            ├── base.tpl
-            ├── index.tpl
-            ├── post.tpl
-            └── tag.tpl
-
-12 directories, 18 files
 ```
+
+* `_builds`: generated static-site top directory
 
 ### serve blog
 
 ```
 $ mdblog serve
 ```
+
+open the site index page automatically,
+and re-generate your static-site when you add or change content,
+
+### new post
+
+create a markdown file `posts/another.md` with the content:
+
+```
+date: 2018-01-01 00:00:00
+tags: hello, another
+
+This is just another post.
+```
+
+refresh the index page, you will find the new post.
 
 
 # Config.toml

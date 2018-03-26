@@ -2,12 +2,10 @@
 //!
 //! # features
 //!
-//! * markdown format
 //! * TeX style math support
-//! * post tags index
-//! * hidden post
-//! * post title is the title of markdown file
-//! * post url is some to path of markdown file
+//! * file path is the post url
+//! * file name is the post title
+//! * post can be hidden(link does not be insert into index/tag page)
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -173,10 +171,9 @@ impl Mdblog {
         }
 
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
-        hello_post.write_all(b"date: 1970-01-01 00:00:00\n")?;
-        hello_post.write_all(b"tags: hello, world\n")?;
-        hello_post.write_all(b"\n")?;
-        hello_post.write_all(b"# hello\n\nhello world!\n")?;
+        hello_post.write_all(HELLO_POST)?;
+        let mut math_post = create_file(&self.root.join("posts").join("math.md"))?;
+        math_post.write_all(MATH_POST)?;
 
         let settings = Mdblog::get_default_settings()?;
         let mut config_file = create_file(&self.root.join("Config.toml"))?;
@@ -439,3 +436,6 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
         },
     }
 }
+
+static HELLO_POST: &'static [u8] = include_bytes!("post/hello.md");
+static MATH_POST: &'static [u8] = include_bytes!("post/math.md");

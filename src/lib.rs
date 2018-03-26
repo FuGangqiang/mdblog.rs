@@ -19,6 +19,8 @@ extern crate config;
 extern crate failure;
 #[macro_use]
 extern crate log;
+extern crate hyper;
+extern crate futures;
 extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate tera;
@@ -28,12 +30,14 @@ mod errors;
 mod post;
 mod theme;
 mod utils;
+mod service;
 
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
@@ -42,6 +46,7 @@ use config::{Config, Source};
 pub use errors::{Error, Result};
 pub use theme::Theme;
 pub use post::Post;
+use service::HttpService;
 pub use utils::create_file;
 
 
@@ -182,9 +187,17 @@ impl Mdblog {
         Ok(())
     }
 
-    /// unimplemented.
-    pub fn server(&self, port: u16) {
-        println!("server blog at localhost:{}", port);
+    /// server the blog static files built in `root/_build/` directory.
+    pub fn server(&self, port: u16) -> Result<()> {
+        let addr_str = format!("127.0.0.1:{}", port);
+        let server_url = format!("http://{}", &addr_str);
+        let addr = addr_str.parse()?;
+        let root = self.root.clone();
+        println!("server blog at {}", server_url);
+
+        let server = Http::new().bind(&addr, move || Ok(HttpService{root: root.clone()}))?;
+        server.run()?;
+        Ok(())
     }
 
     pub fn export(&self) -> Result<()> {

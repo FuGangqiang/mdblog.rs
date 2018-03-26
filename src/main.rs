@@ -18,7 +18,7 @@ fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
 Usage:
     mdblog init <blog>
     mdblog build
-    mdblog server [-p <port>]  # unimplemented
+    mdblog server [-p <port>]
     mdblog -v | --version
     mdblog -h | --help\
 ";
@@ -103,6 +103,13 @@ fn build(matches: &Matches) -> Result<()> {
 }
 
 fn server(matches: &Matches) -> Result<()> {
-    println!("server command");
+    let port = matches.opt_str("port")
+                      .unwrap_or("5000".to_string())
+                      .parse()?;
+    let root_dir = env::current_dir()?;
+    let mut mb = Mdblog::new(&root_dir)?;
+    mb.load()?;
+    mb.build()?;
+    mb.server(port)?;
     Ok(())
 }

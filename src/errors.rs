@@ -1,13 +1,22 @@
 use std::path::PathBuf;
 use std::io::Error as IoError;
+use std::num::ParseIntError;
+use std::net::AddrParseError;
 use config::ConfigError;
 use tera::Error as TeraError;
+use hyper::error::Error as HyperError;
 
 /// The error type used by this crate.
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "IO error")]
-    Io(#[cause] ::std::io::Error),
+    Io(#[cause] IoError),
+
+    #[fail(display = "Int Parse error")]
+    IntParse(#[cause] ParseIntError),
+
+    #[fail(display = "Address Parse error")]
+    AddrParse(#[cause] AddrParseError),
 
     #[fail(display = "Config error")]
     Config(#[cause] ConfigError),
@@ -15,6 +24,9 @@ pub enum Error {
     #[fail(display = "Template error: {}", _0)]
     Template(String),
     // Template(#[cause] ::tera::Error),
+
+    #[fail(display = "Server error")]
+    Hyper(#[cause] HyperError),
 
     #[fail(display = "Argument error: {}", _0)]
     Argument(String),
@@ -38,6 +50,18 @@ impl From<IoError> for Error {
      }
 }
 
+impl From<ParseIntError> for Error {
+     fn from(err: ParseIntError) -> Error {
+         Error::IntParse(err)
+     }
+}
+
+impl From<AddrParseError> for Error {
+     fn from(err: AddrParseError) -> Error {
+         Error::AddrParse(err)
+     }
+}
+
 impl From<ConfigError> for Error {
      fn from(err: ConfigError) -> Error {
          Error::Config(err)
@@ -47,6 +71,12 @@ impl From<ConfigError> for Error {
 impl From<TeraError> for Error {
      fn from(err: TeraError) -> Error {
          Error::Template(err.description().to_string())
+     }
+}
+
+impl From<HyperError> for Error {
+     fn from(err: HyperError) -> Error {
+         Error::Hyper(err)
      }
 }
 

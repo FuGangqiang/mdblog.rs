@@ -17,7 +17,7 @@ fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
 Usage:
     mdblog init <blog>
     mdblog build
-    mdblog server [-p <port>]
+    mdblog serve [-p <port>]
     mdblog -v | --version
     mdblog -h | --help\
 ";
@@ -39,7 +39,7 @@ fn main() {
     opts.optflag("v", "version", "Print version info and exit");
     opts.opt("p",
              "port",
-             "Server with port number",
+             "Serve with port number",
              "<port>",
              HasArg::Yes,
              Occur::Optional);
@@ -65,7 +65,7 @@ fn main() {
     let res = match matches.free[0].as_ref() {
         "init" => init(&matches),
         "build" => build(&matches),
-        "server" => server(&matches),
+        "serve" => serve(&matches),
         _ => print_usage_and_exit(&opts, 3),
     };
 
@@ -93,7 +93,7 @@ fn build(matches: &Matches) -> Result<()> {
     Ok(())
 }
 
-fn server(matches: &Matches) -> Result<()> {
+fn serve(matches: &Matches) -> Result<()> {
     let port = matches.opt_str("port")
                       .unwrap_or("5000".to_string())
                       .parse()?;
@@ -101,6 +101,6 @@ fn server(matches: &Matches) -> Result<()> {
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load()?;
     mb.build()?;
-    mb.server(port)?;
+    mb.serve(port)?;
     Ok(())
 }

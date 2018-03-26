@@ -201,8 +201,8 @@ impl Mdblog {
         Ok(())
     }
 
-    /// server the blog static files built in `root/_build/` directory.
-    pub fn server(&mut self, port: u16) -> Result<()> {
+    /// serve the blog static files built in `root/_build/` directory.
+    pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
         let server_url = format!("http://{}", &addr_str);
         let addr = addr_str.parse()?;

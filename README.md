@@ -30,14 +30,14 @@ $ mdblog -h
 Usage:
     mdblog init <blog>
     mdblog build
-    mdblog server [-p <port>]
+    mdblog serve [-p <port>]
     mdblog -v | --version
     mdblog -h | --help
 
 Options:
     -h, --help          Display this message
     -v, --version       Print version info and exit
-    -p, --port <port>   Server with port number
+    -p, --port <port>   Serve with port number
 ```
 
 ### init blog
@@ -118,10 +118,10 @@ $ tree .
 12 directories, 18 files
 ```
 
-### check blog in web broswer: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+### serve blog
 
 ```
-$ mdblog server
+$ mdblog serve
 ```
 
 

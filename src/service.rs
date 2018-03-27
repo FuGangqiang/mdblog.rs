@@ -2,11 +2,12 @@ use std::io;
 use std::fs::File;
 use std::thread;
 use std::path::{Path, PathBuf};
+use mime_guess::get_mime_type;
 use percent_encoding::percent_decode;
 use futures::sync::oneshot;
 use futures::future::{self, Future};
 use hyper::{self, StatusCode};
-use hyper::header::ContentLength;
+use hyper::header::{ContentLength, ContentType};
 use hyper::server::{Request, Response, Service};
 
 static NOTFOUND: &[u8] = b"Not Found";
@@ -34,9 +35,10 @@ impl Service for HttpService {
                 info!("{}", uri_path);
                 let (tx, rx) = oneshot::channel();
                 thread::spawn(move || {
-                    let mut file = match File::open(path) {
+                    let mut file = match File::open(&path) {
                         Ok(f) => f,
                         Err(_) => {
+                            error!("open file error: {}", &path.display());
                             tx.send(not_found_response()).expect("Send error on open");
                             return;
                         },
@@ -44,13 +46,19 @@ impl Service for HttpService {
                     let mut buf: Vec<u8> = Vec::new();
                     match io::copy(&mut file, &mut buf) {
                         Ok(_) => {
+                            let mime = get_mime_type(&path.extension()
+                                                          .expect("get file extention error")
+                                                          .to_str()
+                                                          .expect("get str slice error"));
                             let res = Response::new()
                                 .with_header(ContentLength(buf.len() as u64))
+                                .with_header(ContentType(mime))
                                 .with_body(buf);
                             tx.send(res)
                               .expect("Send error on successful file read");
                         },
                         Err(_) => {
+                            error!("read file error: {}", &path.display());
                             tx.send(Response::new().with_status(StatusCode::InternalServerError))
                               .expect("Send error on error reading file");
                         },

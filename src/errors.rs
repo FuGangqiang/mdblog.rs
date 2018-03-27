@@ -45,6 +45,9 @@ pub enum Error {
     #[fail(display = "blog theme {} not found", _0)]
     ThemeNotFound(String),
 
+    #[fail(display = "blog theme {} in use, can not be deleted", _0)]
+    ThemeInUse(String),
+
     #[fail(display = "post path {:?} format error: must be relative path without file extension", _0)]
     PostPathInvaild(PathBuf),
 

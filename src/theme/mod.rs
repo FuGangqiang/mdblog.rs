@@ -16,7 +16,7 @@ static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
 /// theme object
 pub struct Theme {
     root: PathBuf,
-    name: String,
+    pub name: String,
     favicon: Vec<u8>,
     logo: Vec<u8>,
     main_css: Vec<u8>,
@@ -96,12 +96,13 @@ impl Theme {
         Ok(())
     }
 
-    pub fn init_dir(&self) -> Result<()> {
-        let dest_dir = self.root.join("_themes").join(&self.name);
+    pub fn init_dir(&self, name: &str) -> Result<()> {
+        let dest_dir = self.root.join("_themes").join(name);
         if dest_dir.exists() {
+            info!("theme({}) already existed", name);
             return Ok(());
         }
-        debug!("init theme({}) ...", self.name);
+        debug!("init theme({}) ...", name);
 
         let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
         favicon.write_all(&self.favicon)?;

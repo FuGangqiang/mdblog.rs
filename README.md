@@ -38,7 +38,9 @@ SUBCOMMANDS:
     build    Build the blog static files
     help     Prints this message or the help of the given subcommand(s)
     init     Initialize the blog directory layout
+    new      Create a blog post
     serve    Serve the blog, rebuild on change
+    theme    Blog theme operations
 ```
 
 you can also check the subcommand usage:

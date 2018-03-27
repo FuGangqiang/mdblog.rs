@@ -176,16 +176,10 @@ impl Mdblog {
         math_post.write_all(MATH_POST)?;
 
         let settings = Mdblog::get_default_settings()?;
-        let mut config_file = create_file(&self.root.join("Config.toml"))?;
-        let mut pairs = settings.collect()?
-                                .into_iter()
-                                .collect::<Vec<_>>();
-        pairs.sort_by(|a, b| a.0.cmp(&b.0));
-        for (key, value) in pairs {
-            config_file.write_fmt(format_args!("{} = \"{}\"\n", key, value))?;
-        }
+        self.export_config(&settings)?;
+
         self.theme.load(&self.settings.get_str("theme")?)?;
-        self.theme.init_dir()?;
+        self.theme.init_dir(&self.theme.name)?;
         std::fs::create_dir_all(self.root.join("media"))?;
         Ok(())
     }
@@ -291,6 +285,18 @@ impl Mdblog {
         self.export_posts()?;
         self.export_index()?;
         self.export_tags()?;
+        Ok(())
+    }
+
+    pub fn export_config(&self, settings: &Config) -> Result<()> {
+        let mut config_file = create_file(&self.root.join("Config.toml"))?;
+        let mut pairs = settings.collect()?
+                                .into_iter()
+                                .collect::<Vec<_>>();
+        pairs.sort_by(|a, b| a.0.cmp(&b.0));
+        for (key, value) in pairs {
+            config_file.write_fmt(format_args!("{} = \"{}\"\n", key, value))?;
+        }
         Ok(())
     }
 
@@ -433,6 +439,51 @@ impl Mdblog {
                         .expect(&format!("get tag({}) error", &tag));
         context.add("posts", &self.get_posts_maps(&posts)?);
         Ok(self.renderer.render("tag.tpl", &context)?)
+    }
+
+    pub fn list_blog_theme(&self) -> Result<()> {
+        let theme_root = self.root.join("_themes");
+        if !theme_root.exists() || !theme_root.is_dir() {
+            println!("no theme");
+        }
+        for entry in std::fs::read_dir(theme_root)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                println!("* {}", path.file_name()
+                                     .expect("theme name error")
+                                     .to_str()
+                                     .expect("theme name error"));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn create_blog_theme(&self, name: &str) -> Result<()> {
+        self.theme.init_dir(name)?;
+        Ok(())
+    }
+
+    pub fn delete_blog_theme(&self, name: &str) -> Result<()> {
+        if self.settings.get_str("theme")? == name {
+            return Err(Error::ThemeInUse(name.to_string()));
+        }
+        let theme_path = self.root.join("_themes").join(name);
+        if !theme_path.exists() || !theme_path.is_dir() {
+            return Err(Error::ThemeNotFound(name.to_string()));
+        }
+        std::fs::remove_dir_all(theme_path)?;
+        Ok(())
+    }
+
+    pub fn set_blog_theme(&mut self, name: &str) -> Result<()> {
+        let theme_path = self.root.join("_themes").join(name);
+        if !theme_path.exists() || !theme_path.is_dir() {
+            return Err(Error::ThemeNotFound(name.to_string()));
+        }
+        self.settings.set("theme", name)?;
+        self.export_config(&self.settings)?;
+        Ok(())
     }
 }
 

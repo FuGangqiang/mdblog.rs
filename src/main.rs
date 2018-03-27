@@ -39,7 +39,37 @@ enum Opt {
         /// Serve the blog at http://127.0.0.1:<port>
         port: u16,
     },
+    #[structopt(name = "theme")]
+    /// Blog theme operations
+    Theme(SubCommandTheme),
 }
+
+
+#[derive(StructOpt, Debug)]
+enum SubCommandTheme {
+    #[structopt(name = "list")]
+    /// list blog themes
+    List,
+    #[structopt(name = "new")]
+    /// Create a new theme
+    New {
+        /// theme name
+        name: String,
+    },
+     #[structopt(name = "delete")]
+    /// Delete a theme
+    Delete {
+        /// theme name
+        name: String,
+    },
+    #[structopt(name = "set")]
+    /// Set blog use the theme
+    Set {
+        /// theme name
+        name: String,
+    },
+}
+
 
 fn main() {
     env_logger::init();
@@ -50,6 +80,7 @@ fn main() {
         Opt::New {ref tags, ref path} => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
+        Opt::Theme(ref subcmd) => theme(subcmd),
     };
 
     if let Err(ref e) = res {
@@ -86,5 +117,19 @@ fn serve(port: u16) -> Result<()> {
     mb.load()?;
     mb.build()?;
     mb.serve(port)?;
+    Ok(())
+}
+
+fn theme(cmd: &SubCommandTheme) -> Result<()> {
+    let root_dir = env::current_dir()?;
+    let mut mb = Mdblog::new(&root_dir)?;
+    mb.load_customize_settings()?;
+
+    match cmd {
+        &SubCommandTheme::List => mb.list_blog_theme()?,
+        &SubCommandTheme::New { ref name } => mb.create_blog_theme(name)?,
+        &SubCommandTheme::Delete { ref name } => mb.delete_blog_theme(name)?,
+        &SubCommandTheme::Set { ref name } => mb.set_blog_theme(name)?,
+    }
     Ok(())
 }

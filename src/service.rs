@@ -27,7 +27,7 @@ impl Service for HttpService {
         match local_path_for_request(&self.root, &uri_path) {
             None => Box::new(future::ok(not_found_response())),
             Some(path) => {
-                info!("{:20} ==> {}", uri_path, path.display());
+                info!("{}", uri_path);
                 let (tx, rx) = oneshot::channel();
                 thread::spawn(move || {
                     let mut file = match File::open(path) {

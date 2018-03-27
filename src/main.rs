@@ -6,6 +6,7 @@ extern crate failure;
 extern crate mdblog;
 
 use std::env;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use mdblog::{Mdblog, Result, print_error};
 
@@ -18,6 +19,15 @@ enum Opt {
     Init {
         /// the blog directory name
         name: String,
+    },
+     #[structopt(name = "new")]
+    /// Create a blog post
+    New {
+        #[structopt(short = "t", long = "tag", default_value = "blog")]
+        /// Post tags
+        tags: Vec<String>,
+        /// Post path relative to blog `posts` directory
+        path: PathBuf,
     },
     #[structopt(name = "build")]
     /// Build the blog static files
@@ -37,6 +47,7 @@ fn main() {
     let opt = Opt::from_args();
     let res = match opt {
         Opt::Init {ref name} => init(name),
+        Opt::New {ref tags, ref path} => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
     };
@@ -51,6 +62,13 @@ fn init(name: &str) -> Result<()> {
     let root_dir = env::current_dir()?.join(name);
     let mut mb = Mdblog::new(root_dir)?;
     mb.init()?;
+    Ok(())
+}
+
+fn new(path: &Path, tags: &Vec<String>) -> Result<()> {
+    let root_dir = env::current_dir()?;
+    let mb = Mdblog::new(&root_dir)?;
+    mb.create_post(path, tags)?;
     Ok(())
 }
 

@@ -39,16 +39,22 @@ pub enum Error {
     #[fail(display = "Argument error: {}", _0)]
     Argument(String),
 
-    #[fail(display = "blog root directory `{:?}` already exists", _0)]
+    #[fail(display = "blog root directory {:?} already exists", _0)]
     RootDirExisted(PathBuf),
 
-    #[fail(display = "blog theme `{}` not found", _0)]
+    #[fail(display = "blog theme {} not found", _0)]
     ThemeNotFound(String),
 
-    #[fail(display = "post `{:?}` head part format error", _0)]
+    #[fail(display = "post path {:?} format error: must be relative path without file extension", _0)]
+    PostPathInvaild(PathBuf),
+
+    #[fail(display = "post path {:?} already existed", _0)]
+    PostPathExisted(PathBuf),
+
+    #[fail(display = "post {:?} head part format error", _0)]
     PostHead(PathBuf),
 
-    #[fail(display = "post `{:?}` has not body part", _0)]
+    #[fail(display = "post {:?} has not body part", _0)]
     PostNoBody(PathBuf),
 }
 

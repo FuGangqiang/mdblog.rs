@@ -116,14 +116,14 @@ and re-generate your static-site when you add or change content,
 
 ### new post
 
-create a markdown file `posts/another.md` with the content:
+create a new post titled `another`:
 
 ```
-date: 2018-01-01 00:00:00
-tags: hello, another
-
-This is just another post.
+$ mdblog new another
 ```
+
+a new markdown file `posts/another.md` is created,
+you can edit it for the new post.
 
 refresh the index page, you will find the new post.
 

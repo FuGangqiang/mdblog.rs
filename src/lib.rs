@@ -39,6 +39,7 @@ use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
+use chrono::Local;
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 use config::{Config, Source};
@@ -254,6 +255,33 @@ impl Mdblog {
             }
         }
         #[allow(unreachable_code)]
+        Ok(())
+    }
+
+    pub fn create_post(&self, path: &Path, tags: &Vec<String>) -> Result<()> {
+        let post_title = path.file_stem();
+        if !path.is_relative()
+            || path.extension().is_some()
+            || path.to_str().unwrap_or("").is_empty()
+            || post_title.is_none() {
+            return Err(Error::PostPathInvaild(path.to_owned()));
+        }
+        if path.is_dir() {
+            return Err(Error::PostPathExisted(path.to_owned()));
+        }
+        let post_path = self.root.join("posts").join(path).with_extension("md");
+        if post_path.exists() {
+            return Err(Error::PostPathExisted(path.to_owned()));
+        }
+        let now = Local::now();
+        let mut post = create_file(&post_path)?;
+        let content = format!("date: {}\n\
+                               tags: {}\n\
+                               \n\
+                               this is a new post!\n",
+                              now.format("%Y-%m-%d %H:%M:%S").to_string(),
+                              tags.join(", "));
+        post.write_all(content.as_bytes())?;
         Ok(())
     }
 

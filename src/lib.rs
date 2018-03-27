@@ -19,6 +19,7 @@ extern crate walkdir;
 extern crate open;
 extern crate notify;
 extern crate glob;
+extern crate percent_encoding;
 
 mod errors;
 mod post;

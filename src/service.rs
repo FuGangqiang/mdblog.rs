@@ -2,6 +2,7 @@ use std::io;
 use std::fs::File;
 use std::thread;
 use std::path::{Path, PathBuf};
+use percent_encoding::percent_decode;
 use futures::sync::oneshot;
 use futures::future::{self, Future};
 use hyper::{self, StatusCode};
@@ -23,9 +24,12 @@ impl Service for HttpService {
     type Future = Box<Future<Item=Self::Response, Error=Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let uri_path = req.uri().path();
+        let uri_path = percent_decode(req.uri().path().as_bytes()).decode_utf8().unwrap();
         match local_path_for_request(&self.root, &uri_path) {
-            None => Box::new(future::ok(not_found_response())),
+            None => {
+                warn!("Not Found {}", uri_path);
+                Box::new(future::ok(not_found_response()))
+            },
             Some(path) => {
                 info!("{}", uri_path);
                 let (tx, rx) = oneshot::channel();

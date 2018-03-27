@@ -237,7 +237,7 @@ impl Mdblog {
                             if build_pattern.matches_path(fpath) {
                                 continue;
                             }
-                            println!("Modified file: {}rebuild blog again...", fpath.display());
+                            println!("Modified file: {}", fpath.display());
                             println!("Rebuild blog again...");
                             if let Err(ref e) = self.load() {
                                 print_error(e);

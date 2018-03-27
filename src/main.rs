@@ -26,6 +26,7 @@ enum Opt {
         #[structopt(short = "t", long = "tag", default_value = "blog")]
         /// Post tags
         tags: Vec<String>,
+        #[structopt(parse(from_os_str))]
         /// Post path relative to blog `posts` directory
         path: PathBuf,
     },

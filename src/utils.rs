@@ -13,6 +13,7 @@ pub fn create_file(path: &Path) -> Result<File> {
     Ok(File::create(path)?)
 }
 
+/// print error chain
 pub fn print_error(err: &Error) {
     eprintln!("error: {}", err);
 

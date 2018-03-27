@@ -1,11 +1,4 @@
 //! create blog from markdown files.
-//!
-//! # features
-//!
-//! * TeX style math support
-//! * file path is the post url
-//! * file name is the post title
-//! * post can be hidden(link does not be insert into index/tag page)
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -101,6 +94,12 @@ impl Mdblog {
         Ok(settings)
     }
 
+    /// load customize settings
+    ///
+    /// layered configuration system:
+    /// * default settings
+    /// * `Config.toml`
+    /// * `BLOG_` prefix environment variable
     pub fn load_customize_settings(&mut self) -> Result<()> {
         self.settings.merge(config::File::with_name("Config.toml"))?;
         self.settings.merge(config::Environment::with_prefix("BLOG"))?;

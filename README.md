@@ -1,6 +1,6 @@
 # Mdblog
 
-Create static site blog from markdown files with features:
+Static site generator from markdown files with features:
 
 * TeX style math support
 * file path is the post url

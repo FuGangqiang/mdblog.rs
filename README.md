@@ -25,18 +25,39 @@ cargo install mdblog
 
 ```
 $ mdblog -h
-Usage:
-    mdblog init <blog>
-    mdblog build
-    mdblog serve [-p <port>]
-    mdblog -v | --version
-    mdblog -h | --help
+static site generator from markdown files
 
-Options:
-    -h, --help          Display this message
-    -v, --version       Print version info and exit
-    -p, --port <port>   Serve with port number
+USAGE:
+    mdblog <SUBCOMMAND>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    build    Build the blog static files
+    help     Prints this message or the help of the given subcommand(s)
+    init     Initialize the blog directory layout
+    serve    Serve the blog, rebuild on change
 ```
+
+you can also check the subcommand usage:
+
+```
+$ mdblog serve -h
+Serve the blog, rebuild on change
+
+USAGE:
+    mdblog serve [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -p, --port <port>    Serve the blog at http://127.0.0.1:<port> [default: 5000]
+```
+
 
 ### init blog
 
@@ -51,7 +72,8 @@ myblog
 ├── Config.toml
 ├── media
 ├── posts
-│   └── hello.md
+│   ├── hello.md
+│   └── math.md
 └── _themes
 ```
 
@@ -72,12 +94,13 @@ the blog static files are build into the subdir `_build`, the current blog direc
 
 ```
 myblog
-├── _builds
 ├── Config.toml
 ├── media
 ├── posts
-│   └── hello.md
-└── _themes
+│   ├── hello.md
+│   └── math.md
+├── _themes
+└── _builds
 ```
 
 * `_builds`: generated static-site top directory

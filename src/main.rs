@@ -8,7 +8,7 @@ extern crate mdblog;
 use std::env;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
-use mdblog::{Mdblog, Result, print_error};
+use mdblog::{Mdblog, Result, log_error};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mdblog")]
@@ -72,7 +72,9 @@ enum SubCommandTheme {
 
 
 fn main() {
-    env_logger::init();
+    env_logger::Builder::new()
+        .filter(None, log::LevelFilter::Info)
+        .init();
 
     let opt = Opt::from_args();
     let res = match opt {
@@ -84,7 +86,7 @@ fn main() {
     };
 
     if let Err(ref e) = res {
-        print_error(e);
+        log_error(e);
         std::process::exit(1);
     }
 }

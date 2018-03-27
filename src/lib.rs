@@ -47,7 +47,7 @@ pub use errors::{Error, Result};
 pub use theme::Theme;
 pub use post::Post;
 use service::HttpService;
-pub use utils::{create_file, print_error};
+pub use utils::{create_file, log_error};
 
 
 /// blog object
@@ -198,7 +198,7 @@ impl Mdblog {
         let server_url = format!("http://{}", &addr_str);
         let addr = addr_str.parse()?;
         let root = self.root.clone();
-        println!("server blog at {}", server_url);
+        info!("server blog at {}", server_url);
 
         let child = thread::spawn(move || {
             let server = Http::new()
@@ -221,7 +221,7 @@ impl Mdblog {
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
         loop {
             match rx.recv() {
-                Err(why) => println!("watch error: {:?}", why),
+                Err(why) => error!("watch error: {:?}", why),
                 Ok(event) => {
                     match event {
                         DebouncedEvent::Create(ref fpath) |
@@ -231,17 +231,17 @@ impl Mdblog {
                             if build_pattern.matches_path(fpath) {
                                 continue;
                             }
-                            println!("Modified file: {}", fpath.display());
-                            println!("Rebuild blog again...");
+                            info!("Modified file: {}", fpath.display());
+                            info!("Rebuild blog again...");
                             if let Err(ref e) = self.load() {
-                                print_error(e);
+                                log_error(e);
                                 continue
                             }
                             if let Err(ref e) = self.build() {
-                                print_error(e);
+                                log_error(e);
                                 continue
                             }
-                            println!("Rebuild done!");
+                            info!("Rebuild done!");
                         },
                         _ => {},
                     }
@@ -444,16 +444,16 @@ impl Mdblog {
     pub fn list_blog_theme(&self) -> Result<()> {
         let theme_root = self.root.join("_themes");
         if !theme_root.exists() || !theme_root.is_dir() {
-            println!("no theme");
+            error!("no theme");
         }
         for entry in std::fs::read_dir(theme_root)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                println!("* {}", path.file_name()
-                                     .expect("theme name error")
-                                     .to_str()
-                                     .expect("theme name error"));
+                info!("* {}", path.file_name()
+                                  .expect("theme name error")
+                                  .to_str()
+                                  .expect("theme name error"));
             }
         }
         Ok(())

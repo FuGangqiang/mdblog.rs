@@ -13,13 +13,13 @@ pub fn create_file(path: &Path) -> Result<File> {
     Ok(File::create(path)?)
 }
 
-/// print error chain
-pub fn print_error(err: &Error) {
+/// log error chain
+pub fn log_error(err: &Error) {
     for cause in err.causes() {
-        eprintln!("{}", cause);
+        error!("{}", cause);
     }
 
     if let Some(backtrace) = err.backtrace() {
-        eprintln!("backtrace: {:?}", backtrace);
+        error!("backtrace: {:?}", backtrace);
     }
 }

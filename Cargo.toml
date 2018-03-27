@@ -1,6 +1,6 @@
 [package]
 name = "mdblog"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["FuGangqiang <fu_gangqiang@qq.com>"]
 description = "create static site blog from markdown files."
 repository = "https://github.com/FuGangqiang/mdblog.rs"

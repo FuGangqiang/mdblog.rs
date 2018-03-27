@@ -18,7 +18,7 @@ doc = false
 [dependencies]
 chrono = "0.4"
 env_logger = "0.5"
-getopts = "0.2"
+structopt = "0.2"
 log = "0.4"
 pulldown-cmark = "0.1"
 serde_json = "1.0"

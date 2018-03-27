@@ -1,91 +1,60 @@
-#![allow(unused_variables)]
-
-extern crate env_logger;
-extern crate getopts;
 extern crate log;
+extern crate env_logger;
+#[macro_use]
+extern crate structopt;
 extern crate failure;
 extern crate mdblog;
 
 use std::env;
+use structopt::StructOpt;
+use mdblog::{Mdblog, Result, print_error};
 
-use getopts::{HasArg, Matches, Occur, Options};
-
-use mdblog::{Mdblog, Result, Error, print_error};
-
-fn print_usage_and_exit(opts: &Options, exit_code: i32) -> ! {
-    let brief = "\
-Usage:
-    mdblog init <blog>
-    mdblog build
-    mdblog serve [-p <port>]
-    mdblog -v | --version
-    mdblog -h | --help\
-";
-    if exit_code == 0 {
-        print!("{}", opts.usage(brief));
-    } else {
-        eprint!("{}", opts.usage(brief));
-    }
-    ::std::process::exit(exit_code);
+#[derive(StructOpt, Debug)]
+#[structopt(name = "mdblog")]
+/// static site generator from markdown files
+enum Opt {
+    #[structopt(name = "init")]
+    /// Initialize the blog directory layout
+    Init {
+        /// the blog directory name
+        name: String,
+    },
+    #[structopt(name = "build")]
+    /// Build the blog static files
+    Build,
+    #[structopt(name = "serve")]
+    /// Serve the blog, rebuild on change
+    Serve {
+        #[structopt(short = "p", long = "port", default_value = "5000")]
+        /// Serve the blog at http://127.0.0.1:<port>
+        port: u16,
+    },
 }
 
 fn main() {
     env_logger::init();
 
-    let args: Vec<_> = env::args().collect();
-
-    let mut opts = Options::new();
-    opts.optflag("h", "help", "Display this message");
-    opts.optflag("v", "version", "Print version info and exit");
-    opts.opt("p",
-             "port",
-             "Serve with port number",
-             "<port>",
-             HasArg::Yes,
-             Occur::Optional);
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(why) => {
-            eprintln!("{}", why);
-            eprintln!("run `mdblog -h` to get the usage.");
-            ::std::process::exit(1);
-        },
-    };
-
-    if matches.opt_present("h") {
-        print_usage_and_exit(&opts, 0);
-    } else if matches.opt_present("v") {
-        println!("mdblog {}", env!("CARGO_PKG_VERSION"));
-        ::std::process::exit(0);
-    } else if matches.free.len() < 1 {
-        print_usage_and_exit(&opts, 2);
-    }
-
-    let res = match matches.free[0].as_ref() {
-        "init" => init(&matches),
-        "build" => build(&matches),
-        "serve" => serve(&matches),
-        _ => print_usage_and_exit(&opts, 3),
+    let opt = Opt::from_args();
+    let res = match opt {
+        Opt::Init {ref name} => init(name),
+        Opt::Build => build(),
+        Opt::Serve { port } => serve(port),
     };
 
     if let Err(ref e) = res {
         print_error(e);
-        ::std::process::exit(1);
+        std::process::exit(1);
     }
 }
 
-fn init(matches: &Matches) -> Result<()> {
-    if matches.free.len() != 2 {
-        return Err(Error::Argument("`init` subcommand requires one argument.".to_string()));
-    }
-    let dir = env::current_dir()?.join(&matches.free[1]);
+fn init(name: &str) -> Result<()> {
+    let dir = env::current_dir()?.join(name);
     let mut mb = Mdblog::new(dir)?;
     mb.init()?;
     Ok(())
 }
 
-fn build(matches: &Matches) -> Result<()> {
+fn build() -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load()?;
@@ -93,10 +62,7 @@ fn build(matches: &Matches) -> Result<()> {
     Ok(())
 }
 
-fn serve(matches: &Matches) -> Result<()> {
-    let port = matches.opt_str("port")
-                      .unwrap_or("5000".to_string())
-                      .parse()?;
+fn serve(port: u16) -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load()?;

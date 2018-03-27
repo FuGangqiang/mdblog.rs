@@ -100,7 +100,8 @@ fn init(name: &str) -> Result<()> {
 
 fn new(path: &Path, tags: &Vec<String>) -> Result<()> {
     let root_dir = env::current_dir()?;
-    let mb = Mdblog::new(&root_dir)?;
+    let mut mb = Mdblog::new(&root_dir)?;
+    mb.load_customize_settings()?;
     mb.create_post(path, tags)?;
     Ok(())
 }

@@ -104,6 +104,8 @@ impl Mdblog {
     pub fn load_customize_settings(&mut self) -> Result<()> {
         self.settings.merge(config::File::with_name("Config.toml"))?;
         self.settings.merge(config::Environment::with_prefix("BLOG"))?;
+        let theme_name = self.settings.get_str("theme")?;
+        self.renderer = Mdblog::get_renderer(&self.root, &theme_name)?;
         Ok(())
     }
 

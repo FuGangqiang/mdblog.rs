@@ -15,8 +15,6 @@ pub fn create_file(path: &Path) -> Result<File> {
 
 /// print error chain
 pub fn print_error(err: &Error) {
-    eprintln!("error: {}", err);
-
     for cause in err.causes() {
         eprintln!("{}", cause);
     }

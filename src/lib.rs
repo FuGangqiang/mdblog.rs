@@ -125,8 +125,6 @@ impl Mdblog {
     }
 
     pub fn load(&mut self) -> Result<()> {
-        self.load_customize_settings()?;
-
         let mut posts: Vec<Rc<Post>> = Vec::new();
         let mut tags: BTreeMap<String, Vec<Rc<Post>>> = BTreeMap::new();
         let posts_dir = self.root.join("posts");

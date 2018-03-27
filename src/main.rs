@@ -109,6 +109,7 @@ fn new(path: &Path, tags: &Vec<String>) -> Result<()> {
 fn build() -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
+    mb.load_customize_settings()?;
     mb.load()?;
     mb.build()?;
     Ok(())
@@ -117,6 +118,7 @@ fn build() -> Result<()> {
 fn serve(port: u16) -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
+    mb.load_customize_settings()?;
     mb.load()?;
     mb.build()?;
     mb.serve(port)?;

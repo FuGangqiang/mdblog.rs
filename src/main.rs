@@ -48,8 +48,8 @@ fn main() {
 }
 
 fn init(name: &str) -> Result<()> {
-    let dir = env::current_dir()?.join(name);
-    let mut mb = Mdblog::new(dir)?;
+    let root_dir = env::current_dir()?.join(name);
+    let mut mb = Mdblog::new(root_dir)?;
     mb.init()?;
     Ok(())
 }

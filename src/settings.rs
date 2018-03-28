@@ -14,6 +14,8 @@ pub struct Settings {
     pub site_motto: String,
     /// blog footer note
     pub footer_note: String,
+    /// blog build directory
+    pub build_dir: String,
     /// blog rebuild interval
     pub rebuild_interval: i64,
 }
@@ -26,6 +28,7 @@ impl Default for Settings {
             site_logo: String::from("/static/logo.png"),
             site_motto: String::from("Simple is Beautiful!"),
             footer_note: String::from("Keep It Simple, Stupid!"),
+            build_dir: String::from("_build"),
             rebuild_interval: 2,
         }
     }
@@ -43,6 +46,7 @@ impl Source for Settings {
         map.insert("site_logo".to_string(), self.site_logo.clone().into());
         map.insert("site_motto".to_string(), self.site_motto.clone().into());
         map.insert("footer_note".to_string(), self.footer_note.clone().into());
+        map.insert("build_dir".to_string(), self.build_dir.clone().into());
         map.insert("rebuild_interval".to_string(), self.rebuild_interval.clone().into());
         Ok(map)
     }

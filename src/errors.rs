@@ -8,6 +8,9 @@ use tera::Error as TeraError;
 use hyper::error::Error as HyperError;
 use notify::Error as NotifyError;
 use glob::PatternError;
+use shellexpand::LookupError;
+use std::env::VarError;
+use std::path::StripPrefixError;
 
 /// The error type used by this crate.
 #[derive(Debug, Fail)]
@@ -32,6 +35,12 @@ pub enum Error {
 
     #[fail(display = "Toml error")]
     Toml(#[cause] TomlError),
+
+    #[fail(display = "Path expand error")]
+    PathExpend(#[cause] LookupError<VarError>),
+
+    #[fail(display = "Path strip prefix error")]
+    PathStripPrefix(#[cause] StripPrefixError),
 
     #[fail(display = "Template error: {}", _0)]
     Template(String),
@@ -104,6 +113,18 @@ impl From<ConfigError> for Error {
 impl From<TomlError> for Error {
      fn from(err: TomlError) -> Error {
          Error::Toml(err)
+     }
+}
+
+impl From<LookupError<VarError>> for Error {
+     fn from(err: LookupError<VarError>) -> Error {
+         Error::PathExpend(err)
+     }
+}
+
+impl From<StripPrefixError> for Error {
+     fn from(err: StripPrefixError) -> Error {
+         Error::PathStripPrefix(err)
      }
 }
 

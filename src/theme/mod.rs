@@ -131,9 +131,9 @@ impl Theme {
         Ok(())
     }
 
-    pub fn export_static(&self) -> Result<()> {
+    pub fn export_static<P: AsRef<Path>>(&self, root: P) -> Result<()> {
         debug!("exporting theme({}) static ...", self.name);
-        let dest_dir = self.root.join("_builds");
+        let dest_dir = root.as_ref();
 
         let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
         favicon.write_all(&self.favicon)?;

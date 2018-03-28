@@ -51,9 +51,12 @@ impl Post {
 
     /// the absolute path of blog post html file
     pub fn dest(&self) -> PathBuf {
-        self.root
-            .join("_builds/blog")
-            .join(self.path.with_extension("html"))
+        Path::new("blog").join(&self.path).with_extension("html")
+    }
+
+    /// the post url
+    pub fn url(&self) -> PathBuf {
+        Path::new("/blog").join(&self.path).with_extension("html")
     }
 
     /// blog title
@@ -88,11 +91,6 @@ impl Post {
             "true" | "t" => true,
             _ => false,
         }
-    }
-
-    /// the post url
-    pub fn url(&self) -> PathBuf {
-        Path::new("/blog").join(&self.path).with_extension("html")
     }
 
     /// the rendered html content of post body port

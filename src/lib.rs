@@ -24,6 +24,7 @@ extern crate open;
 extern crate notify;
 extern crate glob;
 extern crate mime_guess;
+extern crate shellexpand;
 extern crate percent_encoding;
 
 mod errors;
@@ -194,12 +195,12 @@ impl Mdblog {
         let addr_str = format!("127.0.0.1:{}", port);
         let server_url = format!("http://{}", &addr_str);
         let addr = addr_str.parse()?;
-        let root = self.root.clone();
+        let build_dir = self.get_build_dir()?;
         info!("server blog at {}", server_url);
 
         let child = thread::spawn(move || {
             let server = Http::new()
-                .bind(&addr, move || Ok(HttpService{root: root.clone()}))
+                .bind(&addr, move || Ok(HttpService{root: build_dir.clone()}))
                 .expect("server start error");
             server.run().unwrap();
         });
@@ -213,7 +214,7 @@ impl Mdblog {
 
     fn watch(&mut self) -> Result<()> {
         let (tx, rx) = channel();
-        let ignore_patterns = get_ignore_patterns()?;
+        let ignore_patterns = self.get_ignore_patterns()?;
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
         let interval = Duration::new(self.settings.rebuild_interval as u64, 0);
@@ -258,9 +259,29 @@ impl Mdblog {
         Ok(())
     }
 
+    fn get_build_dir(&self) -> Result<PathBuf> {
+        let expanded_path = shellexpand::full(&self.settings.build_dir)?.into_owned();
+        let build_dir = PathBuf::from(expanded_path.to_string());
+        if build_dir.is_relative() {
+            return Ok(self.root.join(&build_dir));
+        } else {
+            return Ok(build_dir);
+        }
+    }
+
+    fn get_ignore_patterns(&self) -> Result<Vec<Pattern>> {
+        let mut patterns = vec![Pattern::new("**/.*")?];
+        let build_dir = self.get_build_dir()?
+                            .to_str()
+                            .expect("get build dir error")
+                            .to_string();
+        patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_right_matches("/")))?);
+        Ok(patterns)
+    }
+
     pub fn create_post(&self, path: &Path, tags: &Vec<String>) -> Result<()> {
         let post_title = path.file_stem();
-        let ignore_patterns = get_ignore_patterns()?;
+        let ignore_patterns = self.get_ignore_patterns()?;
         if !path.is_relative()
             || path.extension().is_some()
             || path.to_str().unwrap_or("").is_empty()
@@ -303,12 +324,12 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> PathBuf {
-        let relpath = media.as_ref()
-                           .strip_prefix(&self.root.join("media"))
-                           .expect("create post path error")
-                           .to_owned();
-        self.root.join("_builds/media").join(relpath)
+    pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> Result<PathBuf> {
+        let build_dir = self.get_build_dir()?;
+        let rel_path = media.as_ref()
+                            .strip_prefix(&self.root.join("media"))?
+                            .to_owned();
+        Ok(build_dir.join(rel_path))
     }
 
     pub fn export_media(&self) -> Result<()> {
@@ -318,21 +339,24 @@ impl Mdblog {
             let entry = entry.expect("get walker entry error");
             let src_path = entry.path();
             if src_path.is_dir() {
-                std::fs::create_dir_all(self.media_dest(src_path))?;
+                std::fs::create_dir_all(self.media_dest(src_path)?)?;
                 continue;
             }
-            std::fs::copy(src_path, self.media_dest(src_path))?;
+            std::fs::copy(src_path, self.media_dest(src_path)?)?;
         }
         Ok(())
     }
 
     pub fn export_static(&self) -> Result<()> {
-        self.theme.export_static()
+        let build_dir = self.get_build_dir()?;
+        self.theme.export_static(&build_dir)?;
+        Ok(())
     }
 
     pub fn export_posts(&self) -> Result<()> {
+        let build_dir = self.get_build_dir()?;
         for post in &self.posts {
-            let dest = post.dest();
+            let dest = build_dir.join(post.dest());
             let mut f = create_file(&dest)?;
             let html = self.render_post(post)?;
             f.write(html.as_bytes())?;
@@ -341,7 +365,8 @@ impl Mdblog {
     }
 
     pub fn export_index(&self) -> Result<()> {
-        let dest = self.root.join("_builds/index.html");
+        let build_dir = self.get_build_dir()?;
+        let dest = build_dir.join("index.html");
         let mut f = create_file(&dest)?;
         let html = self.render_index()?;
         f.write(html.as_bytes())?;
@@ -349,8 +374,9 @@ impl Mdblog {
     }
 
     pub fn export_tags(&self) -> Result<()> {
+        let build_dir = self.get_build_dir()?;
         for tag in self.tags.keys() {
-            let dest = self.root.join(format!("_builds/blog/tags/{}.html", tag));
+            let dest = build_dir.join(format!("blog/tags/{}.html", tag));
             let mut f = create_file(&dest)?;
             let html = self.render_tag(tag)?;
             f.write(html.as_bytes())?;
@@ -516,13 +542,6 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
             }
         },
     }
-}
-
-fn get_ignore_patterns() -> Result<Vec<Pattern>> {
-    Ok(vec![
-        Pattern::new("**/_builds/**")?,
-        Pattern::new("**/.*")?,
-    ])
 }
 
 static HELLO_POST: &'static [u8] = include_bytes!("post/hello.md");

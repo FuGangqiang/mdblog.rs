@@ -88,7 +88,6 @@ fn local_path_for_request<P: AsRef<Path>>(root_dir: P, request_path: &str) -> Op
 
     let mut path = root_dir.as_ref().to_owned();
     // request path start with "/"
-    path.push("_builds");
     path.push(&request_path[1..]);
     if request_path == "/" {
         path.push("index.html");

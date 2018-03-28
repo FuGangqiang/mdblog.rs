@@ -133,9 +133,10 @@ refresh the index page, you will find the new post.
 # Config.toml
 
 ```toml
-footer_note = "Keep It Simple, Stupid!"
+theme = "simple"
+site_name = "Mdblog"
 site_logo = "/static/logo.png"
 site_motto = "Simple is Beautiful!"
-site_name = "Mdblog"
-theme = "simple"
+footer_note = "Keep It Simple, Stupid!"
+rebuild_interval = 2
 ```

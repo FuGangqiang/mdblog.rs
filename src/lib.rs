@@ -215,6 +215,7 @@ impl Mdblog {
     fn watch(&mut self) -> Result<()> {
         let (tx, rx) = channel();
         let ignore_patterns = self.get_ignore_patterns()?;
+        info!("watching dir: {}", self.root.display());
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
         let interval = Duration::new(self.settings.rebuild_interval as u64, 0);

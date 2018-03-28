@@ -33,7 +33,7 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::sync::mpsc::channel;
 
 use glob::Pattern;
@@ -94,6 +94,7 @@ impl Mdblog {
         settings.set_default("site_name", "Mdblog")?;
         settings.set_default("site_motto", "Simple is Beautiful!")?;
         settings.set_default("footer_note", "Keep It Simple, Stupid!")?;
+        settings.set_default("rebuild_interval", 2)?;
         Ok(settings)
     }
 
@@ -221,6 +222,8 @@ impl Mdblog {
         let ignore_patterns = get_ignore_patterns()?;
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
+        let interval = Duration::new(self.settings.get_int("rebuild_interval")? as u64, 0);
+        let mut last_run: Option<Instant> = None;
         loop {
             match rx.recv() {
                 Err(why) => error!("watch error: {:?}", why),
@@ -233,6 +236,13 @@ impl Mdblog {
                             if ignore_patterns.iter().any(|ref pat| pat.matches_path(fpath)) {
                                 continue;
                             }
+                            let now = Instant::now();
+                            if let Some(last_time) = last_run {
+                                if now.duration_since(last_time) < interval {
+                                    continue;
+                                }
+                            }
+                            last_run = Some(now);
                             info!("Modified file: {}", fpath.display());
                             info!("Rebuild blog again...");
                             if let Err(ref e) = self.load() {

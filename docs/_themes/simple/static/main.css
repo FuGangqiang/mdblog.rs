@@ -1,0 +1,287 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #888;
+    font-weight: inherit;
+    font-style: inherit;
+    font-family: inherit;
+    font-size: 100%;
+    text-align: left;
+    text-decoration: none;
+}
+html,
+body {
+    font-family: "Helvetica Neue", "Helvetica", "Microsoft YaHei", "WenQuanYi Micro Hei", Arial, sans-serif;
+    font-size: 90%;
+    background: #ddd;
+    line-height: 2em;
+    height: 100%;
+}
+
+header {
+    height: 10em;
+    padding: 1em;
+    position: relative;
+    background: #2ca6cb;
+}
+
+#container {
+    position: relative;
+    min-height: calc(100% - 22em);
+}
+
+footer {
+    height: 10em;
+    background: #1f1f1f;
+}
+
+header section#imglogo {
+    float: left;
+}
+
+header img {
+    width: 5em;
+    height: 6.5em;
+}
+
+header section#textlogo {
+    float: left;
+    padding: 0.5em 0;
+    margin-left: 0.5em;
+}
+
+header nav {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    font-size: 1.3em;
+}
+
+header section#textlogo #site-name a{
+    color: #fff;
+    font-size: 2.4em;
+    line-height: 1.2em;
+}
+
+header section#textlogo #site-motto {
+    color: #fff;
+    font-size: 1.2em;
+}
+
+header nav ul {
+    padding: 0.5em;
+}
+
+header nav ul li {
+    display: inline;
+    list-style-type: none;
+}
+
+header nav ul li a {
+    color: #fff;
+    padding:0 0.5em;
+}
+
+header nav ul li a:hover {
+    background: #1b7f9e;
+    border-radius: 0.5em;
+}
+
+main {
+    box-sizing: border-box;
+    float: left;
+    width: 80%;
+    font-size: 1.2em;
+}
+
+article {
+    margin: 1em;
+    padding: 1em;
+    background: #fff;
+    border-radius: 0.5em;
+}
+
+article section {
+    margin: 0.5em 0;
+}
+
+aside {
+    box-sizing: border-box;
+    width: 20%;
+    float: left;
+}
+
+aside section {
+    margin: 1em 1em 1em 0;
+    padding: 1em;
+    font-size: 1.2em;
+    background: #fff;
+    border-radius: 0.5em;
+}
+
+footer p {
+    font-size: 1.3em;
+    padding: 2em;
+    text-align: center;
+    line-height: 2em;
+}
+
+#container a {
+    color: #2ca6cb;
+}
+
+#container a:hover {
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+#container a sup {
+    font-size: 0.6em;
+    position: relative;
+    top: 0;
+    right: 0;
+}
+
+h1, h2, h3, h4 {
+    color: #2ca6cb;
+}
+
+main > h1 {
+    font-size: 2em;
+    margin: 1em;
+    text-align: center;
+}
+
+article h1 {
+    font-size: 1.8em;
+}
+
+article h2 {
+    font-size: 1.5em;
+}
+
+article h3 {
+    font-size: 1.2em;
+}
+
+article h4 {
+    font-size: 1em;
+}
+
+article h1,
+article h2,
+article h3,
+article h4,
+article p {
+    margin: 1em 0;
+}
+
+main ul,
+main ol {
+    padding-left: 3em;
+    list-style-position: outside;
+}
+
+main ol {
+    list-style-type: decimal;
+}
+
+main ul {
+    list-style-type: disc;
+}
+
+main blockquote {
+    padding-left: 3em;
+}
+
+main p img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#article_footer {
+    padding-left: 0;
+    list-style-type: none;
+}
+
+#article_footer li:first-child{
+    margin-top: 1em;
+}
+
+aside h1 {
+    font-size: 1.2em;
+    border-bottom: solid #ddd 0.2em;
+}
+
+aside ul {
+    list-style-type: none;
+    margin-top: 0.5em;
+}
+
+aside li {
+    margin: 0.1em;
+}
+
+aside .tags li {
+    float: left;
+    margin: 0em;
+}
+
+.clearfix:after {
+    content:  ".";
+    display: block;
+    height: 0;
+    visibility: hidden;
+    clear: both;
+}
+
+@media (max-width: 1000px) {
+    main {
+        width: 100%;
+    }
+    aside {
+        width: 100%;
+    }
+    aside section {
+        margin: 1em;
+    }
+}
+
+main p code,
+main li > code {
+    font-family: monospace;
+    border: 1px solid #ddd;
+    padding: 0px 4px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+pre code {
+    display: block;
+    border: 1px solid #ddd;
+    margin-left: 2em;
+    padding: 1em;
+    padding-left: 0.5em;
+    border-radius: 0.5em;
+    background-color: #eee;
+    font-family: monospace;
+    line-height: 1.2em;
+    overflow: auto;
+}
+
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+table thead {
+    font-weight: bold;
+}
+
+table td {
+    text-align: center;
+    border: 1px solid #888;
+    min-width: 4em;
+}

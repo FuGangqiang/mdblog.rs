@@ -1,14 +1,14 @@
+date: 2018-03-28 23:48:56
+tags: blog
+
 # Mdblog
 
-Static site generator from markdown files with features:
+`mdblog` is a static site generator from markdown files with features:
 
 * TeX style math support
 * file path is the post url
 * file name is the post title
 * post can be hidden(link does not be insert into index/tag page)
-
-you can check the demo site:[https://fugangqiang.github.io/mdblog.rs](https://fugangqiang.github.io/mdblog.rs/)
-to learn the usages of mdblog.
 
 
 # Install
@@ -144,3 +144,4 @@ build_dir = "_build"
 rebuild_interval = 2
 url_prefix = ""
 ```
+

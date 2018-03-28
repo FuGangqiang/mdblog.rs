@@ -2,25 +2,29 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <link rel="icon" href="/static/favicon.png">
-  <link rel="stylesheet" href="/static/main.css">
+  <meta name="generator" content="mdblog.rs">
+  <link rel="icon" href="{{ url_prefix }}/static/favicon.png">
+  <link rel="stylesheet" href="{{ url_prefix }}/static/main.css">
   {% block css %}{% endblock css %}
   <title>{{ title }}</title>
 </head>
 <body>
 <header class="clearfix">
   <section id="imglogo">
-    <a href="/index.html" title="{{ site_name }}"><img src="{{ site_logo }}"></a>
+    <a href="{{ url_prefix }}/index.html" title="{{ site_name }}">
+    <img src="{{ url_prefix }}/static/logo.png"></a>
   </section>
 
   <section id="textlogo">
-    <h1 id="site-name"><a href="/index.html" title="{{ site_name }}">{{ site_name }}</a></h1>
+    <h1 id="site-name">
+      <a href="{{ url_prefix }}/index.html" title="{{ site_name }}">{{ site_name }}</a>
+    </h1>
     <h2 id="site-motto">{{ site_motto }}</h2>
   </section>
 
   <nav>
     <ul>
-      <li><a href="/index.html">Blog</a></li>
+      <li><a href="{{ url_prefix }}/index.html">Blog</a></li>
     </ul>
   </nav>
 </header>
@@ -34,7 +38,7 @@
       <h1>Tags</h1>
       <ul>
       {% for tag in all_tags %}
-        <li><a href="{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
+        <li><a href="{{ url_prefix }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
       {% endfor %}
       </ul>
     </section>
@@ -42,7 +46,7 @@
     <section class="links clearfix">
       <h1>Links</h1>
       <ul>
-        <li><a href="/index.html" target="_blank">Blog</a></li>
+        <li><a href="{{ url_prefix }}/index.html" target="_blank">Blog</a></li>
       </ul>
     </section>
   </aside>

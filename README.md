@@ -135,9 +135,9 @@ refresh the index page, you will find the new post.
 ```toml
 theme = "simple"
 site_name = "Mdblog"
-site_logo = "/static/logo.png"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
 build_dir = "_build"
 rebuild_interval = 2
+url_prefix = ""
 ```

@@ -8,7 +8,7 @@
 
       <ul id="article_footer">
         {% if post_tags %}
-           <li>tags: {% for tag in post_tags %}<a href="{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
+           <li>tags: {% for tag in post_tags %}<a href="{{ url_prefix }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
         {% endif %}
         {% if datetime %}
            <li>date: {{ datetime }}</li>
@@ -23,6 +23,7 @@
 
 
 {% block js %}
+<script src="{{ url_prefix }}/static/main.js"></script>
 <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script type="text/x-mathjax-config">
     MathJax.Hub.Config({

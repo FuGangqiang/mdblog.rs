@@ -104,6 +104,9 @@ impl Mdblog {
         settings.merge(config::File::with_name("Config.toml"))?;
         settings.merge(config::Environment::with_prefix("BLOG"))?;
         self.settings = settings.try_into()?;
+        if self.settings.url_prefix.ends_with('/') {
+            self.settings.url_prefix = self.settings.url_prefix.trim_right_matches('/').to_string();
+        }
         self.renderer = Mdblog::get_renderer(&self.root, &self.settings.theme)?;
         Ok(())
     }
@@ -193,14 +196,20 @@ impl Mdblog {
     /// serve the blog static files built in `root/_build/` directory.
     pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
-        let server_url = format!("http://{}", &addr_str);
+        let mut server_url = format!("http://{}", &addr_str);
+        server_url.push_str(&self.settings.url_prefix);
         let addr = addr_str.parse()?;
         let build_dir = self.get_build_dir()?;
+        let url_prefix = self.settings.url_prefix.clone();
         info!("server blog at {}", server_url);
 
         let child = thread::spawn(move || {
             let server = Http::new()
-                .bind(&addr, move || Ok(HttpService{root: build_dir.clone()}))
+                .bind(&addr, move || {
+                    Ok(HttpService {
+                        root: build_dir.clone(),
+                        url_prefix: url_prefix.clone(),
+                    })})
                 .expect("server start error");
             server.run().unwrap();
         });
@@ -401,10 +410,10 @@ impl Mdblog {
     pub fn get_base_context(&self, title: &str) -> Result<Context> {
         let mut context = Context::new();
         context.add("title", &title);
-        context.add("site_logo", &self.settings.site_logo);
         context.add("site_name", &self.settings.site_name);
         context.add("site_motto", &self.settings.site_motto);
         context.add("footer_note", &self.settings.footer_note);
+        context.add("url_prefix", &self.settings.url_prefix);
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));

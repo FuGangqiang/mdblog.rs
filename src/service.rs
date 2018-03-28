@@ -14,9 +14,11 @@ static NOTFOUND: &[u8] = b"Not Found";
 
 /// Http Service for static file server
 pub struct HttpService {
+    /// service root directory
     pub root: PathBuf,
+    /// service url prefix
+    pub url_prefix: String,
 }
-
 
 impl Service for HttpService {
     type Request = Request;
@@ -25,8 +27,10 @@ impl Service for HttpService {
     type Future = Box<Future<Item=Self::Response, Error=Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let uri_path = percent_decode(req.uri().path().as_bytes()).decode_utf8().unwrap();
-        match local_path_for_request(&self.root, &uri_path) {
+        let uri_path = percent_decode(req.uri().path().as_bytes())
+            .decode_utf8()
+            .expect("decode utf8 error");
+        match local_path_for_request(&self.root, &self.url_prefix, &uri_path) {
             None => {
                 warn!("Not Found {}", uri_path);
                 Box::new(future::ok(not_found_response()))
@@ -77,20 +81,28 @@ fn not_found_response() -> Response {
             .with_body(NOTFOUND)
 }
 
-
-fn local_path_for_request<P: AsRef<Path>>(root_dir: P, request_path: &str) -> Option<PathBuf> {
-    if !request_path.starts_with("/") {
-        return None;
+fn local_path_for_request<P>(root_dir: P,
+                             url_prefix: &str,
+                             request_path: &str)
+    -> Option<PathBuf>
+    where P: AsRef<Path>
+{
+    let prifix_removed_path: &str;
+    if request_path.starts_with(url_prefix) {
+        prifix_removed_path = &request_path[url_prefix.len()..];
+    } else {
+        prifix_removed_path = request_path;
     }
+
     // skip query string
-    let end = request_path.find('?').unwrap_or(request_path.len());
-    let request_path = &request_path[0..end];
+    let end = prifix_removed_path.find('?').unwrap_or(prifix_removed_path.len());
+    let final_path = &prifix_removed_path[0..end];
 
     let mut path = root_dir.as_ref().to_owned();
-    // request path start with "/"
-    path.push(&request_path[1..]);
-    if request_path == "/" {
+    if final_path.is_empty() || final_path == "/" {
         path.push("index.html");
+    } else {
+        path.push(&final_path.trim_left_matches("/"));
     }
 
     Some(path)

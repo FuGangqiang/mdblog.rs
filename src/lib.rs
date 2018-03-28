@@ -13,7 +13,11 @@ extern crate log;
 extern crate hyper;
 extern crate futures;
 extern crate pulldown_cmark;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
+extern crate toml;
 extern crate tera;
 extern crate walkdir;
 extern crate open;
@@ -23,6 +27,7 @@ extern crate mime_guess;
 extern crate percent_encoding;
 
 mod errors;
+mod settings;
 mod post;
 mod theme;
 mod utils;
@@ -44,8 +49,9 @@ use serde_json::{Map, Value};
 use chrono::Local;
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
-use config::{Config, Source};
+use config::Config;
 pub use errors::{Error, Result};
+pub use settings::Settings;
 pub use theme::Theme;
 pub use post::Post;
 use service::HttpService;
@@ -57,7 +63,7 @@ pub struct Mdblog {
     /// blog root path
     root: PathBuf,
     /// blog settings
-    settings: Config,
+    settings: Settings,
     /// blog theme
     theme: Theme,
     /// blog render
@@ -72,10 +78,9 @@ impl Mdblog {
     /// create Mdblog from the `root` path
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Mdblog> {
         let root = root.as_ref();
-        let settings = Mdblog::get_default_settings()?;
-        let theme_name: String = settings.get("theme")?;
-        let theme = Mdblog::get_theme(root, &theme_name)?;
-        let renderer = Mdblog::get_renderer(root, &theme_name)?;
+        let settings: Settings = Default::default();
+        let theme = Mdblog::get_theme(root, &settings.theme)?;
+        let renderer = Mdblog::get_renderer(root, &settings.theme)?;
         Ok(Mdblog {
             root: root.to_owned(),
             settings: settings,
@@ -86,18 +91,6 @@ impl Mdblog {
         })
     }
 
-    /// get default settings
-    pub fn get_default_settings() -> Result<Config> {
-        let mut settings = Config::default();
-        settings.set_default("theme", "simple")?;
-        settings.set_default("site_logo", "/static/logo.png")?;
-        settings.set_default("site_name", "Mdblog")?;
-        settings.set_default("site_motto", "Simple is Beautiful!")?;
-        settings.set_default("footer_note", "Keep It Simple, Stupid!")?;
-        settings.set_default("rebuild_interval", 2)?;
-        Ok(settings)
-    }
-
     /// load customize settings
     ///
     /// layered configuration system:
@@ -105,10 +98,12 @@ impl Mdblog {
     /// * `Config.toml`
     /// * `BLOG_` prefix environment variable
     pub fn load_customize_settings(&mut self) -> Result<()> {
-        self.settings.merge(config::File::with_name("Config.toml"))?;
-        self.settings.merge(config::Environment::with_prefix("BLOG"))?;
-        let theme_name = self.settings.get_str("theme")?;
-        self.renderer = Mdblog::get_renderer(&self.root, &theme_name)?;
+        let mut settings = Config::new();
+        settings.merge(self.settings.clone())?;
+        settings.merge(config::File::with_name("Config.toml"))?;
+        settings.merge(config::Environment::with_prefix("BLOG"))?;
+        self.settings = settings.try_into()?;
+        self.renderer = Mdblog::get_renderer(&self.root, &self.settings.theme)?;
         Ok(())
     }
 
@@ -178,10 +173,9 @@ impl Mdblog {
         let mut math_post = create_file(&self.root.join("posts").join("math.md"))?;
         math_post.write_all(MATH_POST)?;
 
-        let settings = Mdblog::get_default_settings()?;
-        self.export_config(&settings)?;
+        self.export_config()?;
 
-        self.theme.load(&self.settings.get_str("theme")?)?;
+        self.theme.load(&self.settings.theme)?;
         self.theme.init_dir(&self.theme.name)?;
         std::fs::create_dir_all(self.root.join("media"))?;
         Ok(())
@@ -222,7 +216,7 @@ impl Mdblog {
         let ignore_patterns = get_ignore_patterns()?;
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
-        let interval = Duration::new(self.settings.get_int("rebuild_interval")? as u64, 0);
+        let interval = Duration::new(self.settings.rebuild_interval as u64, 0);
         let mut last_run: Option<Instant> = None;
         loop {
             match rx.recv() {
@@ -302,15 +296,10 @@ impl Mdblog {
         Ok(())
     }
 
-    pub fn export_config(&self, settings: &Config) -> Result<()> {
+    pub fn export_config(&self) -> Result<()> {
+        let content = toml::to_string(&self.settings)?;
         let mut config_file = create_file(&self.root.join("Config.toml"))?;
-        let mut pairs = settings.collect()?
-                                .into_iter()
-                                .collect::<Vec<_>>();
-        pairs.sort_by(|a, b| a.0.cmp(&b.0));
-        for (key, value) in pairs {
-            config_file.write_fmt(format_args!("{} = \"{}\"\n", key, value))?;
-        }
+        config_file.write_all(content.as_bytes())?;
         Ok(())
     }
 
@@ -385,10 +374,10 @@ impl Mdblog {
     pub fn get_base_context(&self, title: &str) -> Result<Context> {
         let mut context = Context::new();
         context.add("title", &title);
-        context.add("site_logo", &self.settings.get_str("site_logo")?);
-        context.add("site_name", &self.settings.get_str("site_name")?);
-        context.add("site_motto", &self.settings.get_str("site_motto")?);
-        context.add("footer_note", &self.settings.get_str("footer_note")?);
+        context.add("site_logo", &self.settings.site_logo);
+        context.add("site_name", &self.settings.site_name);
+        context.add("site_motto", &self.settings.site_motto);
+        context.add("footer_note", &self.settings.footer_note);
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
@@ -432,7 +421,7 @@ impl Mdblog {
 
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
-        let mut context = self.get_base_context(&self.settings.get_str("site_name")?)?;
+        let mut context = self.get_base_context(&self.settings.site_name)?;
         context.add("posts", &self.get_posts_maps(&self.posts)?);
         Ok(self.renderer.render("index.tpl", &context)?)
     }
@@ -479,7 +468,7 @@ impl Mdblog {
     }
 
     pub fn delete_blog_theme(&self, name: &str) -> Result<()> {
-        if self.settings.get_str("theme")? == name {
+        if self.settings.theme == name {
             return Err(Error::ThemeInUse(name.to_string()));
         }
         let theme_path = self.root.join("_themes").join(name);
@@ -495,8 +484,8 @@ impl Mdblog {
         if !theme_path.exists() || !theme_path.is_dir() {
             return Err(Error::ThemeNotFound(name.to_string()));
         }
-        self.settings.set("theme", name)?;
-        self.export_config(&self.settings)?;
+        self.settings.theme = name.to_string();
+        self.export_config()?;
         Ok(())
     }
 }

@@ -3,6 +3,7 @@ use std::io::Error as IoError;
 use std::num::ParseIntError;
 use std::net::AddrParseError;
 use config::ConfigError;
+use toml::ser::Error as TomlError;
 use tera::Error as TeraError;
 use hyper::error::Error as HyperError;
 use notify::Error as NotifyError;
@@ -28,6 +29,9 @@ pub enum Error {
 
     #[fail(display = "Config error")]
     Config(#[cause] ConfigError),
+
+    #[fail(display = "Toml error")]
+    Toml(#[cause] TomlError),
 
     #[fail(display = "Template error: {}", _0)]
     Template(String),
@@ -94,6 +98,12 @@ impl From<PatternError> for Error {
 impl From<ConfigError> for Error {
      fn from(err: ConfigError) -> Error {
          Error::Config(err)
+     }
+}
+
+impl From<TomlError> for Error {
+     fn from(err: TomlError) -> Error {
+         Error::Toml(err)
      }
 }
 

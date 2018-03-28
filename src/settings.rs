@@ -1,0 +1,49 @@
+use std::collections::HashMap;
+use config::{Source, Value, ConfigError};
+
+/// blog setting
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    /// blog theme name
+    pub theme: String,
+    /// blog site name
+    pub site_name: String,
+    /// blog site logo
+    pub site_logo: String,
+    /// blog site motto
+    pub site_motto: String,
+    /// blog footer note
+    pub footer_note: String,
+    /// blog rebuild interval
+    pub rebuild_interval: i64,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        return Settings {
+            theme: String::from("simple"),
+            site_name: String::from("Mdblog"),
+            site_logo: String::from("/static/logo.png"),
+            site_motto: String::from("Simple is Beautiful!"),
+            footer_note: String::from("Keep It Simple, Stupid!"),
+            rebuild_interval: 2,
+        }
+    }
+}
+
+impl Source for Settings {
+    fn clone_into_box(&self) -> Box<Source + Send + Sync> {
+        Box::new((*self).clone())
+    }
+
+    fn collect(&self) -> Result<HashMap<String, Value>, ConfigError> {
+        let mut map = HashMap::new();
+        map.insert("theme".to_string(), self.theme.clone().into());
+        map.insert("site_name".to_string(), self.site_name.clone().into());
+        map.insert("site_logo".to_string(), self.site_logo.clone().into());
+        map.insert("site_motto".to_string(), self.site_motto.clone().into());
+        map.insert("footer_note".to_string(), self.footer_note.clone().into());
+        map.insert("rebuild_interval".to_string(), self.rebuild_interval.clone().into());
+        Ok(map)
+    }
+}

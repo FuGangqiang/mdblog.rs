@@ -218,7 +218,7 @@ impl Mdblog {
 
     fn watch(&mut self) -> Result<()> {
         let (tx, rx) = channel();
-        let build_pattern = Pattern::new("**/_builds/**")?;
+        let ignore_patterns = get_ignore_patterns()?;
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
         loop {
@@ -230,7 +230,7 @@ impl Mdblog {
                         DebouncedEvent::Write(ref fpath)  |
                         DebouncedEvent::Remove(ref fpath) |
                         DebouncedEvent::Rename(ref fpath, _) => {
-                            if build_pattern.matches_path(fpath) {
+                            if ignore_patterns.iter().any(|ref pat| pat.matches_path(fpath)) {
                                 continue;
                             }
                             info!("Modified file: {}", fpath.display());
@@ -256,10 +256,12 @@ impl Mdblog {
 
     pub fn create_post(&self, path: &Path, tags: &Vec<String>) -> Result<()> {
         let post_title = path.file_stem();
+        let ignore_patterns = get_ignore_patterns()?;
         if !path.is_relative()
             || path.extension().is_some()
             || path.to_str().unwrap_or("").is_empty()
-            || post_title.is_none() {
+            || post_title.is_none()
+            || ignore_patterns.iter().any(|ref pat| pat.matches_path(path)) {
             return Err(Error::PostPathInvaild(path.to_owned()));
         }
         if path.is_dir() {
@@ -515,6 +517,13 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
             }
         },
     }
+}
+
+fn get_ignore_patterns() -> Result<Vec<Pattern>> {
+    Ok(vec![
+        Pattern::new("**/_builds/**")?,
+        Pattern::new("**/.*")?,
+    ])
 }
 
 static HELLO_POST: &'static [u8] = include_bytes!("post/hello.md");

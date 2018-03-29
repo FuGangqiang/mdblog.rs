@@ -17,6 +17,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate serde_yaml;
 extern crate toml;
 extern crate tera;
 extern crate walkdir;
@@ -43,11 +44,11 @@ use std::time::{Duration, Instant};
 use std::sync::mpsc::channel;
 
 use glob::Pattern;
+use chrono::Local;
 use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 use serde_json::{Map, Value};
-use chrono::Local;
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 use config::Config;
@@ -57,7 +58,6 @@ pub use theme::Theme;
 pub use post::Post;
 use service::HttpService;
 pub use utils::{create_file, log_error};
-
 
 /// blog object
 pub struct Mdblog {
@@ -139,24 +139,19 @@ impl Mdblog {
             if !is_markdown_file(&entry) {
                 continue;
             }
-            let mut post = Post::new(&self.root,
-                                     &entry.path()
-                                           .strip_prefix(&self.root)
-                                           .expect("create post path error")
-                                           .to_owned());
-            post.load()?;
-            let post = Rc::new(post);
+            let post_path = entry.path().strip_prefix(&self.root)?.to_owned();
+            let post = Rc::new(Post::new(&self.root, &post_path)?);
             posts.push(post.clone());
             if !post.is_hidden() {
-                for tag in post.tags() {
+                for tag in &post.headers.tags {
                     let mut ps = tags.entry(tag.to_string()).or_insert(Vec::new());
                     ps.push(post.clone());
                 }
             }
         }
-        posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+        posts.sort_by(|p1, p2| p2.headers.created.cmp(&p1.headers.created));
         for (_, tag_posts) in tags.iter_mut() {
-            tag_posts.sort_by(|p1, p2| p2.datetime().cmp(&p1.datetime()));
+            tag_posts.sort_by(|p1, p2| p2.headers.created.cmp(&p1.headers.created));
         }
         self.posts = posts;
         self.tags = tags;
@@ -172,10 +167,18 @@ impl Mdblog {
             return Err(Error::RootDirExisted(self.root.clone()));
         }
 
+        let mut tera = Tera::default();
+        tera.add_raw_template("hello.md.tpl", include_str!("demo/hello.md.tpl"))?;
+        tera.add_raw_template("math.md.tpl", include_str!("demo/math.md.tpl"))?;
+
+        let now = Local::now();
+        let mut context = Context::new();
+        context.add("now", &now.format("%Y-%m-%dT%H:%M:%S%:z").to_string());
+
         let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
-        hello_post.write_all(HELLO_POST)?;
+        hello_post.write_all(tera.render("hello.md.tpl", &context)?.as_bytes())?;
         let mut math_post = create_file(&self.root.join("posts").join("math.md"))?;
-        math_post.write_all(MATH_POST)?;
+        math_post.write_all(tera.render("math.md.tpl", &context)?.as_bytes())?;
 
         self.export_config()?;
 
@@ -308,11 +311,11 @@ impl Mdblog {
         }
         let now = Local::now();
         let mut post = create_file(&post_path)?;
-        let content = format!("date: {}\n\
-                               tags: {}\n\
+        let content = format!("created: {}\n\
+                               tags: [{}]\n\
                                \n\
                                this is a new post!\n",
-                              now.format("%Y-%m-%d %H:%M:%S").to_string(),
+                              now.format("%Y-%m-%dT%H:%M:%S%:z"),
                               tags.join(", "));
         post.write_all(content.as_bytes())?;
         Ok(())
@@ -394,26 +397,19 @@ impl Mdblog {
         Ok(())
     }
 
-    fn tag_url(&self, name: &str) -> String {
-        format!("/blog/tags/{}.html", &name)
-    }
-
-    fn tag_map<T>(&self, name: &str, posts: &Vec<T>) -> Map<String, Value> {
-        let mut map = Map::new();
-        map.insert("name".to_string(), Value::String(name.to_string()));
-        let tag_len = format!("{:?}", &posts.len());
-        map.insert("num".to_string(), Value::String(tag_len));
-        map.insert("url".to_string(), Value::String(self.tag_url(&name)));
-        map
-    }
-
     pub fn get_base_context(&self, title: &str) -> Result<Context> {
         let mut context = Context::new();
+        let all_tags = self.get_all_tags();
         context.add("title", &title);
         context.add("site_name", &self.settings.site_name);
         context.add("site_motto", &self.settings.site_motto);
         context.add("footer_note", &self.settings.footer_note);
         context.add("url_prefix", &self.settings.url_prefix);
+        context.add("all_tags", &all_tags);
+        Ok(context)
+    }
+
+    fn get_all_tags(&self) -> Vec<Map<String, Value>> {
         let mut all_tags = Vec::new();
         for (tag_key, tag_posts) in &self.tags {
             all_tags.push(self.tag_map(&tag_key, &tag_posts));
@@ -429,28 +425,38 @@ impl Mdblog {
                                      .expect("get name error")
                                      .to_lowercase())
                          });
-        context.add("all_tags", &all_tags);
-        Ok(context)
+        all_tags
+    }
+
+    fn get_post_tags(&self, post: &Post) -> Vec<Map<String, Value>> {
+        let mut post_tags = Vec::new();
+        for tag in &post.headers.tags {
+            let tag_posts = self.tags.get(tag)
+                                .expect(&format!("post tag({}) does not add to blog tags",
+                                                 tag));
+            post_tags.push(self.tag_map(&tag, &tag_posts));
+        }
+        post_tags
+    }
+
+    fn tag_url(&self, name: &str) -> String {
+        format!("/blog/tags/{}.html", &name)
+    }
+
+    fn tag_map<T>(&self, name: &str, posts: &Vec<T>) -> Map<String, Value> {
+        let mut map = Map::new();
+        map.insert("name".to_string(), Value::String(name.to_string()));
+        let tag_len = format!("{:?}", &posts.len());
+        map.insert("num".to_string(), Value::String(tag_len));
+        map.insert("url".to_string(), Value::String(self.tag_url(&name)));
+        map
     }
 
     pub fn render_post(&self, post: &Post) -> Result<String> {
         debug!("rendering post({}) ...", post.path.display());
-        let mut context = self.get_base_context(&post.title())?;
-        context.add("content", &post.content());
-        let mut post_tags = Vec::new();
-        if !post.is_hidden() {
-            context.add("datetime",
-                        &post.datetime().format("%Y-%m-%d %H:%M:%S").to_string());
-            for tag_key in post.tags() {
-                let tag_posts = self.tags.get(tag_key)
-                                    .expect(&format!("post tag({}) does not add to blog tags",
-                                                     tag_key));
-                post_tags.push(self.tag_map(&tag_key, &tag_posts));
-            }
-        } else {
-            context.add("datetime", &"".to_string());
-        }
-
+        let post_tags = self.get_post_tags(post);
+        let mut context = self.get_base_context(&post.title)?;
+        context.add("post", &post);
         context.add("post_tags", &post_tags);
         Ok(self.renderer.render("post.tpl", &context)?)
     }
@@ -458,25 +464,15 @@ impl Mdblog {
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context(&self.settings.site_name)?;
-        context.add("posts", &self.get_posts_maps(&self.posts)?);
+        context.add("posts", &self.posts);
         Ok(self.renderer.render("index.tpl", &context)?)
-    }
-
-    fn get_posts_maps(&self, posts: &Vec<Rc<Post>>) -> Result<Vec<Map<String, Value>>> {
-        let mut maps = Vec::new();
-        for post in posts.iter().filter(|p| !p.is_hidden()) {
-            maps.push(post.map());
-        }
-        Ok(maps)
     }
 
     pub fn render_tag(&self, tag: &str) -> Result<String> {
         debug!("rendering tag({}) ...", tag);
+        let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
         let mut context = self.get_base_context(&tag)?;
-        let posts = self.tags
-                        .get(tag)
-                        .expect(&format!("get tag({}) error", &tag));
-        context.add("posts", &self.get_posts_maps(&posts)?);
+        context.add("posts", &posts);
         Ok(self.renderer.render("tag.tpl", &context)?)
     }
 
@@ -553,6 +549,3 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
         },
     }
 }
-
-static HELLO_POST: &'static [u8] = include_bytes!("post/hello.md");
-static MATH_POST: &'static [u8] = include_bytes!("post/math.md");

@@ -1,16 +1,18 @@
+use std::env::VarError;
 use std::path::PathBuf;
+use std::path::StripPrefixError;
 use std::io::Error as IoError;
 use std::num::ParseIntError;
 use std::net::AddrParseError;
+
 use config::ConfigError;
 use toml::ser::Error as TomlError;
 use tera::Error as TeraError;
+use serde_yaml::Error as YamlError;
 use hyper::error::Error as HyperError;
 use notify::Error as NotifyError;
 use glob::PatternError;
 use shellexpand::LookupError;
-use std::env::VarError;
-use std::path::StripPrefixError;
 
 /// The error type used by this crate.
 #[derive(Debug, Fail)]
@@ -35,6 +37,9 @@ pub enum Error {
 
     #[fail(display = "Toml error")]
     Toml(#[cause] TomlError),
+
+    #[fail(display = "Post head parse error, please use yaml grammar")]
+    Yaml(#[cause] YamlError),
 
     #[fail(display = "Path expand error")]
     PathExpend(#[cause] LookupError<VarError>),
@@ -67,11 +72,17 @@ pub enum Error {
     #[fail(display = "post path {:?} already existed", _0)]
     PostPathExisted(PathBuf),
 
-    #[fail(display = "post {:?} head part format error", _0)]
-    PostHead(PathBuf),
+    #[fail(display = "post {:?} must has two parts: headers and body, splitted by first blank line", _0)]
+    PostOnlyOnePart(PathBuf),
+
+    #[fail(display = "post {:?} head part is empty", _0)]
+    PostNoHead(PathBuf),
 
     #[fail(display = "post {:?} has not body part", _0)]
     PostNoBody(PathBuf),
+
+    #[fail(display = "post {:?} head part format error", _0)]
+    PostHead(PathBuf),
 }
 
 impl From<IoError> for Error {
@@ -113,6 +124,12 @@ impl From<ConfigError> for Error {
 impl From<TomlError> for Error {
      fn from(err: TomlError) -> Error {
          Error::Toml(err)
+     }
+}
+
+impl From<YamlError> for Error {
+     fn from(err: YamlError) -> Error {
+         Error::Yaml(err)
      }
 }
 

@@ -1,5 +1,5 @@
-date: 2000-01-01 00:00:00
-tags: hello, math
+created: {{ now }}
+tags: [hello, math]
 
 This is a beautiful math test.
 
@@ -21,24 +21,21 @@ $$
 matrices:
 <div>
 $$
-\left[\begin{array}{cccc}
-   1 & x_1 & y_1 & z_1 \\
-   1 & x_2 & y_2 & z_2 \\
-   1 & x_3 & y_3 & z_3 \\
-   1 & x_4 & y_4 & z_4
+\left[\begin{array}{ccc}
+   a_{11} & a_{12} & a_{13} \\
+   a_{21} & a_{22} & a_{23} \\
+   a_{31} & a_{32} & a_{33} \\
 \end{array}\right]
 \left[\begin{array}{c}
-   a_1 \\
-   a_2 \\
-   a_3 \\
-   a_4
+   x_1 \\
+   x_2 \\
+   x_3 \\
 \end{array}\right]
 =
 \left[\begin{array}{c}
-   T_1 \\
-   T_2 \\
-   T_3 \\
-   T_4
+   b_1 \\
+   b_2 \\
+   b_3 \\
 \end{array}\right]
 $$
 </div>

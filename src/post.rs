@@ -1,47 +1,82 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::error::Error as StdError;
 
-use chrono::{DateTime, Local, TimeZone};
-use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
-use serde_json::{Map, Value};
+use serde_yaml;
+use chrono::{DateTime, Local};
 
 use errors::{Error, Result};
+use utils::markdown_to_html;
 
-/// blog post object
+/// blog post
 ///
 /// every blog post is composed of `head` part and `body` part.
 /// the two part is separated by the first blank line.
-///
-/// the blog header part supported headers:
-///
-/// * date: the publish datetime, required, `date: 1970-01-01 00:00:00`
-/// * tags: the tags of blog post, required, `tags: hello, world`
-/// * hidden: whether hidden blog post or not, optional, default `true`, `hidden: false`
+#[derive(Serialize)]
 pub struct Post {
-    /// root path of blog
+    /// blog root path
     root: PathBuf,
-    /// relative path of post from blog root directory
+    /// post path from relative root directory
     pub path: PathBuf,
-    /// post origin head part
-    head: String,
-    /// post origin body part
-    body: String,
-    /// headers from parsing the post origin head part
-    metadata: HashMap<String, String>,
+    /// the post title
+    pub title: String,
+    /// the post url
+    pub url: PathBuf,
+    /// post headers
+    pub headers: PostHeaders,
+    /// post html body
+    pub content: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PostHeaders {
+    /// post created time, `date: 1970-01-01 00:00:00`
+    pub created: DateTime<Local>,
+    /// post hidden flag, `hidden: true`
+    pub hidden: Option<bool>,
+    /// post tags, `tags: hello, world`
+    pub tags: Vec<String>,
 }
 
 impl Post {
-    pub fn new<P: AsRef<Path>>(root: P, path: P) -> Post {
-        Post {
-            root: root.as_ref().to_owned(),
-            path: path.as_ref().to_owned(),
-            head: String::new(),
-            body: String::new(),
-            metadata: HashMap::new(),
+    pub fn new<P: AsRef<Path>>(root: P, path: P) -> Result<Post> {
+        let root = root.as_ref();
+        let path = path.as_ref();
+        debug!("loading post: {}", path.display());
+
+        let fp = root.join(&path);
+        let mut fo = File::open(fp)?;
+        let mut content = String::new();
+        fo.read_to_string(&mut content)?;
+
+        let v: Vec<&str> = content.splitn(2, "\n\n").collect();
+        if v.len() != 2 {
+            return Err(Error::PostOnlyOnePart(path.into()));
         }
+        let head = v[0].trim();
+        let body = v[1].trim();
+        if head.is_empty() {
+            return Err(Error::PostNoHead(path.into()));
+        }
+        if head.is_empty() {
+            return Err(Error::PostNoBody(path.into()));
+        }
+
+        let title = path.file_stem()
+                        .and_then(|x| x.to_str())
+                        .expect(&format!("post filename format error: {}", path.display()));
+        let url = Path::new("/blog").join(path).with_extension("html");
+        let headers: PostHeaders = serde_yaml::from_str(head)?;
+        let content = markdown_to_html(body);
+
+        Ok(Post {
+            root: root.to_owned(),
+            path: path.to_owned(),
+            title: title.to_owned(),
+            url: url,
+            headers: headers,
+            content: content,
+        })
     }
 
     /// the absolute path of blog post markdown file
@@ -54,106 +89,7 @@ impl Post {
         Path::new("blog").join(&self.path).with_extension("html")
     }
 
-    /// the post url
-    pub fn url(&self) -> PathBuf {
-        Path::new("/blog").join(&self.path).with_extension("html")
-    }
-
-    /// blog title
-    pub fn title(&self) -> &str {
-        self.path
-            .file_stem()
-            .and_then(|x| x.to_str())
-            .expect(&format!("post filename format error: {}", self.path.display()))
-    }
-
-    /// blog publish time
-    pub fn datetime(&self) -> DateTime<Local> {
-        let date_value = self.metadata
-                             .get("date")
-                             .expect(&format!("post({}) require date header",
-                                     &self.path.display()));
-        match Local.datetime_from_str(&date_value, "%Y-%m-%d %H:%M:%S") {
-            Ok(datetime) => datetime,
-            Err(why) => panic!("post({}) date header parse error: {}",
-                               &self.path.display(),
-                               why.description()),
-        }
-    }
-
-    /// wether blog post is hidden or not
     pub fn is_hidden(&self) -> bool {
-        let hidden_value = self.metadata
-                               .get("hidden")
-                               .unwrap_or(&"false".to_string())
-                               .to_lowercase();
-        match hidden_value.as_ref() {
-            "true" | "t" => true,
-            _ => false,
-        }
-    }
-
-    /// the rendered html content of post body port
-    pub fn content(&self) -> String {
-        let mut opts = Options::empty();
-        opts.insert(OPTION_ENABLE_TABLES);
-        let mut s = String::with_capacity(self.body.len() * 3 / 2);
-        let p = Parser::new_ext(&self.body, opts);
-        html::push_html(&mut s, p);
-        s
-    }
-
-    /// the post tags
-    pub fn tags(&self) -> Vec<&str> {
-        if let Some(tag_str) = self.metadata.get("tags") {
-            let mut res = tag_str.split(',')
-                                 .map(|x| x.trim())
-                                 .filter(|x| x.len() != 0)
-                                 .collect::<Vec<&str>>();
-            res.sort();
-            res
-        } else {
-            Vec::new()
-        }
-    }
-
-    /// post context for render
-    pub fn map(&self) -> Map<String, Value> {
-        let mut map = Map::new();
-        map.insert("title".to_string(), Value::String(self.title().to_string()));
-        map.insert("url".to_string(),
-                   Value::String(format!("{}", self.url().display())));
-        map.insert("datetime".to_string(),
-                   Value::String(self.datetime().format("%Y-%m-%d").to_string()));
-
-        map
-    }
-
-    /// load post head part and body part
-    pub fn load(&mut self) -> Result<()> {
-        debug!("loading post: {}", self.path.display());
-        let mut pf = File::open(self.src())?;
-        let mut content = String::new();
-        pf.read_to_string(&mut content)?;
-        let v: Vec<&str> = content.splitn(2, "\n\n").collect();
-        if v.len() != 2 {
-            return Err(Error::PostNoBody(self.path.clone()));
-        }
-        if v[0].trim().is_empty() {
-            return Err(Error::PostHead(self.path.clone()));
-        }
-        if v[1].trim().is_empty() {
-            return Err(Error::PostNoBody(self.path.clone()));
-        }
-        self.head = v[0].to_string();
-        self.body = v[1].to_string();
-        for line in self.head.lines() {
-            let pair: Vec<&str> = line.splitn(2, ':').collect();
-            if pair.len() != 2 {
-                return Err(Error::PostHead(self.path.clone()));
-            }
-            self.metadata.insert(pair[0].trim().to_owned(), pair[1].trim().to_owned());
-        }
-        Ok(())
+        self.headers.hidden.unwrap_or(false)
     }
 }

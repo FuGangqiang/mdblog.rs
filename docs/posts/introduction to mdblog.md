@@ -1,5 +1,5 @@
-date: 2018-03-28 23:48:56
-tags: blog
+created: 2018-03-28T23:48:56+08:00
+tags: [blog]
 
 # Mdblog
 

@@ -1,5 +1,5 @@
-date: 1970-01-01 00:00:00
-tags: hello, world
+created: 1970-01-01T00:00:00+08:00
+tags: [hello, world]
 
 
 hello world!

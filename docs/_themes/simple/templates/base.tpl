@@ -38,7 +38,7 @@
       <h1>Tags</h1>
       <ul>
       {% for tag in all_tags %}
-        <li><a href="{{ url_prefix }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
+        <li><a href="{{ url_prefix }}{{ tag.url  | urlencode }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
       {% endfor %}
       </ul>
     </section>

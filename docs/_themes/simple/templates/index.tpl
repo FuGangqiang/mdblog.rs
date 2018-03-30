@@ -5,8 +5,8 @@
   <article>
   {% for post in posts %}
     <section>
-      <span>{{ post.datetime }}</span>
-      <span><a href="{{ url_prefix }}{{ post.url }}">{{ post.title }}</a></span>
+      <span>{{ post.headers.created | date }}</span>
+      <span><a href="{{ url_prefix }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>
     </section>
   {% endfor %}
   </article>

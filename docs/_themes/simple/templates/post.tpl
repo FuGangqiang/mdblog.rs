@@ -4,15 +4,13 @@
 {% block main %}
     <h1>{{ title }}</h1>
     <article>
-      {{ content }}
+      {{ post.content }}
 
       <ul id="article_footer">
         {% if post_tags %}
-           <li>tags: {% for tag in post_tags %}<a href="{{ url_prefix }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
+           <li>tags: {% for tag in post_tags %}<a href="{{ url_prefix  | urlencode }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
         {% endif %}
-        {% if datetime %}
-           <li>date: {{ datetime }}</li>
-        {% endif %}
+        <li>date: {{ post.headers.created | date(format="%Y-%m-%d %H:%M:%S") }}</li>
       </ul>
     </article>
 {% endblock main %}

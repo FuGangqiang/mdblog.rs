@@ -13,6 +13,8 @@ pub struct Settings {
     pub site_motto: String,
     /// blog footer note
     pub footer_note: String,
+    /// blog media directory
+    pub media_dir: String,
     /// blog build root directory
     pub build_dir: String,
     /// blog theme root directory
@@ -30,6 +32,7 @@ impl Default for Settings {
             site_name: String::from("Mdblog"),
             site_motto: String::from("Simple is Beautiful!"),
             footer_note: String::from("Keep It Simple, Stupid!"),
+            media_dir: String::from("media"),
             build_dir: String::from("_build"),
             theme_root_dir: String::from("_theme"),
             rebuild_interval: 2,

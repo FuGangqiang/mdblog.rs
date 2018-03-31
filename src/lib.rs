@@ -261,6 +261,11 @@ impl Mdblog {
         get_dir(&self.root, &self.settings.theme_root_dir)
     }
 
+    /// blog media root directory absolute path.
+    pub fn media_root_dir(&self) -> Result<PathBuf> {
+        get_dir(&self.root, &self.settings.media_dir)
+    }
+
     /// blog posts root directory.
     pub fn post_root_dir(&self) -> Result<PathBuf> {
         Ok(self.root.join("posts"))
@@ -319,15 +324,15 @@ impl Mdblog {
     fn media_dest<P: AsRef<Path>>(&self, media: P) -> Result<PathBuf> {
         let build_dir = self.build_root_dir()?;
         let rel_path = media.as_ref()
-                            .strip_prefix(&self.root.join("media"))?
-                            .to_owned();
+            .strip_prefix(&self.media_root_dir()?)?
+            .to_owned();
         Ok(build_dir.join(rel_path))
     }
 
     /// export blog media files.
     pub fn export_media(&self) -> Result<()> {
         debug!("exporting media ...");
-        let walker = WalkDir::new(&self.root.join("media")).into_iter();
+        let walker = WalkDir::new(&self.media_root_dir()?).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.expect("get walker entry error");
             let src_path = entry.path();

@@ -28,13 +28,16 @@ pub struct Post {
     pub content: String,
 }
 
+/// blog post headers
+///
+/// the blog post headers is parsed using yaml format.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostHeaders {
-    /// post created time, `date: 1970-01-01 00:00:00`
+    /// post created local time, `created: 1970-01-01T00:00:00+08:00`
     pub created: DateTime<Local>,
     /// post hidden flag, `hidden: true`
     pub hidden: Option<bool>,
-    /// post tags, `tags: hello, world`
+    /// post tags, `tags: [hello, world]`
     pub tags: Vec<String>,
 }
 
@@ -79,16 +82,17 @@ impl Post {
         })
     }
 
-    /// the absolute path of blog post markdown file
+    /// the absolute path of blog post markdown file.
     pub fn src(&self) -> PathBuf {
         self.root.join(&self.path)
     }
 
-    /// the absolute path of blog post html file
+    /// the absolute path of blog post html file.
     pub fn dest(&self) -> PathBuf {
         Path::new("blog").join(&self.path).with_extension("html")
     }
 
+    /// check post hidden flag in the post header.
     pub fn is_hidden(&self) -> bool {
         self.headers.hidden.unwrap_or(false)
     }

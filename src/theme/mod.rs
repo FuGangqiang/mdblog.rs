@@ -14,7 +14,7 @@ static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple/templates/index.tpl"
 static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
 static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
 
-/// theme object
+/// blog theme object
 #[derive(Default)]
 pub struct Theme {
     /// theme root directory
@@ -80,6 +80,7 @@ impl Theme {
         return Ok(theme);
     }
 
+    /// init renderer template.
     fn init_template(&mut self) -> Result<()> {
         self.renderer.add_raw_template("base.tpl", ::std::str::from_utf8(&self.base)?)?;
         self.renderer.add_raw_template("index.tpl", ::std::str::from_utf8(&self.index)?)?;
@@ -88,6 +89,7 @@ impl Theme {
         Ok(())
     }
 
+    /// create theme directory.
     pub fn init_dir(&self, name: &str) -> Result<()> {
         let dest_dir = self.root.join(name);
         if dest_dir.exists() {
@@ -106,6 +108,7 @@ impl Theme {
         Ok(())
     }
 
+    /// export theme static files.
     pub fn export_static<P: AsRef<Path>>(&self, root: P) -> Result<()> {
         debug!("exporting theme({}) static ...", self.name);
         let dest_dir = root.as_ref();

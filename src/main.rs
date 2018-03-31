@@ -111,7 +111,7 @@ fn build() -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load_customize_settings()?;
-    mb.load()?;
+    mb.load_posts()?;
     mb.build()?;
     Ok(())
 }
@@ -120,7 +120,7 @@ fn serve(port: u16) -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load_customize_settings()?;
-    mb.load()?;
+    mb.load_posts()?;
     mb.build()?;
     mb.serve(port)?;
     Ok(())

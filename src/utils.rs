@@ -26,7 +26,7 @@ pub fn markdown_to_html(content: &str) -> String {
     s
 }
 
-/// log error chain
+/// log mdblog error chain
 pub fn log_error(err: &Error) {
     for cause in err.causes() {
         error!("{}", cause);

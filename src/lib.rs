@@ -32,6 +32,7 @@ mod errors;
 mod settings;
 mod post;
 mod theme;
+mod tag;
 mod utils;
 mod service;
 
@@ -47,13 +48,13 @@ use chrono::Local;
 use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
-use serde_json::{Map, Value};
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 pub use errors::{Error, Result};
 pub use settings::Settings;
 pub use theme::Theme;
 pub use post::Post;
+pub use tag::Tag;
 pub use post::PostHeaders;
 pub use utils::log_error;
 use config::Config;
@@ -70,8 +71,8 @@ pub struct Mdblog {
     theme: Theme,
     /// collection of blog posts
     posts: Vec<Rc<Post>>,
-    /// tagged posts
-    tags: BTreeMap<String, Vec<Rc<Post>>>,
+    /// tags map
+    tags_map: BTreeMap<String, Tag>,
 }
 
 impl Mdblog {
@@ -86,7 +87,7 @@ impl Mdblog {
             settings: settings,
             theme: theme,
             posts: Vec::new(),
-            tags: BTreeMap::new(),
+            tags_map: BTreeMap::new(),
         })
     }
 
@@ -111,7 +112,7 @@ impl Mdblog {
     /// load blog posts.
     pub fn load_posts(&mut self) -> Result<()> {
         let mut posts: Vec<Rc<Post>> = Vec::new();
-        let mut tags: BTreeMap<String, Vec<Rc<Post>>> = BTreeMap::new();
+        let mut tags_map: BTreeMap<String, Tag> = BTreeMap::new();
         let walker = WalkDir::new(&self.post_root_dir()?).into_iter();
 
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
@@ -120,21 +121,24 @@ impl Mdblog {
                 continue;
             }
             let post_path = entry.path().strip_prefix(&self.root)?.to_owned();
-            let post = Rc::new(Post::new(&self.root, &post_path)?);
+            let post = Post::new(&self.root, &post_path)?;
+            if post.is_hidden() {
+               continue;
+            }
+            let post = Rc::new(post);
             posts.push(post.clone());
-            if !post.is_hidden() {
-                for tag in &post.headers.tags {
-                    let mut ps = tags.entry(tag.to_string()).or_insert(Vec::new());
-                    ps.push(post.clone());
-                }
+            for tag_name in &post.headers.tags {
+                let mut tag = tags_map.entry(tag_name.to_string())
+                                      .or_insert(Tag::new(tag_name, &self.tag_url(tag_name)));
+                tag.add(post.clone());
             }
         }
         posts.sort_by(|p1, p2| p2.headers.created.cmp(&p1.headers.created));
-        for (_, tag_posts) in tags.iter_mut() {
-            tag_posts.sort_by(|p1, p2| p2.headers.created.cmp(&p1.headers.created));
+        for tag in tags_map.values_mut() {
+            tag.posts.sort_by(|p1, p2| p2.headers.created.cmp(&p1.headers.created));
         }
         self.posts = posts;
-        self.tags = tags;
+        self.tags_map = tags_map;
         Ok(())
     }
 
@@ -375,7 +379,7 @@ impl Mdblog {
     /// export blog tag index pages.
     pub fn export_tags(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        for tag in self.tags.keys() {
+        for tag in self.tags_map.keys() {
             let dest = build_dir.join(format!("blog/tags/{}.html", tag));
             let html = self.render_tag(tag)?;
             write_file(&dest, html.as_bytes())?;
@@ -384,48 +388,14 @@ impl Mdblog {
     }
 
     /// get base context of `theme.renderer` templates
-    fn get_base_context(&self, title: &str) -> Result<Context> {
+    fn get_base_context(&self) -> Result<Context> {
         let mut context = Context::new();
-        let all_tags = self.get_all_tags();
-        context.add("title", &title);
         context.add("site_name", &self.settings.site_name);
         context.add("site_motto", &self.settings.site_motto);
         context.add("footer_note", &self.settings.footer_note);
         context.add("url_prefix", &self.settings.url_prefix);
-        context.add("all_tags", &all_tags);
+        context.add("all_tags", &self.tags_map.values().collect::<Vec<_>>());
         Ok(context)
-    }
-
-    /// get all blog tags used by `theme.renderer`.
-    fn get_all_tags(&self) -> Vec<Map<String, Value>> {
-        let mut all_tags = Vec::new();
-        for (tag_key, tag_posts) in &self.tags {
-            all_tags.push(self.tag_map(&tag_key, tag_posts.len()));
-        }
-        all_tags.sort_by(|a, b| {
-                             a.get("name").unwrap()
-                              .as_str()
-                              .expect("get name error")
-                              .to_lowercase()
-                              .cmp(&b.get("name")
-                                     .expect("get name error")
-                                     .as_str()
-                                     .expect("get name error")
-                                     .to_lowercase())
-                         });
-        all_tags
-    }
-
-    /// get all post tags used by `theme.renderer`.
-    fn get_post_tags(&self, post: &Post) -> Vec<Map<String, Value>> {
-        let mut post_tags = Vec::new();
-        for tag in &post.headers.tags {
-            let tag_posts = self.tags.get(tag)
-                                .expect(&format!("post tag({}) does not add to blog tags",
-                                                 tag));
-            post_tags.push(self.tag_map(&tag, tag_posts.len()));
-        }
-        post_tags
     }
 
     /// blog tag url.
@@ -433,20 +403,14 @@ impl Mdblog {
         format!("/blog/tags/{}.html", &name)
     }
 
-    /// create an tag used by `theme.renderer`.
-    fn tag_map(&self, name: &str, num: usize) -> Map<String, Value> {
-        let mut map = Map::new();
-        map.insert("name".to_string(), Value::String(name.to_string()));
-        map.insert("num".to_string(), Value::String(format!("{}", num)));
-        map.insert("url".to_string(), Value::String(self.tag_url(&name)));
-        map
-    }
-
     /// render blog post html.
     pub fn render_post(&self, post: &Post) -> Result<String> {
         debug!("rendering post({}) ...", post.path.display());
-        let post_tags = self.get_post_tags(post);
-        let mut context = self.get_base_context(&post.title)?;
+        let post_tags = self.tags_map.iter()
+            .filter(|&(name, _)| post.headers.tags.contains(name))
+            .map(|(_, tag)| tag)
+            .collect::<Vec<_>>();
+        let mut context = self.get_base_context()?;
         context.add("post", &post);
         context.add("post_tags", &post_tags);
         Ok(self.theme.renderer.render("post.tpl", &context)?)
@@ -455,7 +419,7 @@ impl Mdblog {
     /// render index page html.
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
-        let mut context = self.get_base_context(&self.settings.site_name)?;
+        let mut context = self.get_base_context()?;
         context.add("posts", &self.posts);
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
@@ -463,9 +427,9 @@ impl Mdblog {
     /// render tag pages html.
     pub fn render_tag(&self, tag: &str) -> Result<String> {
         debug!("rendering tag({}) ...", tag);
-        let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
-        let mut context = self.get_base_context(&tag)?;
-        context.add("posts", &posts);
+        let tag = self.tags_map.get(tag).expect(&format!("not found tag: {}", &tag));
+        let mut context = self.get_base_context()?;
+        context.add("tag", &tag);
         Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }
 

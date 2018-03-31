@@ -1,8 +1,11 @@
 {% extends "base.tpl" %}
 
+{% block title %}
+<title>{{ post.title }}</title>
+{% endblock title %}
 
 {% block main %}
-    <h1>{{ title }}</h1>
+    <h1>{{ post.title }}</h1>
     <article>
       {{ post.content }}
 

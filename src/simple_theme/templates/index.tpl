@@ -1,5 +1,8 @@
 {% extends "base.tpl" %}
 
+{% block title %}
+<title>{{ site_name }}</title>
+{% endblock title %}
 
 {% block main %}
   <article>

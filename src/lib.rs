@@ -55,8 +55,10 @@ pub use errors::{Error, Result};
 pub use settings::Settings;
 pub use theme::Theme;
 pub use post::Post;
+pub use post::PostHeaders;
+pub use log_error;
 use service::HttpService;
-pub use utils::{write_file, log_error};
+use utils::write_file;
 
 /// blog object
 pub struct Mdblog {

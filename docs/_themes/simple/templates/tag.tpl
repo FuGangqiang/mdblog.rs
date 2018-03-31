@@ -1,10 +1,13 @@
 {% extends "base.tpl" %}
 
+{% block title %}
+<title>{{ tag.name }}</title>
+{% endblock title %}
 
 {% block main %}
-  <h1>{{ title }}</h1>
+  <h1>{{ tag.name }}</h1>
   <article>
-  {% for post in posts %}
+  {% for post in tag.posts %}
     <section>
       <span>{{ post.headers.created | date }}</span>
       <span><a href="{{ url_prefix }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>

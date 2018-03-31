@@ -74,7 +74,7 @@ blog directory(`myblog`) layout is initialized:
 
 ```
 myblog
-├── Config.toml
+├── config.toml
 ├── media
 ├── posts
 │   ├── hello.md
@@ -82,7 +82,7 @@ myblog
 └── _themes
 ```
 
-* `Config.toml`: blog config file
+* `config.toml`: blog config file
 * `media`: blog media directory
 * `posts`: blog posts directory
 * `posts/hello.md`: a markdown style post
@@ -99,7 +99,7 @@ the blog static files are build into the subdir `_build`, the current blog direc
 
 ```
 myblog
-├── Config.toml
+├── config.toml
 ├── media
 ├── posts
 │   ├── hello.md
@@ -133,15 +133,16 @@ you can edit it for the new post.
 refresh the index page, you will find the new post.
 
 
-# Config.toml
+# config.toml
 
 ```toml
 theme = "simple"
 site_name = "Mdblog"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
+media_dir = "media"
 build_dir = "_build"
+theme_root_dir = "_theme"
 rebuild_interval = 2
-url_prefix = ""
+url_prefix = "/mdblog.rs"
 ```
-

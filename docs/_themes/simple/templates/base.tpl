@@ -6,7 +6,7 @@
   <link rel="icon" href="{{ url_prefix }}/static/favicon.png">
   <link rel="stylesheet" href="{{ url_prefix }}/static/main.css">
   {% block css %}{% endblock css %}
-  <title>{{ title }}</title>
+  {% block title %}{% endblock title %}
 </head>
 <body>
 <header class="clearfix">

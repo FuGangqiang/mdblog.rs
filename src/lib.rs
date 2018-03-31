@@ -95,7 +95,7 @@ impl Mdblog {
     ///
     /// layered configuration system:
     /// * default settings
-    /// * `Config.toml`
+    /// * `config.toml`
     /// * `BLOG_` prefix environment variable
     pub fn load_customize_settings(&mut self) -> Result<()> {
         let mut settings = Config::new();

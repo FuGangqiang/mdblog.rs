@@ -141,6 +141,7 @@ site_name = "Mdblog"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
 build_dir = "_build"
+theme_root_dir = "_theme"
 rebuild_interval = 2
 url_prefix = ""
 ```

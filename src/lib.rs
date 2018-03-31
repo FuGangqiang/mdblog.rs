@@ -67,8 +67,6 @@ pub struct Mdblog {
     settings: Settings,
     /// blog theme
     theme: Theme,
-    /// blog render
-    renderer: Tera,
     /// collection of blog posts
     posts: Vec<Rc<Post>>,
     /// tagged posts
@@ -80,13 +78,12 @@ impl Mdblog {
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Mdblog> {
         let root = root.as_ref();
         let settings: Settings = Default::default();
-        let theme = Mdblog::get_theme(root, &settings.theme)?;
-        let renderer = Mdblog::get_renderer(root, &settings.theme)?;
+        let theme_root_dir = get_dir(root, &settings.theme_root_dir)?;
+        let theme = Theme::new(theme_root_dir, &settings.theme)?;
         Ok(Mdblog {
             root: root.to_owned(),
             settings: settings,
             theme: theme,
-            renderer: renderer,
             posts: Vec::new(),
             tags: BTreeMap::new(),
         })
@@ -107,25 +104,7 @@ impl Mdblog {
         if self.settings.url_prefix.ends_with('/') {
             self.settings.url_prefix = self.settings.url_prefix.trim_right_matches('/').to_string();
         }
-        self.renderer = Mdblog::get_renderer(&self.root, &self.settings.theme)?;
         Ok(())
-    }
-
-    /// get theme
-    pub fn get_theme<P: AsRef<Path>>(root: P, name: &str) -> Result<Theme> {
-        let mut theme = Theme::new(root.as_ref());
-        theme.load(name)?;
-        Ok(theme)
-    }
-
-    pub fn get_renderer<P: AsRef<Path>>(root: P, theme_name: &str) -> Result<Tera> {
-        let template_dir = root.as_ref()
-                               .join("_themes")
-                               .join(theme_name)
-                               .join("templates");
-        debug!("template dir: {}", template_dir.display());
-        let renderer = Tera::new(&format!("{}/*", template_dir.display()))?;
-        Ok(renderer)
     }
 
     pub fn load(&mut self) -> Result<()> {
@@ -182,7 +161,6 @@ impl Mdblog {
 
         self.export_config()?;
 
-        self.theme.load(&self.settings.theme)?;
         self.theme.init_dir(&self.theme.name)?;
         std::fs::create_dir_all(self.root.join("media"))?;
         Ok(())
@@ -202,7 +180,7 @@ impl Mdblog {
         let mut server_url = format!("http://{}", &addr_str);
         server_url.push_str(&self.settings.url_prefix);
         let addr = addr_str.parse()?;
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         let url_prefix = self.settings.url_prefix.clone();
         info!("server blog at {}", server_url);
 
@@ -272,19 +250,19 @@ impl Mdblog {
         Ok(())
     }
 
-    fn get_build_dir(&self) -> Result<PathBuf> {
-        let expanded_path = shellexpand::full(&self.settings.build_dir)?.into_owned();
-        let build_dir = PathBuf::from(expanded_path.to_string());
-        if build_dir.is_relative() {
-            return Ok(self.root.join(&build_dir));
-        } else {
-            return Ok(build_dir);
-        }
+    /// blog build root dir absolute path
+    pub fn build_root_dir(&self) -> Result<PathBuf> {
+        get_dir(&self.root, &self.settings.build_dir)
+    }
+
+    /// blog theme dir absolute path
+    pub fn theme_root_dir(&self) -> Result<PathBuf> {
+        get_dir(&self.root, &self.settings.theme_root_dir)
     }
 
     fn get_ignore_patterns(&self) -> Result<Vec<Pattern>> {
         let mut patterns = vec![Pattern::new("**/.*")?];
-        let build_dir = self.get_build_dir()?
+        let build_dir = self.build_root_dir()?
                             .to_str()
                             .expect("get build dir error")
                             .to_string();
@@ -338,7 +316,7 @@ impl Mdblog {
     }
 
     pub fn media_dest<P: AsRef<Path>>(&self, media: P) -> Result<PathBuf> {
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         let rel_path = media.as_ref()
                             .strip_prefix(&self.root.join("media"))?
                             .to_owned();
@@ -361,13 +339,13 @@ impl Mdblog {
     }
 
     pub fn export_static(&self) -> Result<()> {
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         self.theme.export_static(&build_dir)?;
         Ok(())
     }
 
     pub fn export_posts(&self) -> Result<()> {
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         for post in &self.posts {
             let dest = build_dir.join(post.dest());
             let mut f = create_file(&dest)?;
@@ -378,7 +356,7 @@ impl Mdblog {
     }
 
     pub fn export_index(&self) -> Result<()> {
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         let dest = build_dir.join("index.html");
         let mut f = create_file(&dest)?;
         let html = self.render_index()?;
@@ -387,7 +365,7 @@ impl Mdblog {
     }
 
     pub fn export_tags(&self) -> Result<()> {
-        let build_dir = self.get_build_dir()?;
+        let build_dir = self.build_root_dir()?;
         for tag in self.tags.keys() {
             let dest = build_dir.join(format!("blog/tags/{}.html", tag));
             let mut f = create_file(&dest)?;
@@ -458,14 +436,14 @@ impl Mdblog {
         let mut context = self.get_base_context(&post.title)?;
         context.add("post", &post);
         context.add("post_tags", &post_tags);
-        Ok(self.renderer.render("post.tpl", &context)?)
+        Ok(self.theme.renderer.render("post.tpl", &context)?)
     }
 
     pub fn render_index(&self) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context(&self.settings.site_name)?;
         context.add("posts", &self.posts);
-        Ok(self.renderer.render("index.tpl", &context)?)
+        Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
     pub fn render_tag(&self, tag: &str) -> Result<String> {
@@ -473,11 +451,11 @@ impl Mdblog {
         let posts = self.tags.get(tag).expect(&format!("get tag({}) error", &tag));
         let mut context = self.get_base_context(&tag)?;
         context.add("posts", &posts);
-        Ok(self.renderer.render("tag.tpl", &context)?)
+        Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }
 
     pub fn list_blog_theme(&self) -> Result<()> {
-        let theme_root = self.root.join("_themes");
+        let theme_root = self.theme_root_dir()?;
         if !theme_root.exists() || !theme_root.is_dir() {
             error!("no theme");
         }
@@ -503,7 +481,7 @@ impl Mdblog {
         if self.settings.theme == name {
             return Err(Error::ThemeInUse(name.to_string()));
         }
-        let theme_path = self.root.join("_themes").join(name);
+        let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
             return Err(Error::ThemeNotFound(name.to_string()));
         }
@@ -512,7 +490,7 @@ impl Mdblog {
     }
 
     pub fn set_blog_theme(&mut self, name: &str) -> Result<()> {
-        let theme_path = self.root.join("_themes").join(name);
+        let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
             return Err(Error::ThemeNotFound(name.to_string()));
         }
@@ -547,5 +525,15 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
                 return false;
             }
         },
+    }
+}
+
+fn get_dir<P: AsRef<Path>>(root: P, value: &str) -> Result<PathBuf> {
+    let expanded_path = shellexpand::full(value)?.into_owned();
+    let dir = PathBuf::from(expanded_path.to_string());
+    if dir.is_relative() {
+        return Ok(root.as_ref().join(&dir));
+    } else {
+        return Ok(dir);
     }
 }

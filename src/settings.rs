@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde_json;
 use config::{Source, Value, ConfigError};
 
 /// blog setting
@@ -12,8 +13,10 @@ pub struct Settings {
     pub site_motto: String,
     /// blog footer note
     pub footer_note: String,
-    /// blog build directory
+    /// blog build root directory
     pub build_dir: String,
+    /// blog theme root directory
+    pub theme_root_dir: String,
     /// blog rebuild interval
     pub rebuild_interval: i64,
     /// blog url prefix
@@ -28,6 +31,7 @@ impl Default for Settings {
             site_motto: String::from("Simple is Beautiful!"),
             footer_note: String::from("Keep It Simple, Stupid!"),
             build_dir: String::from("_build"),
+            theme_root_dir: String::from("_theme"),
             rebuild_interval: 2,
             url_prefix: Default::default(),
         }
@@ -40,14 +44,10 @@ impl Source for Settings {
     }
 
     fn collect(&self) -> Result<HashMap<String, Value>, ConfigError> {
-        let mut map = HashMap::new();
-        map.insert("theme".to_string(), self.theme.clone().into());
-        map.insert("site_name".to_string(), self.site_name.clone().into());
-        map.insert("site_motto".to_string(), self.site_motto.clone().into());
-        map.insert("footer_note".to_string(), self.footer_note.clone().into());
-        map.insert("build_dir".to_string(), self.build_dir.clone().into());
-        map.insert("rebuild_interval".to_string(), self.rebuild_interval.clone().into());
-        map.insert("url_prefix".to_string(), self.url_prefix.clone().into());
+        let serialized = serde_json::to_string(&self)
+            .expect("settings serialized error");
+        let map = serde_json::from_str::<HashMap<String, Value>>(&serialized)
+            .expect("settings deserialized error");
         Ok(map)
     }
 }

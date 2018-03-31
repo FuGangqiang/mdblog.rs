@@ -4,7 +4,7 @@ use std::path::StripPrefixError;
 use std::io::Error as IoError;
 use std::num::ParseIntError;
 use std::net::AddrParseError;
-
+use std::str::Utf8Error;
 use config::ConfigError;
 use toml::ser::Error as TomlError;
 use tera::Error as TeraError;
@@ -25,6 +25,9 @@ pub enum Error {
 
     #[fail(display = "Address Parse error")]
     AddrParse(#[cause] AddrParseError),
+
+    #[fail(display = "Theme template file encoding error")]
+    ThemeTemplateEncodeing(#[cause] Utf8Error),
 
     #[fail(display = "Notify error")]
     Notify(#[cause] NotifyError),
@@ -100,6 +103,12 @@ impl From<ParseIntError> for Error {
 impl From<AddrParseError> for Error {
      fn from(err: AddrParseError) -> Error {
          Error::AddrParse(err)
+     }
+}
+
+impl From<Utf8Error> for Error {
+     fn from(err: Utf8Error) -> Error {
+         Error::ThemeTemplateEncodeing(err)
      }
 }
 

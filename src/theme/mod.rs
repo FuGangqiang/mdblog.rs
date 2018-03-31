@@ -1,8 +1,8 @@
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use tera::Tera;
-use utils::create_file;
+use utils::write_file;
 use errors::{Error, Result};
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/favicon.png");
@@ -95,50 +95,24 @@ impl Theme {
             return Ok(());
         }
         debug!("init theme({}) ...", name);
-
-        let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
-        favicon.write_all(&self.favicon)?;
-
-        let mut logo = create_file(&dest_dir.join("static/logo.png"))?;
-        logo.write_all(&self.logo)?;
-
-        let mut main_css = create_file(&dest_dir.join("static/main.css"))?;
-        main_css.write_all(&self.main_css)?;
-
-        let mut main_js = create_file(&dest_dir.join("static/main.js"))?;
-        main_js.write_all(&self.main_js)?;
-
-        let mut base = create_file(&dest_dir.join("templates/base.tpl"))?;
-        base.write_all(&self.base)?;
-
-        let mut index = create_file(&dest_dir.join("templates/index.tpl"))?;
-        index.write_all(&self.index)?;
-
-        let mut post = create_file(&dest_dir.join("templates/post.tpl"))?;
-        post.write_all(&self.post)?;
-
-        let mut tag = create_file(&dest_dir.join("templates/tag.tpl"))?;
-        tag.write_all(&self.tag)?;
-
+        write_file(&dest_dir.join("static/favicon.png"), &self.favicon)?;
+        write_file(&dest_dir.join("static/logo.png"), &self.logo)?;
+        write_file(&dest_dir.join("static/main.css"), &self.main_css)?;
+        write_file(&dest_dir.join("static/main.js"), &self.main_js)?;
+        write_file(&dest_dir.join("templates/base.tpl"), &self.base)?;
+        write_file(&dest_dir.join("templates/index.tpl"), &self.index)?;
+        write_file(&dest_dir.join("templates/post.tpl"), &self.post)?;
+        write_file(&dest_dir.join("templates/tag.tpl"), &self.tag)?;
         Ok(())
     }
 
     pub fn export_static<P: AsRef<Path>>(&self, root: P) -> Result<()> {
         debug!("exporting theme({}) static ...", self.name);
         let dest_dir = root.as_ref();
-
-        let mut favicon = create_file(&dest_dir.join("static/favicon.png"))?;
-        favicon.write_all(&self.favicon)?;
-
-        let mut logo = create_file(&dest_dir.join("static/logo.png"))?;
-        logo.write_all(&self.logo)?;
-
-        let mut main_css = create_file(&dest_dir.join("static/main.css"))?;
-        main_css.write_all(&self.main_css)?;
-
-        let mut main_js = create_file(&dest_dir.join("static/main.js"))?;
-        main_js.write_all(&self.main_js)?;
-
+        write_file(&dest_dir.join("static/favicon.png"), &self.favicon)?;
+        write_file(&dest_dir.join("static/logo.png"), &self.logo)?;
+        write_file(&dest_dir.join("static/main.css"), &self.main_css)?;
+        write_file(&dest_dir.join("static/main.js"), &self.main_js)?;
         Ok(())
     }
 }

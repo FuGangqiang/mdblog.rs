@@ -1,17 +1,19 @@
 use errors::{Result, Error};
 use std::fs::File;
 use std::path::Path;
+use std::io::Write;
 use failure::Fail;
 use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
 
-/// create the file of `path`
+/// create the file of `path` and append content
 ///
 /// if parent of `path` does not existed, create it first.
-pub fn create_file(path: &Path) -> Result<File> {
+pub fn write_file(path: &Path, buf: &[u8]) -> Result<()> {
     if let Some(p) = path.parent() {
         ::std::fs::create_dir_all(p)?;
     }
-    Ok(File::create(path)?)
+    let mut file = File::create(path)?;
+    Ok(file.write_all(buf)?)
 }
 
 /// the rendered html content of post body port

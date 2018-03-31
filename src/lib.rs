@@ -37,7 +37,6 @@ mod service;
 
 use std::thread;
 use std::collections::BTreeMap;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -57,7 +56,7 @@ pub use settings::Settings;
 pub use theme::Theme;
 pub use post::Post;
 use service::HttpService;
-pub use utils::{create_file, log_error};
+pub use utils::{write_file, log_error};
 
 /// blog object
 pub struct Mdblog {
@@ -110,8 +109,7 @@ impl Mdblog {
     pub fn load(&mut self) -> Result<()> {
         let mut posts: Vec<Rc<Post>> = Vec::new();
         let mut tags: BTreeMap<String, Vec<Rc<Post>>> = BTreeMap::new();
-        let posts_dir = self.root.join("posts");
-        let walker = WalkDir::new(&posts_dir).into_iter();
+        let walker = WalkDir::new(&self.post_root_dir()?).into_iter();
 
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.expect("get walker entry error");
@@ -154,10 +152,10 @@ impl Mdblog {
         let mut context = Context::new();
         context.add("now", &now.format("%Y-%m-%dT%H:%M:%S%:z").to_string());
 
-        let mut hello_post = create_file(&self.root.join("posts").join("hello.md"))?;
-        hello_post.write_all(tera.render("hello.md.tpl", &context)?.as_bytes())?;
-        let mut math_post = create_file(&self.root.join("posts").join("math.md"))?;
-        math_post.write_all(tera.render("math.md.tpl", &context)?.as_bytes())?;
+        let hello_content = tera.render("hello.md.tpl", &context)?;
+        let math_content = tera.render("math.md.tpl", &context)?;
+        write_file(&self.post_root_dir()?.join("hello.md"), hello_content.as_bytes())?;
+        write_file(&self.post_root_dir()?.join("math.md"), math_content.as_bytes())?;
 
         self.export_config()?;
 
@@ -250,14 +248,19 @@ impl Mdblog {
         Ok(())
     }
 
-    /// blog build root dir absolute path
+    /// blog build dir absolute path
     pub fn build_root_dir(&self) -> Result<PathBuf> {
         get_dir(&self.root, &self.settings.build_dir)
     }
 
-    /// blog theme dir absolute path
+    /// blog theme root dir absolute path
     pub fn theme_root_dir(&self) -> Result<PathBuf> {
         get_dir(&self.root, &self.settings.theme_root_dir)
+    }
+
+    /// blog posts root dir
+    pub fn post_root_dir(&self) -> Result<PathBuf> {
+        Ok(self.root.join("posts"))
     }
 
     fn get_ignore_patterns(&self) -> Result<Vec<Pattern>> {
@@ -283,19 +286,18 @@ impl Mdblog {
         if path.is_dir() {
             return Err(Error::PostPathExisted(path.to_owned()));
         }
-        let post_path = self.root.join("posts").join(path).with_extension("md");
+        let post_path = self.post_root_dir()?.join(path).with_extension("md");
         if post_path.exists() {
             return Err(Error::PostPathExisted(path.to_owned()));
         }
         let now = Local::now();
-        let mut post = create_file(&post_path)?;
         let content = format!("created: {}\n\
                                tags: [{}]\n\
                                \n\
                                this is a new post!\n",
                               now.format("%Y-%m-%dT%H:%M:%S%:z"),
                               tags.join(", "));
-        post.write_all(content.as_bytes())?;
+        write_file(&post_path, content.as_bytes())?;
         Ok(())
     }
 
@@ -310,8 +312,7 @@ impl Mdblog {
 
     pub fn export_config(&self) -> Result<()> {
         let content = toml::to_string(&self.settings)?;
-        let mut config_file = create_file(&self.root.join("Config.toml"))?;
-        config_file.write_all(content.as_bytes())?;
+        write_file(&self.root.join("Config.toml"), content.as_bytes())?;
         Ok(())
     }
 
@@ -348,9 +349,8 @@ impl Mdblog {
         let build_dir = self.build_root_dir()?;
         for post in &self.posts {
             let dest = build_dir.join(post.dest());
-            let mut f = create_file(&dest)?;
             let html = self.render_post(post)?;
-            f.write(html.as_bytes())?;
+            write_file(&dest, html.as_bytes())?;
         }
         Ok(())
     }
@@ -358,9 +358,8 @@ impl Mdblog {
     pub fn export_index(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
         let dest = build_dir.join("index.html");
-        let mut f = create_file(&dest)?;
         let html = self.render_index()?;
-        f.write(html.as_bytes())?;
+        write_file(&dest, html.as_bytes())?;
         Ok(())
     }
 
@@ -368,9 +367,8 @@ impl Mdblog {
         let build_dir = self.build_root_dir()?;
         for tag in self.tags.keys() {
             let dest = build_dir.join(format!("blog/tags/{}.html", tag));
-            let mut f = create_file(&dest)?;
             let html = self.render_tag(tag)?;
-            f.write(html.as_bytes())?;
+            write_file(&dest, html.as_bytes())?;
         }
         Ok(())
     }

@@ -5,15 +5,6 @@ use tera::Tera;
 use utils::write_file;
 use errors::{Error, Result};
 
-static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple/static/favicon.png");
-static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple/static/logo.png");
-static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple/static/main.css");
-static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple/static/main.js");
-static SIMPLE_BASE: &'static [u8] = include_bytes!("simple/templates/base.tpl");
-static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple/templates/index.tpl");
-static SIMPLE_POST: &'static [u8] = include_bytes!("simple/templates/post.tpl");
-static SIMPLE_TAG: &'static [u8] = include_bytes!("simple/templates/tag.tpl");
-
 /// blog theme object
 #[derive(Default)]
 pub struct Theme {
@@ -119,3 +110,12 @@ impl Theme {
         Ok(())
     }
 }
+
+static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple_theme/static/favicon.png");
+static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple_theme/static/logo.png");
+static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple_theme/static/main.css");
+static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple_theme/static/main.js");
+static SIMPLE_BASE: &'static [u8] = include_bytes!("simple_theme/templates/base.tpl");
+static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple_theme/templates/index.tpl");
+static SIMPLE_POST: &'static [u8] = include_bytes!("simple_theme/templates/post.tpl");
+static SIMPLE_TAG: &'static [u8] = include_bytes!("simple_theme/templates/tag.tpl");

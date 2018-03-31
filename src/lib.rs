@@ -99,7 +99,7 @@ impl Mdblog {
     pub fn load_customize_settings(&mut self) -> Result<()> {
         let mut settings = Config::new();
         settings.merge(self.settings.clone())?;
-        settings.merge(config::File::with_name("Config.toml"))?;
+        settings.merge(config::File::with_name("config.toml"))?;
         settings.merge(config::Environment::with_prefix("BLOG"))?;
         self.settings = settings.try_into()?;
         if self.settings.url_prefix.ends_with('/') {
@@ -312,7 +312,7 @@ impl Mdblog {
     /// export blog config.toml file.
     pub fn export_config(&self) -> Result<()> {
         let content = toml::to_string(&self.settings)?;
-        write_file(&self.root.join("Config.toml"), content.as_bytes())?;
+        write_file(&self.root.join("config.toml"), content.as_bytes())?;
         Ok(())
     }
 

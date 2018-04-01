@@ -106,6 +106,8 @@ impl Mdblog {
         if self.settings.url_prefix.ends_with('/') {
             self.settings.url_prefix = self.settings.url_prefix.trim_right_matches('/').to_string();
         }
+        let theme_root_dir = self.theme_root_dir()?;
+        self.theme = Theme::new(&theme_root_dir, &self.settings.theme)?;
         Ok(())
     }
 
@@ -237,16 +239,10 @@ impl Mdblog {
                             }
                             last_run = Some(now);
                             info!("Modified file: {}", fpath.display());
-                            info!("Rebuild blog again...");
-                            if let Err(ref e) = self.load_posts() {
+                            if let Err(ref e) = self.rebuild() {
                                 log_error(e);
-                                continue
+                                continue;
                             }
-                            if let Err(ref e) = self.build() {
-                                log_error(e);
-                                continue
-                            }
-                            info!("Rebuild done!");
                         },
                         _ => {},
                     }
@@ -254,6 +250,16 @@ impl Mdblog {
             }
         }
         #[allow(unreachable_code)]
+        Ok(())
+    }
+
+    /// rebuild blog
+    pub fn rebuild(&mut self) -> Result<()> {
+        info!("Rebuild blog again...");
+        self.load_customize_settings()?;
+        self.load_posts()?;
+        self.build()?;
+        info!("Rebuild done!");
         Ok(())
     }
 

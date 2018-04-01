@@ -20,9 +20,11 @@ pub struct Settings {
     /// blog theme root directory
     pub theme_root_dir: String,
     /// blog rebuild interval
-    pub rebuild_interval: i64,
+    pub rebuild_interval: u8,
     /// blog url prefix
     pub url_prefix: String,
+    /// post count per index page
+    pub posts_per_page: usize,
 }
 
 impl Default for Settings {
@@ -37,6 +39,7 @@ impl Default for Settings {
             theme_root_dir: String::from("_theme"),
             rebuild_interval: 2,
             url_prefix: Default::default(),
+            posts_per_page: 20,
         }
     }
 }

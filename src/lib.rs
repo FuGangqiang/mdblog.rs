@@ -174,7 +174,9 @@ impl Mdblog {
         self.export_static()?;
         self.export_posts()?;
         self.export_index()?;
-        self.export_tags()?;
+        for tag in self.tags_map.values() {
+            self.export_tag(tag)?;
+        }
         Ok(())
     }
 
@@ -370,19 +372,45 @@ impl Mdblog {
     /// export blog index page.
     pub fn export_index(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        let dest = build_dir.join("index.html");
-        let html = self.render_index()?;
-        write_file(&dest, html.as_bytes())?;
+        let total = self.posts.len();
+        let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
+        let mut i = 1;
+        while i <= pages {
+            let start = (i - 1) * self.settings.posts_per_page;
+            let end = total.min(start + self.settings.posts_per_page);
+            let prev_name = format_page_name("index", i-1, pages);
+            let current_name = format_page_name("index", i, pages);
+            let next_name = format_page_name("index", i+1, pages);
+            let dest = build_dir.join(current_name);
+            let html = self.render_index(&self.posts[start..end],
+                                         &prev_name,
+                                         &next_name)?;
+            write_file(&dest, html.as_bytes())?;
+            i += 1;
+        }
         Ok(())
     }
 
-    /// export blog tag index pages.
-    pub fn export_tags(&self) -> Result<()> {
+    /// export blog tag index page.
+    pub fn export_tag(&self, tag: &Tag) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        for tag in self.tags_map.keys() {
-            let dest = build_dir.join(format!("blog/tags/{}.html", tag));
-            let html = self.render_tag(tag)?;
+        let total = tag.posts.len();
+        let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
+        let mut i = 1;
+        while i <= pages {
+            let start = (i - 1) * self.settings.posts_per_page;
+            let end = total.min(start + self.settings.posts_per_page);
+            let prev_name = format_page_name(&tag.name, i-1, pages);
+            let current_name = format_page_name(&tag.name, i, pages);
+            let next_name = format_page_name(&tag.name, i+1, pages);
+            let dest = build_dir.join("blog/tags").join(current_name);
+            debug!("rendering tag: {} ...", dest.display());
+            let html = self.render_tag(&tag.name,
+                                       &tag.posts[start..end],
+                                       &prev_name,
+                                       &next_name)?;
             write_file(&dest, html.as_bytes())?;
+            i += 1;
         }
         Ok(())
     }
@@ -414,19 +442,22 @@ impl Mdblog {
     }
 
     /// render index page html.
-    pub fn render_index(&self) -> Result<String> {
+    pub fn render_index(&self, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
-        context.add("posts", &self.posts);
+        context.add("prev_name", prev_name);
+        context.add("next_name", next_name);
+        context.add("posts", posts);
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
     /// render tag pages html.
-    pub fn render_tag(&self, tag: &str) -> Result<String> {
-        debug!("rendering tag({}) ...", tag);
-        let tag = self.tags_map.get(tag).expect(&format!("not found tag: {}", &tag));
+    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
         let mut context = self.get_base_context()?;
-        context.add("tag", &tag);
+        context.add("title", title);
+        context.add("prev_name", prev_name);
+        context.add("next_name", next_name);
+        context.add("posts", posts);
         Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }
 
@@ -519,4 +550,17 @@ fn get_dir<P: AsRef<Path>>(root: P, value: &str) -> Result<PathBuf> {
     } else {
         return Ok(dir);
     }
+}
+
+fn format_page_name(prefix: &str, page: usize, total: usize) -> String {
+    if page == 0 || page > total {
+        return String::default();
+    }
+    let mut s = String::with_capacity(prefix.len()+10);
+    s.push_str(prefix);
+    if page > 1 {
+        s.push_str(&format!("-{}", page));
+    }
+    s.push_str(".html");
+    s
 }

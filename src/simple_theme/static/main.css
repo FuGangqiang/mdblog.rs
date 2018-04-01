@@ -285,3 +285,8 @@ table td {
     border: 1px solid #888;
     min-width: 4em;
 }
+
+#pages .next, #pages .prev {
+    font-size: 1.2em;
+    padding: 1em;
+}

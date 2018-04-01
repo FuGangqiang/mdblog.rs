@@ -13,6 +13,11 @@
     </section>
   {% endfor %}
   </article>
+
+  <div id="pages">
+    {% if prev_name %}<span class="prev"><a href="{{ prev_name | urlencode }}">Previous</a></span>{% endif %}
+    {% if next_name %}<span class="next"><a href="{{ next_name | urlencode }}">Next</a></span>{% endif %}
+  </div>
 {% endblock main %}
 
 

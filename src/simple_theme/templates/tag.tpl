@@ -10,7 +10,7 @@
   {% for post in tag.posts %}
     <section>
       <span>{{ post.headers.created | date }}</span>
-      <span><a href="{{ url_prefix }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>
+      <span><a href="{{ config.url_prefix }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>
     </section>
   {% endfor %}
   </article>
@@ -18,5 +18,5 @@
 
 
 {% block js %}
-<script src="{{ url_prefix }}/static/main.js"></script>
+<script src="{{ config.url_prefix }}/static/main.js"></script>
 {% endblock js %}

@@ -390,10 +390,7 @@ impl Mdblog {
     /// get base context of `theme.renderer` templates
     fn get_base_context(&self) -> Result<Context> {
         let mut context = Context::new();
-        context.add("site_name", &self.settings.site_name);
-        context.add("site_motto", &self.settings.site_motto);
-        context.add("footer_note", &self.settings.footer_note);
-        context.add("url_prefix", &self.settings.url_prefix);
+        context.add("config", &self.settings);
         context.add("all_tags", &self.tags_map.values().collect::<Vec<_>>());
         Ok(context)
     }

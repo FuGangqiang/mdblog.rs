@@ -11,7 +11,7 @@
 
       <ul id="article_footer">
         {% if post_tags %}
-           <li>tags: {% for tag in post_tags %}<a href="{{ url_prefix  | urlencode }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
+           <li>tags: {% for tag in post_tags %}<a href="{{ config.url_prefix  | urlencode }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
         {% endif %}
         <li>date: {{ post.headers.created | date(format="%Y-%m-%d %H:%M:%S") }}</li>
       </ul>
@@ -24,7 +24,7 @@
 
 
 {% block js %}
-<script src="{{ url_prefix }}/static/main.js"></script>
+<script src="{{ config.url_prefix }}/static/main.js"></script>
 <script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script type="text/x-mathjax-config">
     MathJax.Hub.Config({

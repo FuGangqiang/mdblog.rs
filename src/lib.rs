@@ -124,11 +124,11 @@ impl Mdblog {
             }
             let post_path = entry.path().strip_prefix(&self.root)?.to_owned();
             let post = Post::new(&self.root, &post_path)?;
+            let post = Rc::new(post);
+            posts.push(post.clone());
             if post.is_hidden() {
                continue;
             }
-            let post = Rc::new(post);
-            posts.push(post.clone());
             for tag_name in &post.headers.tags {
                 let mut tag = tags_map.entry(tag_name.to_string())
                                       .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
@@ -378,7 +378,8 @@ impl Mdblog {
     /// export blog index page.
     pub fn export_index(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        let total = self.posts.len();
+        let posts: Vec<_> = self.posts.iter().filter(|p| !p.is_hidden()).collect();
+        let total = posts.len();
         let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
         let mut i = 1;
         while i <= pages {
@@ -388,7 +389,7 @@ impl Mdblog {
             let current_name = format_page_name("index", i, pages);
             let next_name = format_page_name("index", i+1, pages);
             let dest = build_dir.join(current_name);
-            let html = self.render_index(&self.posts[start..end],
+            let html = self.render_index(&posts[start..end],
                                          &prev_name,
                                          &next_name)?;
             write_file(&dest, html.as_bytes())?;
@@ -443,7 +444,7 @@ impl Mdblog {
     }
 
     /// render index page html.
-    pub fn render_index(&self, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
+    pub fn render_index(&self, posts: &[&Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
         context.add("prev_name", prev_name);

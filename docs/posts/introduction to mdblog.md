@@ -144,5 +144,6 @@ media_dir = "media"
 build_dir = "_build"
 theme_root_dir = "_theme"
 rebuild_interval = 2
-url_prefix = "/mdblog.rs"
+url_prefix = ""
+posts_per_page = 20
 ```

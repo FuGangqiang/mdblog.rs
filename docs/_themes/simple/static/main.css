@@ -285,3 +285,17 @@ table td {
     border: 1px solid #888;
     min-width: 4em;
 }
+
+#pages {
+    font-size: 1.2em;
+}
+
+#pages .next {
+    float: right;
+    padding: 0em 1em 1em 1em;
+}
+
+#pages .prev {
+    float: left;
+    padding: 0em 1em 1em 1em;
+}

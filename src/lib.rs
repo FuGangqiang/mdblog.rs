@@ -131,7 +131,7 @@ impl Mdblog {
             posts.push(post.clone());
             for tag_name in &post.headers.tags {
                 let mut tag = tags_map.entry(tag_name.to_string())
-                                      .or_insert(Tag::new(tag_name, &self.tag_url(tag_name)));
+                                      .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
                 tag.add(post.clone());
             }
         }
@@ -409,7 +409,7 @@ impl Mdblog {
             let prev_name = format_page_name(&tag.name, i-1, pages);
             let current_name = format_page_name(&tag.name, i, pages);
             let next_name = format_page_name(&tag.name, i+1, pages);
-            let dest = build_dir.join("blog/tags").join(current_name);
+            let dest = build_dir.join("tags").join(current_name);
             debug!("rendering tag: {} ...", dest.display());
             let html = self.render_tag(&tag.name,
                                        &tag.posts[start..end],
@@ -427,11 +427,6 @@ impl Mdblog {
         context.add("config", &self.settings);
         context.add("all_tags", &self.tags_map.values().collect::<Vec<_>>());
         Ok(context)
-    }
-
-    /// blog tag url.
-    fn tag_url(&self, name: &str) -> String {
-        format!("/blog/tags/{}.html", &name)
     }
 
     /// render blog post html.

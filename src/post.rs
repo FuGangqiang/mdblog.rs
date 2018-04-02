@@ -68,7 +68,7 @@ impl Post {
         let title = path.file_stem()
                         .and_then(|x| x.to_str())
                         .expect(&format!("post filename format error: {}", path.display()));
-        let url = Path::new("/blog").join(path).with_extension("html");
+        let url = Path::new("/").join(path).with_extension("html");
         let headers: PostHeaders = serde_yaml::from_str(head)?;
         let content = markdown_to_html(body);
 
@@ -89,7 +89,7 @@ impl Post {
 
     /// the absolute path of blog post html file.
     pub fn dest(&self) -> PathBuf {
-        Path::new("blog").join(&self.path).with_extension("html")
+        self.path.with_extension("html")
     }
 
     /// check post hidden flag in the post header.

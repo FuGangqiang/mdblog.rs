@@ -338,7 +338,7 @@ impl Mdblog {
         let rel_path = media.as_ref()
             .strip_prefix(&self.media_root_dir()?)?
             .to_owned();
-        Ok(build_dir.join(rel_path))
+        Ok(build_dir.join("media").join(rel_path))
     }
 
     /// export blog media files.

@@ -450,7 +450,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "mdblog"
-version = "0.9.2"
+version = "0.10.0"
 dependencies = [
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "config 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -36,7 +36,7 @@ impl Default for Settings {
             footer_note: String::from("Keep It Simple, Stupid!"),
             media_dir: String::from("media"),
             build_dir: String::from("_build"),
-            theme_root_dir: String::from("_theme"),
+            theme_root_dir: String::from("_themes"),
             rebuild_interval: 2,
             url_prefix: Default::default(),
             posts_per_page: 20,

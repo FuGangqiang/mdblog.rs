@@ -4,6 +4,6 @@ site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
 media_dir = "media"
 build_dir = "_build"
-theme_root_dir = "_theme"
+theme_root_dir = "_themes"
 rebuild_interval = 2
 url_prefix = "/mdblog.rs"

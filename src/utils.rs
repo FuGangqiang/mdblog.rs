@@ -1,7 +1,7 @@
 use errors::{Result, Error};
 use std::fs::File;
 use std::path::Path;
-use std::io::Write;
+use std::io::{Write, Read};
 use failure::Fail;
 use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
 
@@ -14,6 +14,13 @@ pub fn write_file(path: &Path, buf: &[u8]) -> Result<()> {
     }
     let mut file = File::create(path)?;
     Ok(file.write_all(buf)?)
+}
+
+/// read the file content of `path` to `buf`
+pub fn read_file<P: AsRef<Path>>(path: P, buf: &mut Vec<u8>) -> Result<()> {
+    let mut f = File::open(path.as_ref())?;
+    f.read_to_end(buf)?;
+    Ok(())
 }
 
 /// the rendered html content of post body port

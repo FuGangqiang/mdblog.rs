@@ -1,8 +1,6 @@
-use std::fs::File;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use tera::Tera;
-use utils::write_file;
+use utils::{write_file, read_file};
 use errors::{Error, Result};
 
 /// blog theme object
@@ -51,22 +49,14 @@ impl Theme {
             return Ok(theme);
         }
 
-        let mut favicon_file = File::open(src_dir.join("static/favicon.png"))?;
-        let mut logo_file = File::open(src_dir.join("static/logo.png"))?;
-        let mut main_css_file = File::open(src_dir.join("static/main.css"))?;
-        let mut main_js_file = File::open(src_dir.join("static/main.js"))?;
-        let mut base_file = File::open(src_dir.join("templates/base.tpl"))?;
-        let mut index_file = File::open(src_dir.join("templates/index.tpl"))?;
-        let mut post_file = File::open(src_dir.join("templates/post.tpl"))?;
-        let mut tag_file = File::open(src_dir.join("templates/tag.tpl"))?;
-        favicon_file.read_to_end(&mut theme.favicon)?;
-        logo_file.read_to_end(&mut theme.logo)?;
-        main_css_file.read_to_end(&mut theme.main_css)?;
-        main_js_file.read_to_end(&mut theme.main_js)?;
-        base_file.read_to_end(&mut theme.base)?;
-        index_file.read_to_end(&mut theme.index)?;
-        post_file.read_to_end(&mut theme.post)?;
-        tag_file.read_to_end(&mut theme.tag)?;
+        read_file(&src_dir.join("static/favicon.png"), &mut theme.favicon)?;
+        read_file(&src_dir.join("static/logo.png"), &mut theme.logo)?;
+        read_file(&src_dir.join("static/main.css"), &mut theme.main_css)?;
+        read_file(&src_dir.join("static/main.js"), &mut theme.main_js)?;
+        read_file(&src_dir.join("templates/base.tpl"), &mut theme.base)?;
+        read_file(&src_dir.join("templates/index.tpl"), &mut theme.index)?;
+        read_file(&src_dir.join("templates/post.tpl"), &mut theme.post)?;
+        read_file(&src_dir.join("templates/tag.tpl"), &mut theme.tag)?;
         theme.init_template()?;
         return Ok(theme);
     }

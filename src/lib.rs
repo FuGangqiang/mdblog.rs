@@ -126,7 +126,7 @@ impl Mdblog {
             let post = Post::new(&self.root, &post_path)?;
             let post = Rc::new(post);
             posts.push(post.clone());
-            if post.is_hidden() {
+            if post.headers.hidden {
                continue;
             }
             for tag_name in &post.headers.tags {
@@ -378,7 +378,7 @@ impl Mdblog {
     /// export blog index page.
     pub fn export_index(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        let posts: Vec<_> = self.posts.iter().filter(|p| !p.is_hidden()).collect();
+        let posts: Vec<_> = self.posts.iter().filter(|p| !p.headers.hidden).collect();
         let total = posts.len();
         let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
         let mut i = 1;

@@ -1,16 +1,15 @@
 {% extends "base.tpl" %}
 
 {% block title %}
-<title>{{ title }}</title>
+<title>{{ config.site_name }}</title>
 {% endblock title %}
 
 {% block main %}
-  <h1>{{ title }}</h1>
   <article>
   {% for post in posts %}
     <section>
       <span>{{ post.headers.created | date }}</span>
-      <span><a href="{{ config.url_prefix }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>
+      <span><a href="{{ config.site_url }}{{ post.url  | urlencode }}">{{ post.title }}</a></span>
     </section>
   {% endfor %}
   </article>
@@ -23,5 +22,5 @@
 
 
 {% block js %}
-<script src="{{ config.url_prefix }}/static/main.js"></script>
+<script src="{{ config.site_url }}/static/main.js"></script>
 {% endblock js %}

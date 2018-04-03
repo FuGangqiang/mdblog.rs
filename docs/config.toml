@@ -1,4 +1,4 @@
-site_url = "/mdblog.rs"
+site_url = "https://fugangqiang.github.io/mdblog.rs"
 site_name = "Mdblog"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
@@ -7,3 +7,4 @@ build_dir = "_build"
 theme = "simple"
 theme_root_dir = "_themes"
 rebuild_interval = 2
+posts_per_page = 20

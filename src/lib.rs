@@ -185,6 +185,7 @@ impl Mdblog {
         for tag in self.tags_map.values() {
             self.export_tag(tag)?;
         }
+        self.export_rss()?;
         Ok(())
     }
 
@@ -430,6 +431,18 @@ impl Mdblog {
             write_file(&dest, html.as_bytes())?;
             i += 1;
         }
+        Ok(())
+    }
+
+    /// export blog rss.xml
+    pub fn export_rss(&self) -> Result<()> {
+        debug!("rendering rss ...");
+        let build_dir = self.build_root_dir()?;
+        let dest = build_dir.join("rss.xml");
+        let mut context = self.get_base_context()?;
+        context.add("posts", &self.posts[..10.min(self.posts.len())]);
+        let html = self.theme.renderer.render("rss.tpl", &context)?;
+        write_file(&dest, html.as_bytes())?;
         Ok(())
     }
 

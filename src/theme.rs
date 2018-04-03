@@ -20,6 +20,7 @@ pub struct Theme {
     index: Vec<u8>,
     post: Vec<u8>,
     tag: Vec<u8>,
+    rss: Vec<u8>,
 }
 
 impl Theme {
@@ -45,6 +46,7 @@ impl Theme {
             theme.index.extend_from_slice(&SIMPLE_INDEX);
             theme.post.extend_from_slice(&SIMPLE_POST);
             theme.tag.extend_from_slice(&SIMPLE_TAG);
+            theme.rss.extend_from_slice(&SIMPLE_RSS);
             theme.init_template()?;
             return Ok(theme);
         }
@@ -57,6 +59,7 @@ impl Theme {
         read_file(&src_dir.join("templates/index.tpl"), &mut theme.index)?;
         read_file(&src_dir.join("templates/post.tpl"), &mut theme.post)?;
         read_file(&src_dir.join("templates/tag.tpl"), &mut theme.tag)?;
+        read_file(&src_dir.join("templates/rss.tpl"), &mut theme.rss)?;
         theme.init_template()?;
         return Ok(theme);
     }
@@ -67,6 +70,7 @@ impl Theme {
         self.renderer.add_raw_template("index.tpl", ::std::str::from_utf8(&self.index)?)?;
         self.renderer.add_raw_template("post.tpl", ::std::str::from_utf8(&self.post)?)?;
         self.renderer.add_raw_template("tag.tpl", ::std::str::from_utf8(&self.tag)?)?;
+        self.renderer.add_raw_template("rss.tpl", ::std::str::from_utf8(&self.rss)?)?;
         Ok(())
     }
 
@@ -86,6 +90,7 @@ impl Theme {
         write_file(&dest_dir.join("templates/index.tpl"), &self.index)?;
         write_file(&dest_dir.join("templates/post.tpl"), &self.post)?;
         write_file(&dest_dir.join("templates/tag.tpl"), &self.tag)?;
+        write_file(&dest_dir.join("templates/rss.tpl"), &self.rss)?;
         Ok(())
     }
 
@@ -109,3 +114,4 @@ static SIMPLE_BASE: &'static [u8] = include_bytes!("simple_theme/templates/base.
 static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple_theme/templates/index.tpl");
 static SIMPLE_POST: &'static [u8] = include_bytes!("simple_theme/templates/post.tpl");
 static SIMPLE_TAG: &'static [u8] = include_bytes!("simple_theme/templates/tag.tpl");
+static SIMPLE_RSS: &'static [u8] = include_bytes!("simple_theme/templates/rss.tpl");

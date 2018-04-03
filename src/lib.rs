@@ -21,6 +21,7 @@ extern crate serde_yaml;
 extern crate toml;
 extern crate tera;
 extern crate walkdir;
+extern crate tempdir;
 extern crate open;
 extern crate notify;
 extern crate glob;
@@ -48,6 +49,7 @@ use chrono::Local;
 use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
+use tempdir::TempDir;
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 pub use errors::{Error, Result};
@@ -73,6 +75,8 @@ pub struct Mdblog {
     posts: Vec<Rc<Post>>,
     /// tags map
     tags_map: BTreeMap<String, Tag>,
+    /// server root dir
+    server_root_dir: Option<TempDir>,
 }
 
 impl Mdblog {
@@ -88,6 +92,7 @@ impl Mdblog {
             theme: theme,
             posts: Vec::new(),
             tags_map: BTreeMap::new(),
+            server_root_dir: None,
         })
     }
 
@@ -103,8 +108,8 @@ impl Mdblog {
         settings.merge(config::File::with_name("config.toml"))?;
         settings.merge(config::Environment::with_prefix("BLOG"))?;
         self.settings = settings.try_into()?;
-        if self.settings.url_prefix.ends_with('/') {
-            self.settings.url_prefix = self.settings.url_prefix.trim_right_matches('/').to_string();
+        if self.settings.site_url.ends_with('/') {
+            self.settings.site_url = self.settings.site_url.trim_right_matches('/').to_string();
         }
         let theme_root_dir = self.theme_root_dir()?;
         self.theme = Theme::new(&theme_root_dir, &self.settings.theme)?;
@@ -172,6 +177,7 @@ impl Mdblog {
 
     /// build the blog html files to `build_dir` directory.
     pub fn build(&mut self) -> Result<()> {
+        self.load_posts()?;
         self.export_media()?;
         self.export_static()?;
         self.export_posts()?;
@@ -185,25 +191,27 @@ impl Mdblog {
     /// serve the blog static files in the `build_dir` directory.
     pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
-        let mut server_url = format!("http://{}", &addr_str);
-        server_url.push_str(&self.settings.url_prefix);
         let addr = addr_str.parse()?;
-        let build_dir = self.build_root_dir()?;
-        let url_prefix = self.settings.url_prefix.clone();
-        info!("server blog at {}", server_url);
+        let server_root_dir = TempDir::new("mdblog")?;
+        info!("server root dir: {}", &server_root_dir.path().display());
 
+        self.server_root_dir = Some(server_root_dir);
+        self.settings.site_url = format!("http://{}", &addr_str);
+        self.build()?;
+
+        info!("server blog at {}", &self.settings.site_url);
+        let server_root_dir = self.server_root_dir.as_ref().unwrap().path().to_owned();
         let child = thread::spawn(move || {
             let server = Http::new()
                 .bind(&addr, move || {
                     Ok(HttpService {
-                        root: build_dir.clone(),
-                        url_prefix: url_prefix.clone(),
+                        root: server_root_dir.clone(),
                     })})
                 .expect("server start error");
             server.run().unwrap();
         });
 
-        open::that(server_url)?;
+        open::that(&self.settings.site_url)?;
         self.watch()?;
         child.join().expect("Couldn't join the server thread");
 
@@ -257,7 +265,6 @@ impl Mdblog {
     pub fn rebuild(&mut self) -> Result<()> {
         info!("Rebuild blog again...");
         self.load_customize_settings()?;
-        self.load_posts()?;
         self.build()?;
         info!("Rebuild done!");
         Ok(())
@@ -265,7 +272,11 @@ impl Mdblog {
 
     /// blog build directory absolute path.
     pub fn build_root_dir(&self) -> Result<PathBuf> {
-        get_dir(&self.root, &self.settings.build_dir)
+        if let Some(ref server_root_dir) = self.server_root_dir {
+            Ok(server_root_dir.path().to_owned())
+        } else {
+            get_dir(&self.root, &self.settings.build_dir)
+        }
     }
 
     /// blog theme root directory absolute path.

@@ -16,8 +16,6 @@ static NOTFOUND: &[u8] = b"Not Found";
 pub struct HttpService {
     /// service root directory
     pub root: PathBuf,
-    /// service url prefix
-    pub url_prefix: String,
 }
 
 impl Service for HttpService {
@@ -30,7 +28,7 @@ impl Service for HttpService {
         let uri_path = percent_decode(req.uri().path().as_bytes())
             .decode_utf8()
             .expect("decode utf8 error");
-        match local_path_for_request(&self.root, &self.url_prefix, &uri_path) {
+        match local_path_for_request(&self.root, &uri_path) {
             None => {
                 warn!("Not Found {}", uri_path);
                 Box::new(future::ok(not_found_response()))
@@ -81,22 +79,10 @@ fn not_found_response() -> Response {
             .with_body(NOTFOUND)
 }
 
-fn local_path_for_request<P>(root_dir: P,
-                             url_prefix: &str,
-                             request_path: &str)
-    -> Option<PathBuf>
-    where P: AsRef<Path>
-{
-    let prifix_removed_path: &str;
-    if request_path.starts_with(url_prefix) {
-        prifix_removed_path = &request_path[url_prefix.len()..];
-    } else {
-        prifix_removed_path = request_path;
-    }
-
+fn local_path_for_request<P: AsRef<Path>>(root_dir: P, request_path: &str) -> Option<PathBuf> {
     // skip query string
-    let end = prifix_removed_path.find('?').unwrap_or(prifix_removed_path.len());
-    let final_path = &prifix_removed_path[0..end];
+    let end = request_path.find('?').unwrap_or(request_path.len());
+    let final_path = &request_path[0..end];
 
     let mut path = root_dir.as_ref().to_owned();
     if final_path.is_empty() || final_path == "/" {

@@ -5,8 +5,8 @@ use config::{Source, Value, ConfigError};
 /// blog setting
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
-    /// blog theme name
-    pub theme: String,
+    /// blog base url
+    pub site_url: String,
     /// blog site name
     pub site_name: String,
     /// blog site motto
@@ -17,28 +17,29 @@ pub struct Settings {
     pub media_dir: String,
     /// blog build root directory
     pub build_dir: String,
+    /// blog theme name
+    pub theme: String,
     /// blog theme root directory
     pub theme_root_dir: String,
     /// blog rebuild interval
     pub rebuild_interval: u8,
-    /// blog url prefix
-    pub url_prefix: String,
     /// post count per index page
     pub posts_per_page: usize,
 }
 
+
 impl Default for Settings {
     fn default() -> Self {
         return Settings {
-            theme: String::from("simple"),
+            site_url: String::from(""),
             site_name: String::from("Mdblog"),
             site_motto: String::from("Simple is Beautiful!"),
             footer_note: String::from("Keep It Simple, Stupid!"),
             media_dir: String::from("media"),
             build_dir: String::from("_build"),
+            theme: String::from("simple"),
             theme_root_dir: String::from("_themes"),
             rebuild_interval: 2,
-            url_prefix: Default::default(),
             posts_per_page: 20,
         }
     }

@@ -136,14 +136,14 @@ refresh the index page, you will find the new post.
 # config.toml
 
 ```toml
-theme = "simple"
+site_url = ""
 site_name = "Mdblog"
 site_motto = "Simple is Beautiful!"
 footer_note = "Keep It Simple, Stupid!"
 media_dir = "media"
 build_dir = "_build"
+theme = "simple"
 theme_root_dir = "_themes"
 rebuild_interval = 2
-url_prefix = ""
 posts_per_page = 20
 ```

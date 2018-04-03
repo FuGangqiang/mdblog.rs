@@ -21,6 +21,9 @@ pub struct PostHeaders {
     /// post tags, `tags: [hello, world]`, default `[]`
     #[serde(default)]
     pub tags: Vec<String>,
+    /// post description
+    #[serde(default)]
+    pub description: String,
 }
 
 /// blog post
@@ -71,7 +74,16 @@ impl Post {
                         .and_then(|x| x.to_str())
                         .expect(&format!("post filename format error: {}", path.display()));
         let url = Path::new("/").join(path).with_extension("html");
-        let headers: PostHeaders = serde_yaml::from_str(head)?;
+        let mut headers: PostHeaders = serde_yaml::from_str(head)?;
+        if headers.description.is_empty() {
+            let desc = body.split("\n\n").take(1).next().unwrap_or("")
+                           .split_whitespace().take(100).collect::<Vec<_>>()
+                           .join(" ");
+            headers.description.push_str(&desc);
+            if !headers.description.is_empty() {
+                headers.description.push_str("...");
+            }
+        }
         let content = markdown_to_html(body);
 
         Ok(Post {

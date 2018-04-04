@@ -1,27 +1,23 @@
 {% extends "base.tpl" %}
 
 {% block title %}
-<title>{{ post.title }}</title>
+  <title>{{ post.title }}</title>
 {% endblock title %}
+
+{%- block css %}{% endblock css -%}
 
 {% block main %}
     <h1>{{ post.title }}</h1>
     <article>
       {{ post.content }}
-
       <ul id="article_footer">
-        {% if post_tags %}
-           <li>tags: {% for tag in post_tags %}<a href="{{ config.site_url }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
-        {% endif %}
+      {%- if post_tags %}
+        <li>tags: {% for tag in post_tags %}<a href="{{ config.site_url }}{{ tag.url }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a>{% endfor %}</li>
+      {% endif -%}
         <li>date: {{ post.headers.created | date(format="%Y-%m-%d %H:%M:%S") }}</li>
       </ul>
     </article>
-{% endblock main %}
-
-
-{% block css %}
-{% endblock css %}
-
+{%- endblock main %}
 
 {% block js %}
 <script src="{{ config.site_url }}/static/main.js"></script>

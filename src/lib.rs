@@ -265,7 +265,9 @@ impl Mdblog {
     /// rebuild blog
     pub fn rebuild(&mut self) -> Result<()> {
         info!("Rebuild blog again...");
+        let site_url = self.settings.site_url.clone();
         self.load_customize_settings()?;
+        self.settings.site_url = site_url;
         self.build()?;
         info!("Rebuild done!");
         Ok(())

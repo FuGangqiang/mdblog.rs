@@ -14,6 +14,7 @@ pub struct Theme {
     pub renderer: Tera,
     favicon: Vec<u8>,
     logo: Vec<u8>,
+    feed: Vec<u8>,
     main_css: Vec<u8>,
     main_js: Vec<u8>,
     base: Vec<u8>,
@@ -40,6 +41,7 @@ impl Theme {
             }
             theme.favicon.extend_from_slice(&SIMPLE_FAVICON);
             theme.logo.extend_from_slice(&SIMPLE_LOGO);
+            theme.feed.extend_from_slice(&SIMPLE_FEED);
             theme.main_css.extend_from_slice(&SIMPLE_MAIN_CSS);
             theme.main_js.extend_from_slice(&SIMPLE_MAIN_JS);
             theme.base.extend_from_slice(&SIMPLE_BASE);
@@ -53,6 +55,7 @@ impl Theme {
 
         read_file(&src_dir.join("static/favicon.png"), &mut theme.favicon)?;
         read_file(&src_dir.join("static/logo.png"), &mut theme.logo)?;
+        read_file(&src_dir.join("static/feed.png"), &mut theme.feed)?;
         read_file(&src_dir.join("static/main.css"), &mut theme.main_css)?;
         read_file(&src_dir.join("static/main.js"), &mut theme.main_js)?;
         read_file(&src_dir.join("templates/base.tpl"), &mut theme.base)?;
@@ -84,6 +87,7 @@ impl Theme {
         debug!("init theme({}) ...", name);
         write_file(&dest_dir.join("static/favicon.png"), &self.favicon)?;
         write_file(&dest_dir.join("static/logo.png"), &self.logo)?;
+        write_file(&dest_dir.join("static/feed.png"), &self.feed)?;
         write_file(&dest_dir.join("static/main.css"), &self.main_css)?;
         write_file(&dest_dir.join("static/main.js"), &self.main_js)?;
         write_file(&dest_dir.join("templates/base.tpl"), &self.base)?;
@@ -100,6 +104,7 @@ impl Theme {
         let dest_dir = root.as_ref();
         write_file(&dest_dir.join("static/favicon.png"), &self.favicon)?;
         write_file(&dest_dir.join("static/logo.png"), &self.logo)?;
+        write_file(&dest_dir.join("static/feed.png"), &self.feed)?;
         write_file(&dest_dir.join("static/main.css"), &self.main_css)?;
         write_file(&dest_dir.join("static/main.js"), &self.main_js)?;
         Ok(())
@@ -108,6 +113,7 @@ impl Theme {
 
 static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple_theme/static/favicon.png");
 static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple_theme/static/logo.png");
+static SIMPLE_FEED: &'static [u8] = include_bytes!("simple_theme/static/feed.png");
 static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple_theme/static/main.css");
 static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple_theme/static/main.js");
 static SIMPLE_BASE: &'static [u8] = include_bytes!("simple_theme/templates/base.tpl");

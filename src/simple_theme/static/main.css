@@ -299,3 +299,8 @@ table td {
     float: left;
     padding: 0em 1em 1em 1em;
 }
+
+#feed {
+    width: 3em;
+    height: 3em;
+}

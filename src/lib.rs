@@ -358,7 +358,11 @@ impl Mdblog {
     /// export blog media files.
     pub fn export_media(&self) -> Result<()> {
         debug!("exporting media ...");
-        let walker = WalkDir::new(&self.media_root_dir()?).into_iter();
+        let media_root_dir = self.media_root_dir()?;
+        if !media_root_dir.exists() {
+            return Ok(());
+        }
+        let walker = WalkDir::new(&media_root_dir).into_iter();
         for entry in walker.filter_entry(|e| !is_hidden(e)) {
             let entry = entry.expect("get walker entry error");
             let src_path = entry.path();

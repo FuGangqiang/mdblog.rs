@@ -1,5 +1,15 @@
 # Mdblog
 
+[![crate][crate-image]][crate-link]
+[![Docs][docs-image]][docs-link]
+![MIT/Apache2 licensed][license-image]
+
+[crate-image]: https://img.shields.io/crates/v/mdblog.svg
+[crate-link]: https://crates.io/crates/mdblog
+[docs-image]: https://docs.rs/mdblog/badge.svg
+[docs-link]: https://docs.rs/mdblog
+[license-image]: https://img.shields.io/crates/l/mdblog.svg
+
 Static site generator from markdown files with features:
 
 * TeX style math support
@@ -7,7 +17,7 @@ Static site generator from markdown files with features:
 * file name is the post title
 * post can be hidden(link does not be insert into index/tag page)
 
-you can check the demo site:[https://fugangqiang.github.io/mdblog.rs](https://fugangqiang.github.io/mdblog.rs/)
+you can check the [demo site](https://fugangqiang.github.io/mdblog.rs/)
 to learn the usages of mdblog.
 
 

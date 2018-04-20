@@ -23,7 +23,7 @@ enum Opt {
      #[structopt(name = "new")]
     /// Create a blog post
     New {
-        #[structopt(short = "t", long = "tag", default_value = "blog")]
+        #[structopt(short = "t", long = "tag", default_value = "")]
         /// Post tags
         tags: Vec<String>,
         #[structopt(parse(from_os_str))]

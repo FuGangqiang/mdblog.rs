@@ -21,7 +21,7 @@ extern crate serde_yaml;
 extern crate toml;
 extern crate tera;
 extern crate walkdir;
-extern crate tempdir;
+extern crate tempfile;
 extern crate open;
 extern crate notify;
 extern crate glob;
@@ -49,7 +49,7 @@ use chrono::Local;
 use hyper::server::Http;
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
-use tempdir::TempDir;
+use tempfile::{TempDir, Builder as TempBuilder};
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 pub use errors::{Error, Result};
@@ -193,7 +193,10 @@ impl Mdblog {
     pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
         let addr = addr_str.parse()?;
-        let server_root_dir = TempDir::new("mdblog")?;
+        let server_root_dir = TempBuilder::new()
+            .prefix("mdblog.")
+            .rand_bytes(10)
+            .tempdir()?;
         info!("server root dir: {}", &server_root_dir.path().display());
 
         self.server_root_dir = Some(server_root_dir);

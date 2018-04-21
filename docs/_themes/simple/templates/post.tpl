@@ -4,7 +4,11 @@
   <title>{{ post.title }}</title>
 {% endblock title %}
 
-{%- block css %}{% endblock css -%}
+{%- block css %}
+  <style>
+    .katex      { font-size: 1em !important; }
+  </style>
+{% endblock css -%}
 
 {% block main %}
     <h1>{{ post.title }}</h1>
@@ -20,24 +24,35 @@
 {%- endblock main %}
 
 {% block js %}
-<script src="{{ config.site_url }}/static/main.js"></script>
-<script src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-       tex2jax: {
-          inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-          processEscapes: true,
-          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-       },
-       TeX: {equationNumbers: {autoNumber: ["AMS"], useLabelIds: true}},
-       "HTML-CSS": {linebreaks: {automatic: true}},
-       SVG: {linebreaks: {automatic: true}}
-    });
-    MathJax.Hub.Queue(function() {
-       var all = MathJax.Hub.getAllJax(), i;
-       for(i=0; i < all.length; i += 1) {
-          all[i].SourceElement().parentNode.className += ' has-jax';
-       }
-    });
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.9.0/dist/katex.min.js"></script>
+<script>
+  "use strict";
+  document.addEventListener("DOMContentLoaded", function () {
+      var maths = document.getElementsByClassName("language-math");
+      for (var i=0; i<maths.length; i++) {
+          var el = maths[i];
+          katex.render(el.innerText, el, {displayMode: true});
+      }
+      var codes = document.getElementsByTagName("code");
+      for (i=0; i<codes.length; i++) {
+          el = codes[i];
+          if (el.classList.contains("language-math")) continue;
+          if (el.classList.contains("language-inline-math")) {
+              katex.render(el.innerText, el);
+              continue;
+          }
+          var parent = el.parentNode;
+          if (parent.nodeName.toLowerCase() === "pre") continue;
+          // TODO: Can this be done with DOM manipulation rather than string manipulation?
+          // https://stackoverflow.com/q/48438067/3019990
+          var inlineMath = "$" + el.outerHTML + "$";
+          if (parent.innerHTML.indexOf(inlineMath) !== -1) {
+              el.classList.add("language-inline-math");
+              parent.innerHTML = parent.innerHTML.replace("$" + el.outerHTML + "$", el.outerHTML);
+              i--;
+          }
+      }
+  });
 </script>
 {% endblock js %}

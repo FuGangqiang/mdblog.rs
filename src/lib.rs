@@ -215,7 +215,7 @@ impl Mdblog {
             server.run().unwrap();
         });
 
-        open::that(&self.settings.site_url)?;
+        self.open_browser();
         self.watch()?;
         child.join().expect("Couldn't join the server thread");
 
@@ -263,6 +263,14 @@ impl Mdblog {
         }
         #[allow(unreachable_code)]
         Ok(())
+    }
+
+    /// open url with browser
+    fn open_browser(&self) {
+        let url = self.settings.site_url.clone();
+        thread::spawn(move || {
+            open::that(url).unwrap();
+        });
     }
 
     /// rebuild blog

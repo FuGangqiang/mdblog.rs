@@ -29,13 +29,24 @@ myblog
 * `posts`: blog project markdown posts directory
 * `_themes`: blog project themes directory
 
+## run subcommand
+
+every mdblog subcommand except `init` should be run in the top blog project directory.
+
+```
+cd myblog
+# mdblog subcommand
+```
+
+`config.toml` must be existed in the top blog project directory.
+
 ## check blog project
+
 
 now you can run `serve` command in the blog project directory
 to check the web pages:
 
 ```
-cd myblog
 mdblog serve
 ```
 

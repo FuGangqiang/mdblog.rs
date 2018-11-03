@@ -1,9 +1,12 @@
-use errors::{Result, Error};
 use std::fs::File;
 use std::path::Path;
 use std::io::{Write, Read};
+
+use log::{log, error};
 use failure::Fail;
 use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
+
+use crate::errors::{Result, Error};
 
 /// create the file of `path` and append content
 ///

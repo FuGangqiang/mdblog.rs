@@ -10,6 +10,7 @@ keywords = ["blog", "markdown", "static", "site", "generator"]
 categories = ["command-line-utilities"]
 license = "MIT"
 readme = "README.md"
+edition = "2018"
 
 [[bin]]
 name = "mdblog"

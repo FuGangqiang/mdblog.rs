@@ -2,6 +2,8 @@ use std::io;
 use std::fs::File;
 use std::thread;
 use std::path::{Path, PathBuf};
+
+use log::{log, warn, info, error};
 use mime_guess::get_mime_type;
 use percent_encoding::percent_decode;
 use futures::sync::oneshot;

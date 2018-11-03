@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde_derive::{Deserialize, Serialize};
 use serde_json;
 use config::{Source, Value, ConfigError};
 

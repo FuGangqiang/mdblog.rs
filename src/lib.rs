@@ -4,31 +4,6 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/mdblog")]
 
-extern crate chrono;
-extern crate config;
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate log;
-extern crate hyper;
-extern crate futures;
-extern crate pulldown_cmark;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-extern crate serde_yaml;
-extern crate toml;
-extern crate tera;
-extern crate walkdir;
-extern crate tempfile;
-extern crate open;
-extern crate notify;
-extern crate glob;
-extern crate mime_guess;
-extern crate shellexpand;
-extern crate percent_encoding;
-
 mod errors;
 mod settings;
 mod post;
@@ -44,6 +19,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 use std::sync::mpsc::channel;
 
+use log::{debug, log, info, error};
 use glob::Pattern;
 use chrono::Local;
 use hyper::server::Http;
@@ -52,16 +28,16 @@ use walkdir::{DirEntry, WalkDir};
 use tempfile::{TempDir, Builder as TempBuilder};
 use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
-pub use errors::{Error, Result};
-pub use settings::Settings;
-pub use theme::Theme;
-pub use post::Post;
-pub use tag::Tag;
-pub use post::PostHeaders;
-pub use utils::log_error;
+pub use crate::errors::{Error, Result};
+pub use crate::settings::Settings;
+pub use crate::theme::Theme;
+pub use crate::post::Post;
+pub use crate::tag::Tag;
+pub use crate::post::PostHeaders;
+pub use crate::utils::log_error;
 use config::Config;
-use service::HttpService;
-use utils::write_file;
+use crate::service::HttpService;
+use crate::utils::write_file;
 
 /// blog object
 pub struct Mdblog {
@@ -135,8 +111,8 @@ impl Mdblog {
                continue;
             }
             for tag_name in &post.headers.tags {
-                let mut tag = tags_map.entry(tag_name.to_string())
-                                      .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
+                let tag = tags_map.entry(tag_name.to_string())
+                                  .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
                 tag.add(post.clone());
             }
         }

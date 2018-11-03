@@ -1,3 +1,4 @@
+use failure::Fail;
 use std::env::VarError;
 use std::path::PathBuf;
 use std::path::StripPrefixError;

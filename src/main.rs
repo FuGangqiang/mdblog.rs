@@ -1,10 +1,3 @@
-extern crate log;
-extern crate env_logger;
-#[macro_use]
-extern crate structopt;
-extern crate failure;
-extern crate mdblog;
-
 use std::env;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;

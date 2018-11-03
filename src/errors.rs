@@ -1,19 +1,20 @@
-use failure::Fail;
 use std::env::VarError;
+use std::io::Error as IoError;
+use std::net::AddrParseError;
+use std::num::ParseIntError;
 use std::path::PathBuf;
 use std::path::StripPrefixError;
-use std::io::Error as IoError;
-use std::num::ParseIntError;
-use std::net::AddrParseError;
 use std::str::Utf8Error;
+
 use config::ConfigError;
-use toml::ser::Error as TomlError;
-use tera::Error as TeraError;
-use serde_yaml::Error as YamlError;
+use failure::Fail;
+use glob::PatternError;
 use hyper::error::Error as HyperError;
 use notify::Error as NotifyError;
-use glob::PatternError;
+use serde_yaml::Error as YamlError;
 use shellexpand::LookupError;
+use tera::Error as TeraError;
+use toml::ser::Error as TomlError;
 
 /// The error type used by this crate.
 #[derive(Debug, Fail)]
@@ -54,7 +55,6 @@ pub enum Error {
     #[fail(display = "Template error: {}", _0)]
     Template(String),
     // Template(#[cause] ::tera::Error),
-
     #[fail(display = "Server error")]
     Hyper(#[cause] HyperError),
 
@@ -70,13 +70,19 @@ pub enum Error {
     #[fail(display = "blog theme {} in use, can not be deleted", _0)]
     ThemeInUse(String),
 
-    #[fail(display = "post path {:?} format error: must be relative path without file extension", _0)]
+    #[fail(
+        display = "post path {:?} format error: must be relative path without file extension",
+        _0
+    )]
     PostPathInvaild(PathBuf),
 
     #[fail(display = "post path {:?} already existed", _0)]
     PostPathExisted(PathBuf),
 
-    #[fail(display = "post {:?} must has two parts: headers and body, splitted by first blank line", _0)]
+    #[fail(
+        display = "post {:?} must has two parts: headers and body, splitted by first blank line",
+        _0
+    )]
     PostOnlyOnePart(PathBuf),
 
     #[fail(display = "post {:?} head part is empty", _0)]
@@ -90,81 +96,81 @@ pub enum Error {
 }
 
 impl From<IoError> for Error {
-     fn from(err: IoError) -> Error {
-         Error::Io(err)
-     }
+    fn from(err: IoError) -> Error {
+        Error::Io(err)
+    }
 }
 
 impl From<ParseIntError> for Error {
-     fn from(err: ParseIntError) -> Error {
-         Error::IntParse(err)
-     }
+    fn from(err: ParseIntError) -> Error {
+        Error::IntParse(err)
+    }
 }
 
 impl From<AddrParseError> for Error {
-     fn from(err: AddrParseError) -> Error {
-         Error::AddrParse(err)
-     }
+    fn from(err: AddrParseError) -> Error {
+        Error::AddrParse(err)
+    }
 }
 
 impl From<Utf8Error> for Error {
-     fn from(err: Utf8Error) -> Error {
-         Error::ThemeTemplateEncodeing(err)
-     }
+    fn from(err: Utf8Error) -> Error {
+        Error::ThemeTemplateEncodeing(err)
+    }
 }
 
 impl From<NotifyError> for Error {
-     fn from(err: NotifyError) -> Error {
-         Error::Notify(err)
-     }
+    fn from(err: NotifyError) -> Error {
+        Error::Notify(err)
+    }
 }
 
 impl From<PatternError> for Error {
-     fn from(err: PatternError) -> Error {
-         Error::Pattern(err)
-     }
+    fn from(err: PatternError) -> Error {
+        Error::Pattern(err)
+    }
 }
 
 impl From<ConfigError> for Error {
-     fn from(err: ConfigError) -> Error {
-         Error::Config(err)
-     }
+    fn from(err: ConfigError) -> Error {
+        Error::Config(err)
+    }
 }
 
 impl From<TomlError> for Error {
-     fn from(err: TomlError) -> Error {
-         Error::Toml(err)
-     }
+    fn from(err: TomlError) -> Error {
+        Error::Toml(err)
+    }
 }
 
 impl From<YamlError> for Error {
-     fn from(err: YamlError) -> Error {
-         Error::Yaml(err)
-     }
+    fn from(err: YamlError) -> Error {
+        Error::Yaml(err)
+    }
 }
 
 impl From<LookupError<VarError>> for Error {
-     fn from(err: LookupError<VarError>) -> Error {
-         Error::PathExpend(err)
-     }
+    fn from(err: LookupError<VarError>) -> Error {
+        Error::PathExpend(err)
+    }
 }
 
 impl From<StripPrefixError> for Error {
-     fn from(err: StripPrefixError) -> Error {
-         Error::PathStripPrefix(err)
-     }
+    fn from(err: StripPrefixError) -> Error {
+        Error::PathStripPrefix(err)
+    }
 }
 
 impl From<TeraError> for Error {
-     fn from(err: TeraError) -> Error {
-         Error::Template(err.description().to_string())
-     }
+    fn from(err: TeraError) -> Error {
+        Error::Template(err.description().to_string())
+    }
 }
 
 impl From<HyperError> for Error {
-     fn from(err: HyperError) -> Error {
-         Error::Hyper(err)
-     }
+    fn from(err: HyperError) -> Error {
+        Error::Hyper(err)
+    }
 }
 
 /// A specialized `Result` type where the error is hard-wired to [`Error`].

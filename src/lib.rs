@@ -1,42 +1,44 @@
 //! static site generator from markdown files.
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/mdblog")]
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://docs.rs/mdblog"
+)]
 
 mod errors;
-mod settings;
 mod post;
-mod theme;
-mod tag;
-mod utils;
 mod service;
+mod settings;
+mod tag;
+mod theme;
+mod utils;
 
-use std::thread;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::time::{Duration, Instant};
 use std::sync::mpsc::channel;
+use std::thread;
+use std::time::{Duration, Instant};
 
-use log::{debug, log, info, error};
-use glob::Pattern;
 use chrono::Local;
+use config::Config;
+use glob::Pattern;
 use hyper::server::Http;
+use log::{debug, error, info, log};
+use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use tempfile::{Builder as TempBuilder, TempDir};
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
-use tempfile::{TempDir, Builder as TempBuilder};
-use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
 
 pub use crate::errors::{Error, Result};
-pub use crate::settings::Settings;
-pub use crate::theme::Theme;
 pub use crate::post::Post;
-pub use crate::tag::Tag;
 pub use crate::post::PostHeaders;
-pub use crate::utils::log_error;
-use config::Config;
 use crate::service::HttpService;
+pub use crate::settings::Settings;
+pub use crate::tag::Tag;
+pub use crate::theme::Theme;
+pub use crate::utils::log_error;
 use crate::utils::write_file;
 
 /// blog object
@@ -108,11 +110,12 @@ impl Mdblog {
             let post = Rc::new(post);
             posts.push(post.clone());
             if post.headers.hidden {
-               continue;
+                continue;
             }
             for tag_name in &post.headers.tags {
-                let tag = tags_map.entry(tag_name.to_string())
-                                  .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
+                let tag = tags_map
+                    .entry(tag_name.to_string())
+                    .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
                 tag.add(post.clone());
             }
         }
@@ -169,10 +172,7 @@ impl Mdblog {
     pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
         let addr = addr_str.parse()?;
-        let server_root_dir = TempBuilder::new()
-            .prefix("mdblog.")
-            .rand_bytes(10)
-            .tempdir()?;
+        let server_root_dir = TempBuilder::new().prefix("mdblog.").rand_bytes(10).tempdir()?;
         info!("server root dir: {}", &server_root_dir.path().display());
 
         self.server_root_dir = Some(server_root_dir);
@@ -186,7 +186,8 @@ impl Mdblog {
                 .bind(&addr, move || {
                     Ok(HttpService {
                         root: server_root_dir.clone(),
-                    })})
+                    })
+                })
                 .expect("server start error");
             server.run().unwrap();
         });
@@ -210,30 +211,28 @@ impl Mdblog {
         loop {
             match rx.recv() {
                 Err(why) => error!("watch error: {:?}", why),
-                Ok(event) => {
-                    match event {
-                        DebouncedEvent::Create(ref fpath) |
-                        DebouncedEvent::Write(ref fpath)  |
-                        DebouncedEvent::Remove(ref fpath) |
-                        DebouncedEvent::Rename(ref fpath, _) => {
-                            if ignore_patterns.iter().any(|ref pat| pat.matches_path(fpath)) {
+                Ok(event) => match event {
+                    DebouncedEvent::Create(ref fpath)
+                    | DebouncedEvent::Write(ref fpath)
+                    | DebouncedEvent::Remove(ref fpath)
+                    | DebouncedEvent::Rename(ref fpath, _) => {
+                        if ignore_patterns.iter().any(|ref pat| pat.matches_path(fpath)) {
+                            continue;
+                        }
+                        let now = Instant::now();
+                        if let Some(last_time) = last_run {
+                            if now.duration_since(last_time) < interval {
                                 continue;
                             }
-                            let now = Instant::now();
-                            if let Some(last_time) = last_run {
-                                if now.duration_since(last_time) < interval {
-                                    continue;
-                                }
-                            }
-                            last_run = Some(now);
-                            info!("Modified file: {}", fpath.display());
-                            if let Err(ref e) = self.rebuild() {
-                                log_error(e);
-                                continue;
-                            }
-                        },
-                        _ => {},
+                        }
+                        last_run = Some(now);
+                        info!("Modified file: {}", fpath.display());
+                        if let Err(ref e) = self.rebuild() {
+                            log_error(e);
+                            continue;
+                        }
                     }
+                    _ => {}
                 },
             }
         }
@@ -291,10 +290,11 @@ impl Mdblog {
     /// * `mdblog serve` command, the modified file path is checked
     pub fn ignore_patterns(&self) -> Result<Vec<Pattern>> {
         let mut patterns = vec![Pattern::new("**/.*")?];
-        let build_dir = self.build_root_dir()?
-                            .to_str()
-                            .expect("get build dir error")
-                            .to_string();
+        let build_dir = self
+            .build_root_dir()?
+            .to_str()
+            .expect("get build dir error")
+            .to_string();
         patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_right_matches("/")))?);
         Ok(patterns)
     }
@@ -306,7 +306,8 @@ impl Mdblog {
             || path.extension().is_some()
             || path.to_str().unwrap_or("").is_empty()
             || post_title.is_none()
-            || self.ignore_patterns()?.iter().any(|ref pat| pat.matches_path(path)) {
+            || self.ignore_patterns()?.iter().any(|ref pat| pat.matches_path(path))
+        {
             return Err(Error::PostPathInvaild(path.to_owned()));
         }
         if path.is_dir() {
@@ -317,12 +318,14 @@ impl Mdblog {
             return Err(Error::PostPathExisted(path.to_owned()));
         }
         let now = Local::now();
-        let content = format!("created: {}\n\
-                               tags: [{}]\n\
-                               \n\
-                               this is a new post!\n",
-                              now.format("%Y-%m-%dT%H:%M:%S%:z"),
-                              tags.join(", "));
+        let content = format!(
+            "created: {}\n\
+             tags: [{}]\n\
+             \n\
+             this is a new post!\n",
+            now.format("%Y-%m-%dT%H:%M:%S%:z"),
+            tags.join(", ")
+        );
         write_file(&post_path, content.as_bytes())?;
         Ok(())
     }
@@ -336,9 +339,7 @@ impl Mdblog {
 
     fn media_dest<P: AsRef<Path>>(&self, media: P) -> Result<PathBuf> {
         let build_dir = self.build_root_dir()?;
-        let rel_path = media.as_ref()
-            .strip_prefix(&self.media_root_dir()?)?
-            .to_owned();
+        let rel_path = media.as_ref().strip_prefix(&self.media_root_dir()?)?.to_owned();
         Ok(build_dir.join("media").join(rel_path))
     }
 
@@ -390,13 +391,11 @@ impl Mdblog {
         while i <= pages {
             let start = (i - 1) * self.settings.posts_per_page;
             let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name("index", i-1, pages);
+            let prev_name = format_page_name("index", i - 1, pages);
             let current_name = format_page_name("index", i, pages);
-            let next_name = format_page_name("index", i+1, pages);
+            let next_name = format_page_name("index", i + 1, pages);
             let dest = build_dir.join(current_name);
-            let html = self.render_index(&posts[start..end],
-                                         &prev_name,
-                                         &next_name)?;
+            let html = self.render_index(&posts[start..end], &prev_name, &next_name)?;
             write_file(&dest, html.as_bytes())?;
             i += 1;
         }
@@ -412,15 +411,12 @@ impl Mdblog {
         while i <= pages {
             let start = (i - 1) * self.settings.posts_per_page;
             let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name(&tag.name, i-1, pages);
+            let prev_name = format_page_name(&tag.name, i - 1, pages);
             let current_name = format_page_name(&tag.name, i, pages);
-            let next_name = format_page_name(&tag.name, i+1, pages);
+            let next_name = format_page_name(&tag.name, i + 1, pages);
             let dest = build_dir.join("tags").join(current_name);
             debug!("rendering tag: {} ...", dest.display());
-            let html = self.render_tag(&tag.name,
-                                       &tag.posts[start..end],
-                                       &prev_name,
-                                       &next_name)?;
+            let html = self.render_tag(&tag.name, &tag.posts[start..end], &prev_name, &next_name)?;
             write_file(&dest, html.as_bytes())?;
             i += 1;
         }
@@ -452,7 +448,9 @@ impl Mdblog {
     /// render blog post html.
     pub fn render_post(&self, post: &Post) -> Result<String> {
         debug!("rendering post({}) ...", post.path.display());
-        let post_tags = self.tags_map.iter()
+        let post_tags = self
+            .tags_map
+            .iter()
             .filter(|&(name, _)| post.headers.tags.contains(name))
             .map(|(_, tag)| tag)
             .collect::<Vec<_>>();
@@ -492,10 +490,13 @@ impl Mdblog {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                info!("* {}", path.file_name()
-                                  .expect("theme name error")
-                                  .to_str()
-                                  .expect("theme name error"));
+                info!(
+                    "* {}",
+                    path.file_name()
+                        .expect("theme name error")
+                        .to_str()
+                        .expect("theme name error")
+                );
             }
         }
         Ok(())
@@ -534,10 +535,7 @@ impl Mdblog {
 
 /// check directory entry is a hidden file.
 fn is_hidden(entry: &DirEntry) -> bool {
-    entry.file_name()
-         .to_str()
-         .map(|s| s.starts_with("."))
-         .unwrap_or(false)
+    entry.file_name().to_str().map(|s| s.starts_with(".")).unwrap_or(false)
 }
 
 /// check directory entry is an markdown file.
@@ -549,7 +547,7 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
     match fname {
         None => {
             return false;
-        },
+        }
         Some(s) => {
             if s.starts_with(|c| (c == '.') | (c == '~')) {
                 return false;
@@ -558,7 +556,7 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
             } else {
                 return false;
             }
-        },
+        }
     }
 }
 
@@ -577,7 +575,7 @@ fn format_page_name(prefix: &str, page: usize, total: usize) -> String {
     if page == 0 || page > total {
         return String::default();
     }
-    let mut s = String::with_capacity(prefix.len()+10);
+    let mut s = String::with_capacity(prefix.len() + 10);
     s.push_str(prefix);
     if page > 1 {
         s.push_str(&format!("-{}", page));

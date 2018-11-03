@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use serde_derive::{Serialize};
+use serde_derive::Serialize;
 
 use crate::post::Post;
 

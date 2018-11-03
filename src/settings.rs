@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+
+use config::{ConfigError, Source, Value};
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
-use config::{Source, Value, ConfigError};
 
 /// blog setting
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,7 +29,6 @@ pub struct Settings {
     pub posts_per_page: usize,
 }
 
-
 impl Default for Settings {
     fn default() -> Self {
         return Settings {
@@ -42,7 +42,7 @@ impl Default for Settings {
             theme_root_dir: String::from("_themes"),
             rebuild_interval: 2,
             posts_per_page: 20,
-        }
+        };
     }
 }
 
@@ -52,10 +52,8 @@ impl Source for Settings {
     }
 
     fn collect(&self) -> Result<HashMap<String, Value>, ConfigError> {
-        let serialized = serde_json::to_string(&self)
-            .expect("settings serialized error");
-        let map = serde_json::from_str::<HashMap<String, Value>>(&serialized)
-            .expect("settings deserialized error");
+        let serialized = serde_json::to_string(&self).expect("settings serialized error");
+        let map = serde_json::from_str::<HashMap<String, Value>>(&serialized).expect("settings deserialized error");
         Ok(map)
     }
 }

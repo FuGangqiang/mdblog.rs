@@ -2,10 +2,10 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use log::{log, debug};
+use chrono::{DateTime, Local};
+use log::{debug, log};
 use serde_derive::{Deserialize, Serialize};
 use serde_yaml;
-use chrono::{DateTime, Local};
 
 use crate::errors::{Error, Result};
 use crate::utils::markdown_to_html;
@@ -72,15 +72,22 @@ impl Post {
             return Err(Error::PostNoBody(path.into()));
         }
 
-        let title = path.file_stem()
-                        .and_then(|x| x.to_str())
-                        .expect(&format!("post filename format error: {}", path.display()));
+        let title = path
+            .file_stem()
+            .and_then(|x| x.to_str())
+            .expect(&format!("post filename format error: {}", path.display()));
         let url = Path::new("/").join(path).with_extension("html");
         let mut headers: PostHeaders = serde_yaml::from_str(head)?;
         if headers.description.is_empty() {
-            let desc = body.split("\n\n").take(1).next().unwrap_or("")
-                           .split_whitespace().take(100).collect::<Vec<_>>()
-                           .join(" ");
+            let desc = body
+                .split("\n\n")
+                .take(1)
+                .next()
+                .unwrap_or("")
+                .split_whitespace()
+                .take(100)
+                .collect::<Vec<_>>()
+                .join(" ");
             headers.description.push_str(&desc);
             if !headers.description.is_empty() {
                 headers.description.push_str("...");

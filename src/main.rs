@@ -1,7 +1,8 @@
 use std::env;
 use std::path::{Path, PathBuf};
+
+use mdblog::{log_error, Mdblog, Result};
 use structopt::StructOpt;
-use mdblog::{Mdblog, Result, log_error};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "mdblog")]
@@ -13,7 +14,7 @@ enum Opt {
         /// the blog directory name
         name: String,
     },
-     #[structopt(name = "new")]
+    #[structopt(name = "new")]
     /// Create a blog post
     New {
         #[structopt(short = "t", long = "tag", default_value = "")]
@@ -38,7 +39,6 @@ enum Opt {
     Theme(SubCommandTheme),
 }
 
-
 #[derive(StructOpt, Debug)]
 enum SubCommandTheme {
     #[structopt(name = "list")]
@@ -50,7 +50,7 @@ enum SubCommandTheme {
         /// theme name
         name: String,
     },
-     #[structopt(name = "delete")]
+    #[structopt(name = "delete")]
     /// Delete a theme
     Delete {
         /// theme name
@@ -64,16 +64,13 @@ enum SubCommandTheme {
     },
 }
 
-
 fn main() {
-    env_logger::Builder::new()
-        .filter(None, log::LevelFilter::Info)
-        .init();
+    env_logger::Builder::new().filter(None, log::LevelFilter::Info).init();
 
     let opt = Opt::from_args();
     let res = match opt {
-        Opt::Init {ref name} => init(name),
-        Opt::New {ref tags, ref path} => new(path, tags),
+        Opt::Init { ref name } => init(name),
+        Opt::New { ref tags, ref path } => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
         Opt::Theme(ref subcmd) => theme(subcmd),

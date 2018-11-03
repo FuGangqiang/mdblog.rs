@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
-use log::{log, debug, info};
+use log::{debug, info, log};
 use tera::Tera;
 
-use crate::utils::{write_file, read_file};
 use crate::errors::{Error, Result};
+use crate::utils::{read_file, write_file};
 
 /// blog theme object
 #[derive(Default)]
@@ -72,11 +72,16 @@ impl Theme {
 
     /// init renderer template.
     fn init_template(&mut self) -> Result<()> {
-        self.renderer.add_raw_template("base.tpl", ::std::str::from_utf8(&self.base)?)?;
-        self.renderer.add_raw_template("index.tpl", ::std::str::from_utf8(&self.index)?)?;
-        self.renderer.add_raw_template("post.tpl", ::std::str::from_utf8(&self.post)?)?;
-        self.renderer.add_raw_template("tag.tpl", ::std::str::from_utf8(&self.tag)?)?;
-        self.renderer.add_raw_template("atom.tpl", ::std::str::from_utf8(&self.atom)?)?;
+        self.renderer
+            .add_raw_template("base.tpl", ::std::str::from_utf8(&self.base)?)?;
+        self.renderer
+            .add_raw_template("index.tpl", ::std::str::from_utf8(&self.index)?)?;
+        self.renderer
+            .add_raw_template("post.tpl", ::std::str::from_utf8(&self.post)?)?;
+        self.renderer
+            .add_raw_template("tag.tpl", ::std::str::from_utf8(&self.tag)?)?;
+        self.renderer
+            .add_raw_template("atom.tpl", ::std::str::from_utf8(&self.atom)?)?;
         Ok(())
     }
 

@@ -67,7 +67,7 @@ enum SubCommandTheme {
 }
 
 fn main() {
-    env_logger::Builder::new().filter(None, log::LevelFilter::Info).init();
+    env_logger::Builder::from_default_env().filter(None, log::LevelFilter::Info).init();
 
     let opt = Opt::from_args();
     let res = match opt {

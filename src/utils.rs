@@ -4,7 +4,7 @@ use std::path::Path;
 
 use failure::Fail;
 use log::error;
-use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
+use pulldown_cmark::{html, Options, Parser};
 
 use crate::errors::{Error, Result};
 
@@ -30,7 +30,8 @@ pub fn read_file<P: AsRef<Path>>(path: P, buf: &mut Vec<u8>) -> Result<()> {
 /// the rendered html content of post body port
 pub fn markdown_to_html(content: &str) -> String {
     let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
     let mut s = String::with_capacity(content.len() * 3 / 2);
     let p = Parser::new_ext(content, opts);
     html::push_html(&mut s, p);

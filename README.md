@@ -26,9 +26,7 @@ to learn the usages of mdblog.
 
 # Install
 
-minimum required rust version: 1.23.0.
-
-`mdblog` is implemented by rust language, so you need cargo command:
+`mdblog` is implemented by rust language(2018 edition), so you need cargo command:
 
 ```
 cargo install mdblog

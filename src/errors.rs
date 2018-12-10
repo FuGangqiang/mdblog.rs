@@ -9,7 +9,6 @@ use std::str::Utf8Error;
 use config::ConfigError;
 use failure::Fail;
 use glob::PatternError;
-use hyper::error::Error as HyperError;
 use notify::Error as NotifyError;
 use serde_yaml::Error as YamlError;
 use shellexpand::LookupError;
@@ -55,9 +54,6 @@ pub enum Error {
     #[fail(display = "Template error: {}", _0)]
     Template(String),
     // Template(#[cause] ::tera::Error),
-    #[fail(display = "Server error")]
-    Hyper(#[cause] HyperError),
-
     #[fail(display = "Argument error: {}", _0)]
     Argument(String),
 
@@ -164,12 +160,6 @@ impl From<StripPrefixError> for Error {
 impl From<TeraError> for Error {
     fn from(err: TeraError) -> Error {
         Error::Template(err.description().to_string())
-    }
-}
-
-impl From<HyperError> for Error {
-    fn from(err: HyperError) -> Error {
-        Error::Hyper(err)
     }
 }
 

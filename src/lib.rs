@@ -6,25 +6,16 @@
     html_root_url = "https://docs.rs/mdblog"
 )]
 
-mod errors;
-mod post;
-mod service;
-mod settings;
-mod tag;
-mod theme;
-mod utils;
-
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::mpsc::channel;
+use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use chrono::Local;
 use config::Config;
 use glob::Pattern;
-use hyper::server::Http;
 use log::{debug, error, info, log};
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use tempfile::{Builder as TempBuilder, TempDir};
@@ -34,12 +25,18 @@ use walkdir::{DirEntry, WalkDir};
 pub use crate::errors::{Error, Result};
 pub use crate::post::Post;
 pub use crate::post::PostHeaders;
-use crate::service::HttpService;
 pub use crate::settings::Settings;
 pub use crate::tag::Tag;
 pub use crate::theme::Theme;
 pub use crate::utils::log_error;
 use crate::utils::write_file;
+
+mod errors;
+mod post;
+mod settings;
+mod tag;
+mod theme;
+mod utils;
 
 /// blog object
 pub struct Mdblog {
@@ -171,7 +168,6 @@ impl Mdblog {
     /// serve the blog static files in the `build_dir` directory.
     pub fn serve(&mut self, port: u16) -> Result<()> {
         let addr_str = format!("127.0.0.1:{}", port);
-        let addr = addr_str.parse()?;
         let server_root_dir = TempBuilder::new().prefix("mdblog.").rand_bytes(10).tempdir()?;
         info!("server root dir: {}", &server_root_dir.path().display());
 
@@ -181,27 +177,24 @@ impl Mdblog {
 
         info!("server blog at {}", &self.settings.site_url);
         let server_root_dir = self.server_root_dir.as_ref().unwrap().path().to_owned();
-        let child = thread::spawn(move || {
-            let server = Http::new()
-                .bind(&addr, move || {
-                    Ok(HttpService {
-                        root: server_root_dir.clone(),
-                    })
-                })
-                .expect("server start error");
-            server.run().unwrap();
+
+        thread::spawn(move || {
+            let mut config = rocket::config::Config::production();
+            config.set_address("127.0.0.1").expect("can not bind address: 127.0.0.1");
+            config.set_port(port);
+            rocket::custom(config)
+                .mount("/", rocket_contrib::serve::StaticFiles::from(&server_root_dir))
+                .launch();
         });
 
         self.open_browser();
         self.watch()?;
-        child.join().expect("Couldn't join the server thread");
-
         Ok(())
     }
 
     /// watch blog files, rebuild blog when some files modified.
     fn watch(&mut self) -> Result<()> {
-        let (tx, rx) = channel();
+        let (tx, rx) = mpsc::channel();
         let ignore_patterns = self.ignore_patterns()?;
         info!("watching dir: {}", self.root.display());
         let mut watcher = watcher(tx, Duration::new(2, 0))?;

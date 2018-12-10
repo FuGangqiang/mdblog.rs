@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use failure::Fail;
-use log::{error, log};
+use log::error;
 use pulldown_cmark::{html, Options, Parser, OPTION_ENABLE_TABLES};
 
 use crate::errors::{Error, Result};
@@ -16,7 +16,8 @@ pub fn write_file(path: &Path, buf: &[u8]) -> Result<()> {
         ::std::fs::create_dir_all(p)?;
     }
     let mut file = File::create(path)?;
-    Ok(file.write_all(buf)?)
+    file.write_all(buf)?;
+    Ok(())
 }
 
 /// read the file content of `path` to `buf`
@@ -38,7 +39,7 @@ pub fn markdown_to_html(content: &str) -> String {
 
 /// log mdblog error chain
 pub fn log_error(err: &Error) {
-    for cause in err.causes() {
+    for cause in (err as &Fail).iter_chain() {
         error!("{}", cause);
     }
 

@@ -1,3 +1,5 @@
+#![deny(unused_extern_crates)]
+
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -89,7 +91,7 @@ fn init(name: &str) -> Result<()> {
     Ok(())
 }
 
-fn new(path: &Path, tags: &Vec<String>) -> Result<()> {
+fn new(path: &Path, tags: &[String]) -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load_customize_settings()?;
@@ -118,11 +120,11 @@ fn theme(cmd: &SubCommandTheme) -> Result<()> {
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load_customize_settings()?;
 
-    match cmd {
-        &SubCommandTheme::List => mb.list_blog_theme()?,
-        &SubCommandTheme::New { ref name } => mb.create_blog_theme(name)?,
-        &SubCommandTheme::Delete { ref name } => mb.delete_blog_theme(name)?,
-        &SubCommandTheme::Set { ref name } => mb.set_blog_theme(name)?,
+    match *cmd {
+        SubCommandTheme::List => mb.list_blog_theme()?,
+        SubCommandTheme::New { ref name } => mb.create_blog_theme(name)?,
+        SubCommandTheme::Delete { ref name } => mb.delete_blog_theme(name)?,
+        SubCommandTheme::Set { ref name } => mb.set_blog_theme(name)?,
     }
     Ok(())
 }

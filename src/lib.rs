@@ -5,6 +5,10 @@
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
     html_root_url = "https://docs.rs/mdblog"
 )]
+#![deny(unused_extern_crates)]
+#![allow(clippy::needless_return)]
+#![allow(clippy::expect_fun_call)]
+#![allow(clippy::or_fun_call)]
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -16,7 +20,7 @@ use std::time::{Duration, Instant};
 use chrono::Local;
 use config::Config;
 use glob::Pattern;
-use log::{debug, error, info, log};
+use log::{debug, error, info};
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use tempfile::{Builder as TempBuilder, TempDir};
 use tera::{Context, Tera};
@@ -63,8 +67,8 @@ impl Mdblog {
         let theme = Theme::new(theme_root_dir, &settings.theme)?;
         Ok(Mdblog {
             root: root.to_owned(),
-            settings: settings,
-            theme: theme,
+            settings,
+            theme,
             posts: Vec::new(),
             tags_map: BTreeMap::new(),
             server_root_dir: None,
@@ -137,7 +141,7 @@ impl Mdblog {
 
         let now = Local::now();
         let mut context = Context::new();
-        context.add("now", &now.format("%Y-%m-%dT%H:%M:%S%:z").to_string());
+        context.insert("now", &now.format("%Y-%m-%dT%H:%M:%S%:z").to_string());
 
         let hello_content = tera.render("hello.md.tpl", &context)?;
         let math_content = tera.render("math.md.tpl", &context)?;
@@ -180,7 +184,9 @@ impl Mdblog {
 
         thread::spawn(move || {
             let mut config = rocket::config::Config::production();
-            config.set_address("127.0.0.1").expect("can not bind address: 127.0.0.1");
+            config
+                .set_address("127.0.0.1")
+                .expect("can not bind address: 127.0.0.1");
             config.set_port(port);
             rocket::custom(config)
                 .mount("/", rocket_contrib::serve::StaticFiles::from(&server_root_dir))
@@ -199,7 +205,7 @@ impl Mdblog {
         info!("watching dir: {}", self.root.display());
         let mut watcher = watcher(tx, Duration::new(2, 0))?;
         watcher.watch(&self.root, RecursiveMode::Recursive)?;
-        let interval = Duration::new(self.settings.rebuild_interval as u64, 0);
+        let interval = Duration::new(self.settings.rebuild_interval.into(), 0);
         let mut last_run: Option<Instant> = None;
         loop {
             match rx.recv() {
@@ -288,12 +294,12 @@ impl Mdblog {
             .to_str()
             .expect("get build dir error")
             .to_string();
-        patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_right_matches("/")))?);
+        patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_right_matches('/')))?);
         Ok(patterns)
     }
 
     /// create a new sample post.
-    pub fn create_post(&self, path: &Path, tags: &Vec<String>) -> Result<()> {
+    pub fn create_post(&self, path: &Path, tags: &[String]) -> Result<()> {
         let post_title = path.file_stem();
         if !path.is_relative()
             || path.extension().is_some()
@@ -423,8 +429,8 @@ impl Mdblog {
         let dest = build_dir.join("atom.xml");
         let now = Local::now();
         let mut context = self.get_base_context()?;
-        context.add("now", &now);
-        context.add("posts", &self.posts[..10.min(self.posts.len())]);
+        context.insert("now", &now);
+        context.insert("posts", &self.posts[..10.min(self.posts.len())]);
         let html = self.theme.renderer.render("atom.tpl", &context)?;
         write_file(&dest, html.as_bytes())?;
         Ok(())
@@ -433,8 +439,8 @@ impl Mdblog {
     /// get base context of `theme.renderer` templates
     fn get_base_context(&self) -> Result<Context> {
         let mut context = Context::new();
-        context.add("config", &self.settings);
-        context.add("all_tags", &self.tags_map.values().collect::<Vec<_>>());
+        context.insert("config", &self.settings);
+        context.insert("all_tags", &self.tags_map.values().collect::<Vec<_>>());
         Ok(context)
     }
 
@@ -448,8 +454,8 @@ impl Mdblog {
             .map(|(_, tag)| tag)
             .collect::<Vec<_>>();
         let mut context = self.get_base_context()?;
-        context.add("post", &post);
-        context.add("post_tags", &post_tags);
+        context.insert("post", &post);
+        context.insert("post_tags", &post_tags);
         Ok(self.theme.renderer.render("post.tpl", &context)?)
     }
 
@@ -457,19 +463,19 @@ impl Mdblog {
     pub fn render_index(&self, posts: &[&Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
-        context.add("prev_name", prev_name);
-        context.add("next_name", next_name);
-        context.add("posts", posts);
+        context.insert("prev_name", prev_name);
+        context.insert("next_name", next_name);
+        context.insert("posts", posts);
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
     /// render tag pages html.
     pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
         let mut context = self.get_base_context()?;
-        context.add("title", title);
-        context.add("prev_name", prev_name);
-        context.add("next_name", next_name);
-        context.add("posts", posts);
+        context.insert("title", title);
+        context.insert("prev_name", prev_name);
+        context.insert("next_name", next_name);
+        context.insert("posts", posts);
         Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }
 
@@ -528,7 +534,7 @@ impl Mdblog {
 
 /// check directory entry is a hidden file.
 fn is_hidden(entry: &DirEntry) -> bool {
-    entry.file_name().to_str().map(|s| s.starts_with(".")).unwrap_or(false)
+    entry.file_name().to_str().map(|s| s.starts_with('.')).unwrap_or(false)
 }
 
 /// check directory entry is an markdown file.
@@ -544,11 +550,8 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
         Some(s) => {
             if s.starts_with(|c| (c == '.') | (c == '~')) {
                 return false;
-            } else if s.ends_with(".md") {
-                return true;
-            } else {
-                return false;
             }
+            return s.ends_with(".md");
         }
     }
 }

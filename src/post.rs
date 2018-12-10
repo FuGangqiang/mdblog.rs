@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local};
-use log::{debug, log};
+use log::debug;
 use serde_derive::{Deserialize, Serialize};
 use serde_yaml;
 
@@ -99,9 +99,9 @@ impl Post {
             root: root.to_owned(),
             path: path.to_owned(),
             title: title.to_owned(),
-            url: url,
-            headers: headers,
-            content: content,
+            url,
+            headers,
+            content,
         })
     }
 

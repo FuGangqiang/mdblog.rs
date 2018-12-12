@@ -4,6 +4,7 @@
 [![Docs][docs-image]][docs-link]
 ![MIT/Apache2 licensed][license-image]
 [![dependency status][deps-image]][deps-link]
+[![Build Status][travis-image]][travis-link]
 
 [crate-image]: https://img.shields.io/crates/v/mdblog.svg
 [crate-link]: https://crates.io/crates/mdblog
@@ -12,6 +13,8 @@
 [license-image]: https://img.shields.io/crates/l/mdblog.svg
 [deps-image]: https://deps.rs/repo/github/fugangqiang/mdblog.rs/status.svg
 [deps-link]: https://deps.rs/repo/github/fugangqiang/mdblog.rs
+[travis-image]: https://travis-ci.org/FuGangqiang/mdblog.rs.svg?branch=master
+[travis-link]: https://travis-ci.org/FuGangqiang/mdblog.rs
 
 Static site generator from markdown files with features:
 

@@ -88,7 +88,7 @@ impl Mdblog {
         settings.merge(config::Environment::with_prefix("BLOG"))?;
         self.settings = settings.try_into()?;
         if self.settings.site_url.ends_with('/') {
-            self.settings.site_url = self.settings.site_url.trim_right_matches('/').to_string();
+            self.settings.site_url = self.settings.site_url.trim_end_matches('/').to_string();
         }
         let theme_root_dir = self.theme_root_dir()?;
         self.theme = Theme::new(&theme_root_dir, &self.settings.theme)?;
@@ -294,7 +294,7 @@ impl Mdblog {
             .to_str()
             .expect("get build dir error")
             .to_string();
-        patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_right_matches('/')))?);
+        patterns.push(Pattern::new(&format!("{}/**/*", build_dir.trim_end_matches('/')))?);
         Ok(patterns)
     }
 

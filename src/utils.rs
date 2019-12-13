@@ -1,19 +1,19 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::error::Error as StdError;
 
-use failure::Fail;
 use log::error;
 use pulldown_cmark::{html, Options, Parser};
 
-use crate::errors::{Error, Result};
+use crate::error::{Error, Result};
 
 /// create the file of `path` and append content
 ///
 /// if parent of `path` does not existed, create it first.
 pub fn write_file(path: &Path, buf: &[u8]) -> Result<()> {
     if let Some(p) = path.parent() {
-        ::std::fs::create_dir_all(p)?;
+        std::fs::create_dir_all(p)?;
     }
     let mut file = File::create(path)?;
     file.write_all(buf)?;
@@ -38,13 +38,12 @@ pub fn markdown_to_html(content: &str) -> String {
     s
 }
 
-/// log mdblog error chain
 pub fn log_error(err: &Error) {
-    for cause in (err as &dyn Fail).iter_chain() {
-        error!("{}", cause);
+    error!("{}", err);
+    if let Some(source) = err.source() {
+        error!("{}", source);
     }
-
-    if let Some(backtrace) = err.backtrace() {
-        error!("backtrace: {:?}", backtrace);
-    }
+    // if let Some(backtrace) = err.backtrace() {
+    //     error!("backtrace: {:?}", backtrace);
+    // }
 }

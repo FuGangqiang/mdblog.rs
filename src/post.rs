@@ -7,7 +7,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 
-use crate::errors::{Error, Result};
+use crate::error::{Error, Result};
 use crate::utils::markdown_to_html;
 
 /// blog post headers
@@ -61,15 +61,15 @@ impl Post {
 
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            return Err(Error::PostOnlyOnePart(path.into()));
+            return Err(Error::post_only_one_part(path));
         }
         let head = v[0].trim();
         let body = v[1].trim();
         if head.is_empty() {
-            return Err(Error::PostNoHead(path.into()));
+            return Err(Error::post_no_head(path));
         }
         if head.is_empty() {
-            return Err(Error::PostNoBody(path.into()));
+            return Err(Error::post_empty_body(path));
         }
 
         let title = path

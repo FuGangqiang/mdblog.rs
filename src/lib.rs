@@ -26,7 +26,7 @@ use tempfile::{Builder as TempBuilder, TempDir};
 use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 
-pub use crate::errors::{Error, Result};
+pub use crate::error::{Error, Result};
 pub use crate::post::Post;
 pub use crate::post::PostHeaders;
 pub use crate::settings::Settings;
@@ -35,7 +35,7 @@ pub use crate::theme::Theme;
 pub use crate::utils::log_error;
 use crate::utils::write_file;
 
-mod errors;
+mod error;
 mod post;
 mod settings;
 mod tag;
@@ -109,7 +109,7 @@ impl Mdblog {
             let post_path = entry.path().strip_prefix(&self.root)?.to_owned();
             let post = Post::new(&self.root, &post_path)?;
             let post = Rc::new(post);
-            posts.push(post.clone());
+            posts.push(Rc::clone(&post));
             if post.headers.hidden {
                 continue;
             }
@@ -132,7 +132,7 @@ impl Mdblog {
     /// init blog directory.
     pub fn init(&mut self) -> Result<()> {
         if self.root.exists() {
-            return Err(Error::RootDirExisted(self.root.clone()));
+            return Err(Error::root_dir_existed(&self.root));
         }
 
         let mut tera = Tera::default();
@@ -307,14 +307,14 @@ impl Mdblog {
             || post_title.is_none()
             || self.ignore_patterns()?.iter().any(|ref pat| pat.matches_path(path))
         {
-            return Err(Error::PostPathInvaild(path.to_owned()));
+            return Err(Error::post_path_invalid(path));
         }
         if path.is_dir() {
-            return Err(Error::PostPathExisted(path.to_owned()));
+            return Err(Error::post_path_existed(path));
         }
         let post_path = self.post_root_dir()?.join(path).with_extension("md");
         if post_path.exists() {
-            return Err(Error::PostPathExisted(path.to_owned()));
+            return Err(Error::post_path_existed(path));
         }
         let now = Local::now();
         let content = format!(
@@ -510,11 +510,11 @@ impl Mdblog {
     /// delete a blog theme.
     pub fn delete_blog_theme(&self, name: &str) -> Result<()> {
         if self.settings.theme == name {
-            return Err(Error::ThemeInUse(name.to_string()));
+            return Err(Error::theme_in_use(name));
         }
         let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
-            return Err(Error::ThemeNotFound(name.to_string()));
+            return Err(Error::theme_not_found(name));
         }
         std::fs::remove_dir_all(theme_path)?;
         Ok(())
@@ -524,7 +524,7 @@ impl Mdblog {
     pub fn set_blog_theme(&mut self, name: &str) -> Result<()> {
         let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
-            return Err(Error::ThemeNotFound(name.to_string()));
+            return Err(Error::theme_not_found(name));
         }
         self.settings.theme = name.to_string();
         self.export_config()?;

@@ -3,8 +3,18 @@ use std::path::{Path, PathBuf};
 use log::{debug, info};
 use tera::Tera;
 
-use crate::errors::{Error, Result};
+use crate::error::{Error, Result};
 use crate::utils::{read_file, write_file};
+
+macro_rules! try_init_template {
+    ($render:expr, $tpl_name:expr, $tpl_str:expr) => {
+        let template_content = match std::str::from_utf8(&$tpl_str) {
+            Ok(content) => content,
+            Err(_) => return Err(Error::theme_file_encoding($tpl_name)),
+        };
+        $render.add_raw_template($tpl_name, template_content)?;
+    };
+}
 
 /// blog theme object
 #[derive(Default)]
@@ -40,7 +50,7 @@ impl Theme {
         let src_dir = root.join(name);
         if !src_dir.exists() {
             if name != "simple" {
-                return Err(Error::ThemeNotFound(name.to_string()));
+                return Err(Error::theme_not_found(name));
             }
             theme.favicon.extend_from_slice(&SIMPLE_FAVICON);
             theme.logo.extend_from_slice(&SIMPLE_LOGO);
@@ -72,16 +82,11 @@ impl Theme {
 
     /// init renderer template.
     fn init_template(&mut self) -> Result<()> {
-        self.renderer
-            .add_raw_template("base.tpl", ::std::str::from_utf8(&self.base)?)?;
-        self.renderer
-            .add_raw_template("index.tpl", ::std::str::from_utf8(&self.index)?)?;
-        self.renderer
-            .add_raw_template("post.tpl", ::std::str::from_utf8(&self.post)?)?;
-        self.renderer
-            .add_raw_template("tag.tpl", ::std::str::from_utf8(&self.tag)?)?;
-        self.renderer
-            .add_raw_template("atom.tpl", ::std::str::from_utf8(&self.atom)?)?;
+        try_init_template!(self.renderer, "base.tpl", self.base);
+        try_init_template!(self.renderer, "index.tpl", self.index);
+        try_init_template!(self.renderer, "post.tpl", self.post);
+        try_init_template!(self.renderer, "tag.tpl", self.tag);
+        try_init_template!(self.renderer, "atom.tpl", self.atom);
         Ok(())
     }
 

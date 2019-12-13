@@ -489,7 +489,7 @@ impl Mdblog {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                info!(
+                println!(
                     "* {}",
                     path.file_name()
                         .expect("theme name error")

@@ -159,7 +159,7 @@ impl From<StripPrefixError> for Error {
 
 impl From<TeraError> for Error {
     fn from(err: TeraError) -> Error {
-        Error::Template(err.description().to_string())
+        Error::Template(err.to_string())
     }
 }
 

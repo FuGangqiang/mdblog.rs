@@ -47,7 +47,7 @@ impl Default for Settings {
 }
 
 impl Source for Settings {
-    fn clone_into_box(&self) -> Box<Source + Send + Sync> {
+    fn clone_into_box(&self) -> Box<dyn Source + Send + Sync> {
         Box::new((*self).clone())
     }
 

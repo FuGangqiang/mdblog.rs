@@ -40,7 +40,7 @@ pub fn markdown_to_html(content: &str) -> String {
 
 /// log mdblog error chain
 pub fn log_error(err: &Error) {
-    for cause in (err as &Fail).iter_chain() {
+    for cause in (err as &dyn Fail).iter_chain() {
         error!("{}", cause);
     }
 

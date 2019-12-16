@@ -10,7 +10,7 @@ macro_rules! try_init_template {
     ($render:expr, $tpl_name:expr, $tpl_str:expr) => {
         let template_content = match std::str::from_utf8(&$tpl_str) {
             Ok(content) => content,
-            Err(_) => return Err(Error::theme_file_encoding($tpl_name)),
+            Err(_) => return Err(Error::ThemeFileEncoding($tpl_name.into())),
         };
         $render.add_raw_template($tpl_name, template_content)?;
     };
@@ -50,7 +50,7 @@ impl Theme {
         let src_dir = root.join(name);
         if !src_dir.exists() {
             if name != "simple" {
-                return Err(Error::theme_not_found(name));
+                return Err(Error::ThemeNotFound(name.into()));
             }
             theme.favicon.extend_from_slice(&SIMPLE_FAVICON);
             theme.logo.extend_from_slice(&SIMPLE_LOGO);

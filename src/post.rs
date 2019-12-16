@@ -61,15 +61,15 @@ impl Post {
 
         let v: Vec<&str> = content.splitn(2, "\n\n").collect();
         if v.len() != 2 {
-            return Err(Error::post_only_one_part(path));
+            return Err(Error::PostOnlyOnePart(path.into()));
         }
         let head = v[0].trim();
         let body = v[1].trim();
         if head.is_empty() {
-            return Err(Error::post_no_head(path));
+            return Err(Error::PostNoHead(path.into()));
         }
         if head.is_empty() {
-            return Err(Error::post_empty_body(path));
+            return Err(Error::PostNoBody(path.into()));
         }
 
         let title = path

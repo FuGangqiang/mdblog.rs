@@ -132,7 +132,7 @@ impl Mdblog {
     /// init blog directory.
     pub fn init(&mut self) -> Result<()> {
         if self.root.exists() {
-            return Err(Error::root_dir_existed(&self.root));
+            return Err(Error::RootDirExisted(self.root.clone()));
         }
 
         let mut tera = Tera::default();
@@ -307,14 +307,14 @@ impl Mdblog {
             || post_title.is_none()
             || self.ignore_patterns()?.iter().any(|ref pat| pat.matches_path(path))
         {
-            return Err(Error::post_path_invalid(path));
+            return Err(Error::PostPathInvaild(path.into()));
         }
         if path.is_dir() {
-            return Err(Error::post_path_existed(path));
+            return Err(Error::PostPathExisted(path.into()));
         }
         let post_path = self.post_root_dir()?.join(path).with_extension("md");
         if post_path.exists() {
-            return Err(Error::post_path_existed(path));
+            return Err(Error::PostPathExisted(path.into()));
         }
         let now = Local::now();
         let content = format!(
@@ -510,11 +510,11 @@ impl Mdblog {
     /// delete a blog theme.
     pub fn delete_blog_theme(&self, name: &str) -> Result<()> {
         if self.settings.theme == name {
-            return Err(Error::theme_in_use(name));
+            return Err(Error::ThemeInUse(name.into()));
         }
         let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
-            return Err(Error::theme_not_found(name));
+            return Err(Error::ThemeNotFound(name.into()));
         }
         std::fs::remove_dir_all(theme_path)?;
         Ok(())
@@ -524,7 +524,7 @@ impl Mdblog {
     pub fn set_blog_theme(&mut self, name: &str) -> Result<()> {
         let theme_path = self.theme_root_dir()?.join(name);
         if !theme_path.exists() || !theme_path.is_dir() {
-            return Err(Error::theme_not_found(name));
+            return Err(Error::ThemeNotFound(name.into()));
         }
         self.settings.theme = name.to_string();
         self.export_config()?;

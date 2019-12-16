@@ -17,9 +17,11 @@ name = "mdblog"
 doc = false
 
 [dependencies]
+log = "0.4"
 env_logger = "0.7"
 structopt = "0.3"
-log = "0.4"
+config = "0.10"
+derive_more = { version = "0.99", features = ["display", "from"]}
 pulldown-cmark = "0.6"
 serde = { version = "1.0", features = ["rc", "std", "derive"]}
 serde_json = "1.0"
@@ -28,7 +30,6 @@ toml = "0.5"
 tera = "1.0"
 walkdir = "2.2"
 tempfile = "3"
-config = "0.10"
 rocket = "0.4"
 rocket_contrib = "0.4"
 open = "1.3"

@@ -32,7 +32,6 @@ pub use crate::post::PostHeaders;
 pub use crate::settings::Settings;
 pub use crate::tag::Tag;
 pub use crate::theme::Theme;
-pub use crate::utils::log_error;
 use crate::utils::write_file;
 
 mod error;
@@ -227,7 +226,7 @@ impl Mdblog {
                         last_run = Some(now);
                         info!("Modified file: {}", fpath.display());
                         if let Err(ref e) = self.rebuild() {
-                            log_error(e);
+                            crate::utils::log_error_chain(e);
                             continue;
                         }
                     }

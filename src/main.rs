@@ -1,9 +1,9 @@
-#![deny(unused_extern_crates)]
-
 use std::env;
+use std::error::Error;
 use std::path::{Path, PathBuf};
 
-use mdblog::{log_error, Mdblog, Result};
+use log::error;
+use mdblog::{Mdblog, Result};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -81,7 +81,7 @@ fn main() {
     };
 
     if let Err(ref e) = res {
-        log_error(e);
+        log_error_chain(e);
         std::process::exit(1);
     }
 }
@@ -129,4 +129,12 @@ fn theme(cmd: &SubCommandTheme) -> Result<()> {
         SubCommandTheme::Set { ref name } => mb.set_blog_theme(name)?,
     }
     Ok(())
+}
+
+fn log_error_chain(mut e: &dyn Error) {
+    error!("error: {}", e);
+    while let Some(source) = e.source() {
+        error!("caused by: {}", source);
+        e = source;
+    }
 }

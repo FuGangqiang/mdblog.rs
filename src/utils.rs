@@ -1,12 +1,12 @@
+use std::error::Error as StdError;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::error::Error as StdError;
 
 use log::error;
 use pulldown_cmark::{html, Options, Parser};
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 /// create the file of `path` and append content
 ///
@@ -38,12 +38,11 @@ pub fn markdown_to_html(content: &str) -> String {
     s
 }
 
-pub fn log_error(err: &Error) {
-    error!("{}", err);
-    if let Some(source) = err.source() {
-        error!("{}", source);
+/// basic error reporting, including the "cause chain".
+pub(crate) fn log_error_chain(mut e: &dyn StdError) {
+    error!("error: {}", e);
+    while let Some(source) = e.source() {
+        error!("caused by: {}", source);
+        e = source;
     }
-    // if let Some(backtrace) = err.backtrace() {
-    //     error!("backtrace: {:?}", backtrace);
-    // }
 }

@@ -11,10 +11,10 @@
 [docs-image]: https://docs.rs/mdblog/badge.svg
 [docs-link]: https://docs.rs/mdblog
 [license-image]: https://img.shields.io/crates/l/mdblog.svg
-[deps-image]: https://deps.rs/repo/github/fugangqiang/mdblog.rs/status.svg
-[deps-link]: https://deps.rs/repo/github/fugangqiang/mdblog.rs
-[travis-image]: https://travis-ci.org/FuGangqiang/mdblog.rs.svg?branch=master
-[travis-link]: https://travis-ci.org/FuGangqiang/mdblog.rs
+[deps-image]: https://deps.rs/repo/github/fugangqiang/mdblog/status.svg
+[deps-link]: https://deps.rs/repo/github/fugangqiang/mdblog
+[travis-image]: https://travis-ci.org/FuGangqiang/mdblog.svg?branch=master
+[travis-link]: https://travis-ci.org/FuGangqiang/mdblog
 
 Static site generator from markdown files with features:
 
@@ -23,7 +23,7 @@ Static site generator from markdown files with features:
 * file name is the post title
 * post can be hidden(link does not be insert into index/tag page)
 
-you can check the [demo site](https://fugangqiang.github.io/mdblog.rs/)
+you can check the [demo site](https://fugangqiang.github.io/mdblog/)
 to learn the usages of mdblog.
 
 

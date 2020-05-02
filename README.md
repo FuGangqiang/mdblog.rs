@@ -32,7 +32,7 @@ to learn the usages of mdblog.
 `mdblog` is implemented by rust language(2018 edition), so you need cargo command:
 
 ```
-cargo install mdblog
+cargo +nightly install mdblog
 ```
 
 `mdblog` will be installed in your cargo binary directory(`~/.cargo/bin/`).

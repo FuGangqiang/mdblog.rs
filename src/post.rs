@@ -68,7 +68,7 @@ impl Post {
         if head.is_empty() {
             return Err(Error::PostNoHead(path.into()));
         }
-        if head.is_empty() {
+        if body.is_empty() {
             return Err(Error::PostNoBody(path.into()));
         }
 

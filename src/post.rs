@@ -26,6 +26,8 @@ pub struct PostHeaders {
     /// post description
     #[serde(default)]
     pub description: String,
+    #[serde(default)]
+    pub title: String,
 }
 
 /// blog post
@@ -93,6 +95,11 @@ impl Post {
                 headers.description.push_str("...");
             }
         }
+        let title = if headers.title.is_empty() {
+            title.to_string()
+        } else {
+            headers.title.to_string()
+        };
         let content = markdown_to_html(body);
 
         Ok(Post {

@@ -6,6 +6,7 @@
     html_root_url = "https://docs.rs/mdblog"
 )]
 #![deny(unused_extern_crates)]
+#![deny(missing_docs)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::expect_fun_call)]
 #![allow(clippy::or_fun_call)]

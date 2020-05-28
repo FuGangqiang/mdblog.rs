@@ -67,6 +67,7 @@ this is a new post!
 * `tags`: the post blog tags
 * `description`: the post description
 * `hidden`: the hidden flag
+* `title`: the blog title, use the file name if empty
 
 
 ### body part

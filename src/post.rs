@@ -26,6 +26,7 @@ pub struct PostHeaders {
     /// post description
     #[serde(default)]
     pub description: String,
+    /// post title
     #[serde(default)]
     pub title: String,
 }
@@ -51,6 +52,7 @@ pub struct Post {
 }
 
 impl Post {
+    /// create new `Post`
     pub fn new<P: AsRef<Path>>(root: P, path: P) -> Result<Post> {
         let root = root.as_ref();
         let path = path.as_ref();

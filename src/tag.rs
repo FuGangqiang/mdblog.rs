@@ -18,6 +18,7 @@ pub struct Tag {
 }
 
 impl Tag {
+    /// create new `Tag`
     pub fn new(name: &str, url: &str) -> Tag {
         Tag {
             name: name.to_string(),
@@ -27,6 +28,7 @@ impl Tag {
         }
     }
 
+    /// add a post to `Tag`
     pub fn add(&mut self, post: Rc<Post>) {
         self.num += 1;
         self.posts.push(post);

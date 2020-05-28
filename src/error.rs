@@ -9,55 +9,73 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The Error type
 #[derive(Debug, Display, From)]
 pub enum Error {
+    /// IO error
     #[display(fmt = "IO error")]
     Io(std::io::Error),
-    #[display(fmt = "Path strip prefix error")]
+    /// path strip prefix error
+    #[display(fmt = "path strip prefix error")]
     PathStripPrefix(std::path::StripPrefixError),
-    #[display(fmt = "Config merge error")]
+    /// config merge error
+    #[display(fmt = "config merge error")]
     ConfigMerge(config::ConfigError),
-    #[display(fmt = "Template error")]
+    /// template error
+    #[display(fmt = "template error")]
     Template(tera::Error),
-    #[display(fmt = "Notify error")]
+    /// notify error
+    #[display(fmt = "notify error")]
     Notify(notify::Error),
-    #[display(fmt = "Glob pattern error")]
+    /// glob pattern error
+    #[display(fmt = "glob pattern error")]
     GlobPattern(glob::PatternError),
-    #[display(fmt = "Toml export error")]
+    /// toml export error
+    #[display(fmt = "toml export error")]
     TomlExport(toml::ser::Error),
-    #[display(fmt = "Path expand error")]
+    /// path expand error
+    #[display(fmt = "path expand error")]
     PathExpend(shellexpand::LookupError<std::env::VarError>),
-    #[display(fmt = "Post head parse error, please use yaml grammar")]
+    /// post head parse error
+    #[display(fmt = "post head parse error, please use yaml grammar")]
     PostHeadPaser(serde_yaml::Error),
 
+    /// blog root directory already exists error
     #[from(ignore)]
     #[display(fmt = "blog root directory {:?} already exists", _0)]
     RootDirExisted(PathBuf),
+    /// post path format error
     #[from(ignore)]
     #[display(
         fmt = "post path {:?} format error: must be relative path without file extension",
         _0
     )]
     PostPathInvaild(PathBuf),
+    /// post path already existed
     #[from(ignore)]
     #[display(fmt = "post path {:?} already existed", _0)]
     PostPathExisted(PathBuf),
+    /// theme template file encoding error
     #[from(ignore)]
-    #[display(fmt = "Theme template file {:?} encoding error", _0)]
+    #[display(fmt = "theme template file {:?} encoding error", _0)]
     ThemeFileEncoding(String),
+    /// blog theme in use, can not be deleted error
     #[from(ignore)]
     #[display(fmt = "blog theme {:?} in use, can not be deleted", _0)]
     ThemeInUse(String),
+    /// blog theme not found error
     #[from(ignore)]
     #[display(fmt = "blog theme {:?} not found", _0)]
     ThemeNotFound(String),
+    /// post must has two parts error
     #[from(ignore)]
     #[display(
         fmt = "post {:?} must has two parts: headers and body, splitted by first blank line",
         _0
     )]
     PostOnlyOnePart(PathBuf),
+    /// post head part is empty error
     #[from(ignore)]
     #[display(fmt = "post {:?} head part is empty", _0)]
     PostNoHead(PathBuf),
+    /// post body part is empty error
     #[from(ignore)]
     #[display(fmt = "post {:?} body part is empty", _0)]
     PostNoBody(PathBuf),

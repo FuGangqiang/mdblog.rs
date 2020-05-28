@@ -38,6 +38,7 @@ pub struct Theme {
 }
 
 impl Theme {
+    /// create new `Theme`
     pub fn new<P: AsRef<Path>>(root: P, name: &str) -> Result<Theme> {
         debug!("loading theme: {}", &name);
         let root = root.as_ref();

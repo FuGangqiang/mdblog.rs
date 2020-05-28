@@ -56,7 +56,28 @@ impl Post {
         let path = path.as_ref();
         debug!("loading post: {}", path.display());
 
-        let fp = root.join(&path);
+        let (headers, content) = Self::splite_file(root, path)?;
+        let title = if headers.title.is_empty() {
+            path.file_stem()
+                .and_then(|x| x.to_str())
+                .expect(&format!("post filename format error: {}", path.display()))
+        } else {
+            headers.title.as_ref()
+        };
+        let url = Path::new("/").join(path).with_extension("html");
+
+        Ok(Post {
+            root: root.to_owned(),
+            path: path.to_owned(),
+            title: title.to_owned(),
+            url,
+            headers,
+            content,
+        })
+    }
+
+    fn splite_file(root: &Path, path: &Path) -> Result<(PostHeaders, String)> {
+        let fp = root.join(path);
         let mut fo = File::open(fp)?;
         let mut content = String::new();
         fo.read_to_string(&mut content)?;
@@ -73,12 +94,6 @@ impl Post {
         if body.is_empty() {
             return Err(Error::PostNoBody(path.into()));
         }
-
-        let title = path
-            .file_stem()
-            .and_then(|x| x.to_str())
-            .expect(&format!("post filename format error: {}", path.display()));
-        let url = Path::new("/").join(path).with_extension("html");
         let mut headers: PostHeaders = serde_yaml::from_str(head)?;
         if headers.description.is_empty() {
             let desc = body
@@ -95,21 +110,8 @@ impl Post {
                 headers.description.push_str("...");
             }
         }
-        let title = if headers.title.is_empty() {
-            title.to_string()
-        } else {
-            headers.title.to_string()
-        };
-        let content = markdown_to_html(body);
-
-        Ok(Post {
-            root: root.to_owned(),
-            path: path.to_owned(),
-            title: title.to_owned(),
-            url,
-            headers,
-            content,
-        })
+        let content = markdown_to_html(&body);
+        Ok((headers, content.to_string()))
     }
 
     /// the absolute path of blog post markdown file.

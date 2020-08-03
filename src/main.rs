@@ -2,63 +2,63 @@ use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
+use clap::Clap;
 use log::error;
 use mdblog::{Mdblog, Result};
-use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "mdblog")]
+#[derive(Clap, Debug)]
+#[clap(name = "mdblog")]
 /// static site generator from markdown files
 enum Opt {
-    #[structopt(name = "init")]
+    #[clap(name = "init")]
     /// Initialize the blog directory layout
     Init {
         /// the blog directory name
         name: String,
     },
-    #[structopt(name = "new")]
+    #[clap(name = "new")]
     /// Create a blog post
     New {
-        #[structopt(short = "t", long = "tag", default_value = "")]
+        #[clap(short = "t", long = "tag", default_value = "")]
         /// Post tags
         tags: Vec<String>,
-        #[structopt(parse(from_os_str))]
+        #[clap(parse(from_os_str))]
         /// Post path relative to blog `posts` directory
         path: PathBuf,
     },
-    #[structopt(name = "build")]
+    #[clap(name = "build")]
     /// Build the blog static files
     Build,
-    #[structopt(name = "serve")]
+    #[clap(name = "serve")]
     /// Serve the blog, rebuild on change
     Serve {
-        #[structopt(short = "p", long = "port", default_value = "5000")]
+        #[clap(short = "p", long = "port", default_value = "5000")]
         /// Serve the blog at http://127.0.0.1:<port>
         port: u16,
     },
-    #[structopt(name = "theme")]
+    #[clap(name = "theme")]
     /// Blog theme operations
     Theme(SubCommandTheme),
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Clap, Debug)]
 enum SubCommandTheme {
-    #[structopt(name = "list")]
+    #[clap(name = "list")]
     /// list blog themes
     List,
-    #[structopt(name = "new")]
+    #[clap(name = "new")]
     /// Create a new theme
     New {
         /// theme name
         name: String,
     },
-    #[structopt(name = "delete")]
+    #[clap(name = "delete")]
     /// Delete a theme
     Delete {
         /// theme name
         name: String,
     },
-    #[structopt(name = "set")]
+    #[clap(name = "set")]
     /// Set blog use the theme
     Set {
         /// theme name
@@ -71,7 +71,7 @@ fn main() {
         .filter(None, log::LevelFilter::Info)
         .init();
 
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     let res = match opt {
         Opt::Init { ref name } => init(name),
         Opt::New { ref tags, ref path } => new(path, tags),

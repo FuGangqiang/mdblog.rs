@@ -5,6 +5,11 @@
   <meta name="generator" content="mdblog.rs">
   <link rel="icon" href="{{ config.site_url }}/static/favicon.png">
   <link rel="stylesheet" href="{{ config.site_url }}/static/main.css">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}" />
+  <meta property="og:description" content="{{ config.site_motto }}" />
+  <meta property="og:url" content="{{ config.site_url }}" />
+  <meta property="og:image" content="{{ config.site_url }}/static/logo.png" />
   {%- block css %}{% endblock css -%}
   {%- block title %}{% endblock title -%}
 </head>

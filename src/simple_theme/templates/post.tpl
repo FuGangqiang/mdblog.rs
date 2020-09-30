@@ -2,6 +2,7 @@
 
 {% block title %}
   <title>{{ post.title }}</title>
+  <meta property="og:title" content="{{ post.title }}" />
 {% endblock title %}
 
 {%- block css %}

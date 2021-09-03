@@ -85,12 +85,12 @@ impl Post {
         let mut content = String::new();
         fo.read_to_string(&mut content)?;
 
-        let v: Vec<&str> = content.splitn(2, "\n\n").collect();
-        if v.len() != 2 {
+        let v: Vec<&str> = content.splitn(3, "---").collect();
+        if v.len() != 3 {
             return Err(Error::PostOnlyOnePart(path.into()));
         }
-        let head = v[0].trim();
-        let body = v[1].trim();
+        let head = v[1].trim();
+        let body = v[2].trim();
         if head.is_empty() {
             return Err(Error::PostNoHead(path.into()));
         }

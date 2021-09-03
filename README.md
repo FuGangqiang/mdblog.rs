@@ -29,7 +29,7 @@ to learn the usages of mdblog.
 
 # Install
 
-`mdblog` is implemented by rust language(2018 edition), so you need cargo command:
+`mdblog` is implemented by rust language(2021 edition), so you need cargo command:
 
 ```
 cargo +nightly install mdblog

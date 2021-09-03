@@ -58,7 +58,7 @@ impl Post {
         let path = path.as_ref();
         debug!("loading post: {}", path.display());
 
-        let (headers, content) = Self::splite_file(root, path)?;
+        let (headers, content) = Self::split_file(root, path)?;
         let title = if headers.title.is_empty() {
             path.file_stem()
                 .and_then(|x| x.to_str())
@@ -78,7 +78,8 @@ impl Post {
         })
     }
 
-    fn splite_file(root: &Path, path: &Path) -> Result<(PostHeaders, String)> {
+    /// split a post into `headers` and `content`
+    fn split_file(root: &Path, path: &Path) -> Result<(PostHeaders, String)> {
         let fp = root.join(path);
         let mut fo = File::open(fp)?;
         let mut content = String::new();

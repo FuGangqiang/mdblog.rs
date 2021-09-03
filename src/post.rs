@@ -97,7 +97,12 @@ impl Post {
         if body.is_empty() {
             return Err(Error::PostNoBody(path.into()));
         }
-        let mut headers: PostHeaders = serde_yaml::from_str(head)?;
+        let mut headers: PostHeaders = match serde_yaml::from_str(head) {
+            Ok(headers) => headers,
+            Err(e) => {
+                return Err(Error::PostHeadPaser(e, path.into()));
+            }
+        };
         if headers.description.is_empty() {
             let desc = body
                 .split("\n\n")

@@ -34,8 +34,8 @@ pub enum Error {
     #[display(fmt = "path expand error")]
     PathExpend(shellexpand::LookupError<std::env::VarError>),
     /// post head parse error
-    #[display(fmt = "post head parse error, please use yaml grammar")]
-    PostHeadPaser(serde_yaml::Error),
+    #[display(fmt = "{:?}: post head parse error, please use yaml grammar", _1)]
+    PostHeadPaser(serde_yaml::Error, PathBuf),
 
     /// blog root directory already exists error
     #[from(ignore)]
@@ -93,7 +93,7 @@ impl StdError for Error {
             GlobPattern(e) => Some(e),
             TomlExport(e) => Some(e),
             PathExpend(e) => Some(e),
-            PostHeadPaser(e) => Some(e),
+            PostHeadPaser(e, _) => Some(e),
             RootDirExisted(_) => None,
             PostPathInvaild(_) => None,
             PostPathExisted(_) => None,

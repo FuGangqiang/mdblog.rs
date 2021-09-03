@@ -163,3 +163,9 @@ theme_root_dir = "_themes"
 rebuild_interval = 2
 posts_per_page = 20
 ```
+
+# How to contribute
+
+```
+cargo +nightly build
+```

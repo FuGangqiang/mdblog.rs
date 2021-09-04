@@ -169,3 +169,7 @@ posts_per_page = 20
 ```
 cargo +nightly build
 ```
+
+# Credit
+
+[mdbook-katex](https://github.com/lzanini/mdbook-katex)

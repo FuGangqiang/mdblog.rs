@@ -29,13 +29,68 @@ pub fn read_file<P: AsRef<Path>>(path: P, buf: &mut Vec<u8>) -> Result<()> {
 
 /// the rendered html content of post body port
 pub fn markdown_to_html(content: &str) -> String {
+    let mut katexed = replace_delimiters(content, "$$", false);
+    katexed = replace_delimiters(&katexed, "$", true);
+
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_FOOTNOTES);
-    opts.insert(Options::ENABLE_FOOTNOTES);
-    let mut s = String::with_capacity(content.len() * 3 / 2);
-    let p = Parser::new_ext(content, opts);
+    let mut s = String::with_capacity(katexed.len() * 3 / 2);
+    let p = Parser::new_ext(&katexed, opts);
     html::push_html(&mut s, p);
     s
+}
+
+// replace delimiters with html math markers
+fn replace_delimiters(raw_content: &str, delimiters: &str, escape_backslash: bool) -> String {
+    let mut replaced_content = String::new();
+    let mut inside_delimiters = false;
+    let pre_marker = if delimiters == "$" {
+        "<language-inline-math>"
+    } else {
+        "<language-math>"
+    };
+    let post_marker = if delimiters == "$" {
+        "</language-inline-math>"
+    } else {
+        "</language-math>"
+    };
+    for item in split(&raw_content, &delimiters, escape_backslash) {
+        if inside_delimiters {
+            replaced_content.push_str(&pre_marker);
+            replaced_content.push_str(&item);
+            replaced_content.push_str(&post_marker);
+        } else {
+            replaced_content.push_str(&item)
+        }
+        inside_delimiters = !inside_delimiters;
+    }
+    replaced_content
+}
+
+/// https://github.com/lzanini/mdbook-katex
+fn split(string: &str, separator: &str, escape_backslash: bool) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut splits = string.split(separator);
+    let mut current_split = splits.next();
+    // iterate over splits
+    while let Some(substring) = current_split {
+        let mut result_split = String::from(substring);
+        if escape_backslash {
+            // while the current split ends with a backslash
+            while let Some('\\') = current_split.unwrap().chars().last() {
+                // removes the backslash, add the separator back, and add the next split
+                result_split.pop();
+                result_split.push_str(separator);
+                current_split = splits.next();
+                if let Some(split) = current_split {
+                    result_split.push_str(split);
+                }
+            }
+        }
+        result.push(result_split);
+        current_split = splits.next()
+    }
+    result
 }
 
 /// basic error reporting, including the "cause chain".

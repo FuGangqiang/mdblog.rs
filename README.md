@@ -16,6 +16,9 @@
 [travis-image]: https://travis-ci.org/FuGangqiang/mdblog.rs.svg?branch=master
 [travis-link]: https://travis-ci.org/FuGangqiang/mdblog.rs
 
+
+点击[中文版 README](https://github.com/FuGangqiang/mdblog.rs/blob/master/README-zh.md)进入中文文档。
+
 Static site generator from markdown files with features:
 
 * TeX style math support

@@ -396,7 +396,7 @@ impl Mdblog {
             let end = total.min(start + self.settings.posts_per_page);
             let current_name = &page_names[i];
             let dest = build_dir.join(current_name);
-            let html = self.render_index(&posts[start..end], &i, &page_names[0..pages+2])?;
+            let html = self.render_index(&posts[start..end], i, &page_names[0..pages+2])?;
             write_file(&dest, html.as_bytes())?;
         }
         Ok(())
@@ -418,7 +418,7 @@ impl Mdblog {
             let current_name = &page_names[i];
             let dest = build_dir.join("tags").join(current_name);
             debug!("rendering tag: {} ...", dest.display());
-            let html = self.render_tag(&tag.name, &tag.posts[start..end], &i, &page_names[0..pages+2])?;
+            let html = self.render_tag(&tag.name, &tag.posts[start..end], i, &page_names[0..pages+2])?;
             write_file(&dest, html.as_bytes())?;
         }
         Ok(())
@@ -462,7 +462,7 @@ impl Mdblog {
     }
 
     /// render index page html.
-    pub fn render_index(&self, posts: &[&Rc<Post>], cur_num: &usize, page_names: &[String]) -> Result<String> {
+    pub fn render_index(&self, posts: &[&Rc<Post>], cur_num: usize, page_names: &[String]) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
         context.insert("prev_name", &page_names[cur_num - 1]);
@@ -474,7 +474,7 @@ impl Mdblog {
     }
 
     /// render tag pages html.
-    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], cur_num: &usize, page_names: &[String]) -> Result<String> {
+    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], cur_num: usize, page_names: &[String]) -> Result<String> {
         let mut context = self.get_base_context()?;
         context.insert("title", title);
         context.insert("prev_name", &page_names[cur_num - 1]);

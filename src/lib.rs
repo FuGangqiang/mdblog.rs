@@ -466,6 +466,7 @@ impl Mdblog {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
         context.insert("prev_name", &page_names[cur_num - 1]);
+        context.insert("current_name", &page_names[cur_num]);
         context.insert("next_name", &page_names[cur_num + 1]);
         context.insert("page_names", page_names);
         context.insert("posts", posts);
@@ -477,6 +478,7 @@ impl Mdblog {
         let mut context = self.get_base_context()?;
         context.insert("title", title);
         context.insert("prev_name", &page_names[cur_num - 1]);
+        context.insert("current_name", &page_names[cur_num]);
         context.insert("next_name", &page_names[cur_num + 1]);
         context.insert("page_names", page_names);
         context.insert("posts", posts);

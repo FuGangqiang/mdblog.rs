@@ -19,7 +19,7 @@ enum Opt {
     #[clap(name = "new")]
     /// Create a blog post
     New {
-        #[clap(short = "t", long = "tag", default_value = "")]
+        #[clap(short = 't', long = "tag", default_value = "")]
         /// Post tags
         tags: Vec<String>,
         #[clap(parse(from_os_str))]
@@ -32,13 +32,16 @@ enum Opt {
     #[clap(name = "serve")]
     /// Serve the blog, rebuild on change
     Serve {
-        #[clap(short = "p", long = "port", default_value = "5000")]
+        #[clap(short = 'p', long = "port", default_value = "5000")]
         /// Serve the blog at http://127.0.0.1:<port>
         port: u16,
     },
     #[clap(name = "theme")]
     /// Blog theme operations
-    Theme(SubCommandTheme),
+    Theme {
+        #[clap(subcommand)]
+        subcmd: SubCommandTheme,
+    },
 }
 
 #[derive(Clap, Debug)]
@@ -77,7 +80,7 @@ fn main() {
         Opt::New { ref tags, ref path } => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
-        Opt::Theme(ref subcmd) => theme(subcmd),
+        Opt::Theme{ ref subcmd } => theme(subcmd),
     };
 
     if let Err(ref e) = res {

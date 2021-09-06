@@ -30,8 +30,10 @@ pub fn read_file<P: AsRef<Path>>(path: P, buf: &mut Vec<u8>) -> Result<()> {
 /// the rendered html content of post body port
 pub fn markdown_to_html(content: &str) -> String {
     let mut opts = Options::empty();
+    opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
-    opts.insert(Options::ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_TASKLISTS);
+    opts.insert(Options::ENABLE_STRIKETHROUGH);
     let mut s = String::with_capacity(content.len() * 3 / 2);
     let p = Parser::new_ext(content, opts);
     html::push_html(&mut s, p);

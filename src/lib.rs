@@ -386,17 +386,18 @@ impl Mdblog {
         let posts: Vec<_> = self.posts.iter().filter(|p| !p.headers.hidden).collect();
         let total = posts.len();
         let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
-        let mut i = 1;
-        while i <= pages {
+        let mut page_names : Vec<String> = Vec::new();
+        // format 0 and pages+1 as empty
+        for i in 0..pages+2 {
+            page_names.push(format_page_name("index", i, pages));
+        }
+        for i in 1..pages+1 {
             let start = (i - 1) * self.settings.posts_per_page;
             let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name("index", i - 1, pages);
-            let current_name = format_page_name("index", i, pages);
-            let next_name = format_page_name("index", i + 1, pages);
+            let current_name = &page_names[i];
             let dest = build_dir.join(current_name);
-            let html = self.render_index(&posts[start..end], &prev_name, &next_name)?;
+            let html = self.render_index(&posts[start..end], &i, &page_names[0..pages+2])?;
             write_file(&dest, html.as_bytes())?;
-            i += 1;
         }
         Ok(())
     }
@@ -406,18 +407,19 @@ impl Mdblog {
         let build_dir = self.build_root_dir()?;
         let total = tag.posts.len();
         let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
-        let mut i = 1;
-        while i <= pages {
+        let mut page_names : Vec<String> = Vec::new();
+        // format 0 and pages+1 as empty
+        for i in 0..pages+2 {
+            page_names.push(format_page_name(&tag.name, i, pages));
+        }
+        for i in 1..pages+1 {
             let start = (i - 1) * self.settings.posts_per_page;
             let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name(&tag.name, i - 1, pages);
-            let current_name = format_page_name(&tag.name, i, pages);
-            let next_name = format_page_name(&tag.name, i + 1, pages);
+            let current_name = &page_names[i];
             let dest = build_dir.join("tags").join(current_name);
             debug!("rendering tag: {} ...", dest.display());
-            let html = self.render_tag(&tag.name, &tag.posts[start..end], &prev_name, &next_name)?;
+            let html = self.render_tag(&tag.name, &tag.posts[start..end], &i, &page_names[0..pages+2])?;
             write_file(&dest, html.as_bytes())?;
-            i += 1;
         }
         Ok(())
     }
@@ -460,21 +462,23 @@ impl Mdblog {
     }
 
     /// render index page html.
-    pub fn render_index(&self, posts: &[&Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
+    pub fn render_index(&self, posts: &[&Rc<Post>], cur_num: &usize, page_names: &[String]) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
-        context.insert("prev_name", prev_name);
-        context.insert("next_name", next_name);
+        context.insert("prev_name", &page_names[cur_num - 1]);
+        context.insert("next_name", &page_names[cur_num + 1]);
+        context.insert("page_names", page_names);
         context.insert("posts", posts);
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
     /// render tag pages html.
-    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
+    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], cur_num: &usize, page_names: &[String]) -> Result<String> {
         let mut context = self.get_base_context()?;
         context.insert("title", title);
-        context.insert("prev_name", prev_name);
-        context.insert("next_name", next_name);
+        context.insert("prev_name", &page_names[cur_num - 1]);
+        context.insert("next_name", &page_names[cur_num + 1]);
+        context.insert("page_names", page_names);
         context.insert("posts", posts);
         Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }

@@ -32,7 +32,7 @@ to learn the usages of mdblog.
 
 # Install
 
-`mdblog` is implemented by rust language(2018 edition), so you need cargo command:
+`mdblog` is implemented by rust language(2021 edition), so you need cargo command:
 
 ```
 cargo +nightly install mdblog
@@ -166,3 +166,13 @@ theme_root_dir = "_themes"
 rebuild_interval = 2
 posts_per_page = 20
 ```
+
+# How to contribute
+
+```
+cargo +nightly build
+```
+
+# Credit
+
+[mdbook-katex](https://github.com/lzanini/mdbook-katex)

@@ -45,6 +45,7 @@ enum Opt {
 }
 
 #[derive(Clap, Debug)]
+/// subcommands of subcommand `Theme`
 enum SubCommandTheme {
     #[clap(name = "list")]
     /// list blog themes
@@ -80,7 +81,7 @@ fn main() {
         Opt::New { ref tags, ref path } => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
-        Opt::Theme{ ref subcmd } => theme(subcmd),
+        Opt::Theme { ref subcmd } => theme(subcmd),
     };
 
     if let Err(ref e) = res {

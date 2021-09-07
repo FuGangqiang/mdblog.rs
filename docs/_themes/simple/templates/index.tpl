@@ -16,11 +16,11 @@
   {%- endfor %}
   </article>
   <div id="pages">
-  {%- if prev_name %}
-    <span class="prev"><a href="{{ prev_name | urlencode }}">« Previous</a></span>
-  {% endif -%}
-  {%- if next_name %}
-    <span class="next"><a href="{{ next_name | urlencode }}">Next »</a></span>
+  {%- if page.index > 1 %}
+    <span class="prev"><a href="{{ index_pages | nth(n=page.index - 2) | get(key='name') | urlencode }}">« Previous</a></span>
+  {%- endif -%}
+  {%- if page.index < index_pages | length %}
+    <span class="next"><a href="{{ index_pages | nth(n=page.index) | get(key='name') | urlencode }}">Next »</a></span>
   {% endif -%}
   </div>
 {%- endblock main %}

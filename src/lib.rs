@@ -28,6 +28,7 @@ use tera::{Context, Tera};
 use walkdir::{DirEntry, WalkDir};
 
 pub use crate::error::{Error, Result};
+pub use crate::page::Page;
 pub use crate::post::Post;
 pub use crate::post::PostHeaders;
 pub use crate::settings::Settings;
@@ -36,6 +37,7 @@ pub use crate::theme::Theme;
 use crate::utils::write_file;
 
 mod error;
+mod page;
 mod post;
 mod settings;
 mod tag;
@@ -52,6 +54,10 @@ pub struct Mdblog {
     theme: Theme,
     /// collection of blog posts
     posts: Vec<Rc<Post>>,
+    /// collection of blog index pages
+    index_pages: Vec<Rc<Page>>,
+    /// collection of blog tags pages
+    tag_pages: BTreeMap<String, Vec<Rc<Page>>>,
     /// tags map
     tags_map: BTreeMap<String, Tag>,
     /// server root dir
@@ -70,6 +76,8 @@ impl Mdblog {
             settings,
             theme,
             posts: Vec::new(),
+            index_pages: Vec::new(),
+            tag_pages: BTreeMap::new(),
             tags_map: BTreeMap::new(),
             server_root_dir: None,
         })
@@ -129,6 +137,52 @@ impl Mdblog {
         Ok(())
     }
 
+    /// build index pages
+    pub fn build_index_pages(&mut self) -> Result<()> {
+        let posts: Vec<_> = self.posts.iter().filter(|p| !p.headers.hidden).collect();
+        let total = posts.len();
+        let n = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
+        let mut i = 1;
+        while i <= n {
+            let start = (i - 1) * self.settings.posts_per_page;
+            let end = total.min(start + self.settings.posts_per_page);
+            let page = Page {
+                index: i,
+                name: format_page_name("index", i, total),
+                posts: posts[start..end].to_vec().into_iter().map(|p| p.to_owned()).collect(),
+            };
+            self.index_pages.push(Rc::new(page));
+            i += 1;
+        }
+        Ok(())
+    }
+
+    /// build tag pages
+    pub fn build_tag_pages(&mut self) -> Result<()> {
+        for tag in self.tags_map.values() {
+            let total = tag.posts.len();
+            let n = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
+            let mut i = 1;
+            while i <= n {
+                let start = (i - 1) * self.settings.posts_per_page;
+                let end = total.min(start + self.settings.posts_per_page);
+                let page = Page {
+                    index: i,
+                    name: format_page_name(&tag.name, i, total),
+                    posts: tag.posts[start..end]
+                        .to_vec()
+                        .into_iter()
+                        .map(|p| p.to_owned())
+                        .collect(),
+                };
+                let pages = self.tag_pages.entry(tag.name.clone()).or_insert(Vec::new());
+                pages.push(Rc::new(page));
+                i += 1;
+            }
+        }
+        Ok(())
+    }
+
     /// init blog directory.
     pub fn init(&mut self) -> Result<()> {
         if self.root.exists() {
@@ -158,6 +212,8 @@ impl Mdblog {
     /// build the blog html files to `build_dir` directory.
     pub fn build(&mut self) -> Result<()> {
         self.load_posts()?;
+        self.build_index_pages()?;
+        self.build_tag_pages()?;
         self.export_media()?;
         self.export_static()?;
         self.export_posts()?;
@@ -383,20 +439,10 @@ impl Mdblog {
     /// export blog index page.
     pub fn export_index(&self) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        let posts: Vec<_> = self.posts.iter().filter(|p| !p.headers.hidden).collect();
-        let total = posts.len();
-        let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
-        let mut i = 1;
-        while i <= pages {
-            let start = (i - 1) * self.settings.posts_per_page;
-            let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name("index", i - 1, pages);
-            let current_name = format_page_name("index", i, pages);
-            let next_name = format_page_name("index", i + 1, pages);
-            let dest = build_dir.join(current_name);
-            let html = self.render_index(&posts[start..end], &prev_name, &next_name)?;
+        for (i, page) in self.index_pages.iter().enumerate() {
+            let dest = build_dir.join(&page.name);
+            let html = self.render_index(i)?;
             write_file(&dest, html.as_bytes())?;
-            i += 1;
         }
         Ok(())
     }
@@ -404,20 +450,13 @@ impl Mdblog {
     /// export blog tag index page.
     pub fn export_tag(&self, tag: &Tag) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        let total = tag.posts.len();
-        let pages = (total + self.settings.posts_per_page - 1) / self.settings.posts_per_page;
-        let mut i = 1;
-        while i <= pages {
-            let start = (i - 1) * self.settings.posts_per_page;
-            let end = total.min(start + self.settings.posts_per_page);
-            let prev_name = format_page_name(&tag.name, i - 1, pages);
-            let current_name = format_page_name(&tag.name, i, pages);
-            let next_name = format_page_name(&tag.name, i + 1, pages);
-            let dest = build_dir.join("tags").join(current_name);
-            debug!("rendering tag: {} ...", dest.display());
-            let html = self.render_tag(&tag.name, &tag.posts[start..end], &prev_name, &next_name)?;
-            write_file(&dest, html.as_bytes())?;
-            i += 1;
+        for pages in self.tag_pages.get(&tag.name) {
+            for (i, page) in pages.iter().enumerate() {
+                let dest = build_dir.join("tags").join(&page.name);
+                debug!("rendering tag: {} ...", dest.display());
+                let html = self.render_tag(tag, i)?;
+                write_file(&dest, html.as_bytes())?;
+            }
         }
         Ok(())
     }
@@ -441,6 +480,8 @@ impl Mdblog {
         let mut context = Context::new();
         context.insert("config", &self.settings);
         context.insert("all_tags", &self.tags_map.values().collect::<Vec<_>>());
+        context.insert("index_pages", &self.index_pages);
+        context.insert("tag_pages", &self.tag_pages);
         Ok(context)
     }
 
@@ -460,22 +501,21 @@ impl Mdblog {
     }
 
     /// render index page html.
-    pub fn render_index(&self, posts: &[&Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
+    pub fn render_index(&self, i: usize) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
-        context.insert("prev_name", prev_name);
-        context.insert("next_name", next_name);
-        context.insert("posts", posts);
+        context.insert("page", &self.index_pages[i]);
+        context.insert("posts", &self.index_pages[i].posts);
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
     /// render tag pages html.
-    pub fn render_tag(&self, title: &str, posts: &[Rc<Post>], prev_name: &str, next_name: &str) -> Result<String> {
+    pub fn render_tag(&self, tag: &Tag, i: usize) -> Result<String> {
         let mut context = self.get_base_context()?;
-        context.insert("title", title);
-        context.insert("prev_name", prev_name);
-        context.insert("next_name", next_name);
-        context.insert("posts", posts);
+        let page = self.tag_pages.get(&tag.name).unwrap().get(i).unwrap();
+        context.insert("tag", &tag);
+        context.insert("page", &page);
+        context.insert("posts", &page.posts);
         Ok(self.theme.renderer.render("tag.tpl", &context)?)
     }
 

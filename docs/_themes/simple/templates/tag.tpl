@@ -1,13 +1,13 @@
 {% extends "base.tpl" %}
 
 {% block title %}
-  <title>{{ title }}</title>
+  <title>{{ tag.name }}</title>
 {% endblock title %}
 
 {%- block css %}{% endblock css -%}
 
 {% block main %}
-  <h1>{{ title }}</h1>
+  <h1>{{ tag.name }}</h1>
   <article>
   {%- for post in posts %}
     <section>
@@ -18,11 +18,11 @@
   </article>
 
   <div id="pages">
-  {%- if prev_name %}
-    <span class="prev"><a href="{{ prev_name | urlencode }}">« Previous</a></span>
-  {% endif -%}
-  {%- if next_name %}
-    <span class="next"><a href="{{ next_name | urlencode }}">Next »</a></span>
+  {%- if page.index > 1 %}
+    <span class="prev"><a href="{{ tag_pages | get(key=tag.name) | nth(n=page.index - 2) | get(key='name') | urlencode }}">« Previous</a></span>
+  {%- endif -%}
+  {%- if page.index < tag_pages | get(key=tag.name) | length %}
+    <span class="next"><a href="{{ tag_pages | get(key=tag.name) | nth(n=page.index) | get(key='name') | urlencode }}">Next »</a></span>
   {% endif -%}
   </div>
 {%- endblock main %}

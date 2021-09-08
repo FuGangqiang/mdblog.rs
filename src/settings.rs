@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use config::{ConfigError, Source, Value};
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 /// blog setting
 #[derive(Debug, Clone, Serialize, Deserialize)]

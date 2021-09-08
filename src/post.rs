@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use chrono::{DateTime, Local};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use serde_yaml;
 
 use crate::error::{Error, Result};
 use crate::utils::markdown_to_html;
@@ -118,8 +117,8 @@ impl Post {
                 headers.description.push_str("...");
             }
         }
-        let content = markdown_to_html(&body);
-        Ok((headers, content.to_string()))
+        let content = markdown_to_html(body);
+        Ok((headers, content))
     }
 
     /// the absolute path of blog post markdown file.

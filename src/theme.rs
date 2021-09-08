@@ -71,16 +71,16 @@ impl Theme {
             if name != "simple" {
                 return Err(Error::ThemeNotFound(name.into()));
             }
-            theme.favicon.extend_from_slice(&SIMPLE_FAVICON);
-            theme.logo.extend_from_slice(&SIMPLE_LOGO);
-            theme.feed.extend_from_slice(&SIMPLE_FEED);
-            theme.main_css.extend_from_slice(&SIMPLE_MAIN_CSS);
-            theme.main_js.extend_from_slice(&SIMPLE_MAIN_JS);
-            theme.base.extend_from_slice(&SIMPLE_BASE);
-            theme.index.extend_from_slice(&SIMPLE_INDEX);
-            theme.post.extend_from_slice(&SIMPLE_POST);
-            theme.tag.extend_from_slice(&SIMPLE_TAG);
-            theme.atom.extend_from_slice(&SIMPLE_ATOM);
+            theme.favicon.extend_from_slice(SIMPLE_FAVICON);
+            theme.logo.extend_from_slice(SIMPLE_LOGO);
+            theme.feed.extend_from_slice(SIMPLE_FEED);
+            theme.main_css.extend_from_slice(SIMPLE_MAIN_CSS);
+            theme.main_js.extend_from_slice(SIMPLE_MAIN_JS);
+            theme.base.extend_from_slice(SIMPLE_BASE);
+            theme.index.extend_from_slice(SIMPLE_INDEX);
+            theme.post.extend_from_slice(SIMPLE_POST);
+            theme.tag.extend_from_slice(SIMPLE_TAG);
+            theme.atom.extend_from_slice(SIMPLE_ATOM);
             theme.init_template()?;
             return Ok(theme);
         }
@@ -144,13 +144,13 @@ impl Theme {
     }
 }
 
-static SIMPLE_FAVICON: &'static [u8] = include_bytes!("simple_theme/static/favicon.png");
-static SIMPLE_LOGO: &'static [u8] = include_bytes!("simple_theme/static/logo.png");
-static SIMPLE_FEED: &'static [u8] = include_bytes!("simple_theme/static/feed.png");
-static SIMPLE_MAIN_CSS: &'static [u8] = include_bytes!("simple_theme/static/main.css");
-static SIMPLE_MAIN_JS: &'static [u8] = include_bytes!("simple_theme/static/main.js");
-static SIMPLE_BASE: &'static [u8] = include_bytes!("simple_theme/templates/base.tpl");
-static SIMPLE_INDEX: &'static [u8] = include_bytes!("simple_theme/templates/index.tpl");
-static SIMPLE_POST: &'static [u8] = include_bytes!("simple_theme/templates/post.tpl");
-static SIMPLE_TAG: &'static [u8] = include_bytes!("simple_theme/templates/tag.tpl");
-static SIMPLE_ATOM: &'static [u8] = include_bytes!("simple_theme/templates/atom.tpl");
+static SIMPLE_FAVICON: &[u8] = include_bytes!("simple_theme/static/favicon.png");
+static SIMPLE_LOGO: &[u8] = include_bytes!("simple_theme/static/logo.png");
+static SIMPLE_FEED: &[u8] = include_bytes!("simple_theme/static/feed.png");
+static SIMPLE_MAIN_CSS: &[u8] = include_bytes!("simple_theme/static/main.css");
+static SIMPLE_MAIN_JS: &[u8] = include_bytes!("simple_theme/static/main.js");
+static SIMPLE_BASE: &[u8] = include_bytes!("simple_theme/templates/base.tpl");
+static SIMPLE_INDEX: &[u8] = include_bytes!("simple_theme/templates/index.tpl");
+static SIMPLE_POST: &[u8] = include_bytes!("simple_theme/templates/post.tpl");
+static SIMPLE_TAG: &[u8] = include_bytes!("simple_theme/templates/tag.tpl");
+static SIMPLE_ATOM: &[u8] = include_bytes!("simple_theme/templates/atom.tpl");

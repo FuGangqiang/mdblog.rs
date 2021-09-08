@@ -169,11 +169,7 @@ impl Mdblog {
                 let page = Page {
                     index: i,
                     name: format_page_name(&tag.name, i, total),
-                    posts: tag.posts[start..end]
-                        .to_vec()
-                        .into_iter()
-                        .map(|p| p.to_owned())
-                        .collect(),
+                    posts: tag.posts[start..end].to_vec().into_iter().collect(),
                 };
                 let pages = self.tag_pages.entry(tag.name.clone()).or_insert(Vec::new());
                 pages.push(Rc::new(page));
@@ -271,7 +267,7 @@ impl Mdblog {
                     | DebouncedEvent::Write(ref fpath)
                     | DebouncedEvent::Remove(ref fpath)
                     | DebouncedEvent::Rename(ref fpath, _) => {
-                        if ignore_patterns.iter().any(|ref pat| pat.matches_path(fpath)) {
+                        if ignore_patterns.iter().any(|pat| pat.matches_path(fpath)) {
                             continue;
                         }
                         let now = Instant::now();
@@ -361,7 +357,7 @@ impl Mdblog {
             || path.extension().is_some()
             || path.to_str().unwrap_or("").is_empty()
             || post_title.is_none()
-            || self.ignore_patterns()?.iter().any(|ref pat| pat.matches_path(path))
+            || self.ignore_patterns()?.iter().any(|pat| pat.matches_path(path))
         {
             return Err(Error::PostPathInvaild(path.into()));
         }
@@ -450,7 +446,7 @@ impl Mdblog {
     /// export blog tag index page.
     pub fn export_tag(&self, tag: &Tag) -> Result<()> {
         let build_dir = self.build_root_dir()?;
-        for pages in self.tag_pages.get(&tag.name) {
+        if let Some(pages) = self.tag_pages.get(&tag.name) {
             for (i, page) in pages.iter().enumerate() {
                 let dest = build_dir.join("tags").join(&page.name);
                 debug!("rendering tag: {} ...", dest.display());
@@ -599,7 +595,7 @@ fn is_markdown_file(entry: &DirEntry) -> bool {
 /// create a directory pathbuf from setting config.
 fn get_dir<P: AsRef<Path>>(root: P, value: &str) -> Result<PathBuf> {
     let expanded_path = shellexpand::full(value)?.into_owned();
-    let dir = PathBuf::from(expanded_path.to_string());
+    let dir = PathBuf::from(expanded_path);
     if dir.is_relative() {
         return Ok(root.as_ref().join(&dir));
     } else {

@@ -16,6 +16,24 @@ macro_rules! try_init_template {
     };
 }
 
+macro_rules! try_read_file {
+    ($src_dir: expr, $p: expr, $buf: expr) => {
+        let p = $src_dir.join($p);
+        if p.exists() {
+            read_file(&p, $buf)?;
+        }
+    };
+}
+
+macro_rules! try_write_file {
+    ($src_dir: expr, $dest_dir: expr, $p: expr, $buf: expr) => {
+        let p = $src_dir.join($p);
+        if p.exists() {
+            write_file(&$dest_dir.join($p), $buf)?;
+        }
+    };
+}
+
 /// blog theme object
 #[derive(Default)]
 pub struct Theme {
@@ -67,11 +85,11 @@ impl Theme {
             return Ok(theme);
         }
 
-        read_file(&src_dir.join("static/favicon.png"), &mut theme.favicon)?;
-        read_file(&src_dir.join("static/logo.png"), &mut theme.logo)?;
-        read_file(&src_dir.join("static/feed.png"), &mut theme.feed)?;
-        read_file(&src_dir.join("static/main.css"), &mut theme.main_css)?;
-        read_file(&src_dir.join("static/main.js"), &mut theme.main_js)?;
+        try_read_file!(src_dir, "static/favicon.png", &mut theme.favicon);
+        try_read_file!(src_dir, "static/logo.png", &mut theme.logo);
+        try_read_file!(src_dir, "static/feed.png", &mut theme.feed);
+        try_read_file!(src_dir, "static/main.css", &mut theme.main_css);
+        try_read_file!(src_dir, "static/main.js", &mut theme.main_js);
         read_file(&src_dir.join("templates/base.tpl"), &mut theme.base)?;
         read_file(&src_dir.join("templates/index.tpl"), &mut theme.index)?;
         read_file(&src_dir.join("templates/post.tpl"), &mut theme.post)?;
@@ -115,12 +133,13 @@ impl Theme {
     /// export theme static files.
     pub fn export_static<P: AsRef<Path>>(&self, root: P) -> Result<()> {
         debug!("exporting theme({}) static ...", self.name);
+        let src_dir = self.root.join(&self.name);
         let dest_dir = root.as_ref();
-        write_file(&dest_dir.join("static/favicon.png"), &self.favicon)?;
-        write_file(&dest_dir.join("static/logo.png"), &self.logo)?;
-        write_file(&dest_dir.join("static/feed.png"), &self.feed)?;
-        write_file(&dest_dir.join("static/main.css"), &self.main_css)?;
-        write_file(&dest_dir.join("static/main.js"), &self.main_js)?;
+        try_write_file!(src_dir, dest_dir, "static/favicon.png", &self.favicon);
+        try_write_file!(src_dir, dest_dir, "static/logo.png", &self.logo);
+        try_write_file!(src_dir, dest_dir, "static/feed.png", &self.feed);
+        try_write_file!(src_dir, dest_dir, "static/main.css", &self.main_css);
+        try_write_file!(src_dir, dest_dir, "static/main.js", &self.main_js);
         Ok(())
     }
 }

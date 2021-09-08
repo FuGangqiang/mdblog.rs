@@ -22,7 +22,7 @@ pub fn write_file(path: &Path, buf: &[u8]) -> Result<()> {
 
 /// read the file content of `path` to `buf`
 pub fn read_file<P: AsRef<Path>>(path: P, buf: &mut Vec<u8>) -> Result<()> {
-    let mut f = File::open(path.as_ref())?;
+    let mut f = File::open(path)?;
     f.read_to_end(buf)?;
     Ok(())
 }

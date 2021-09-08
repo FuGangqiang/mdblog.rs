@@ -80,7 +80,7 @@ fn main() {
         Opt::New { ref tags, ref path } => new(path, tags),
         Opt::Build => build(),
         Opt::Serve { port } => serve(port),
-        Opt::Theme{ ref subcmd } => theme(subcmd),
+        Opt::Theme { ref subcmd } => theme(subcmd),
     };
 
     if let Err(ref e) = res {

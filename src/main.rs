@@ -33,10 +33,10 @@ enum Opts {
     /// Serve the blog, rebuild on change
     Serve {
         #[clap(long = "host", default_value = "127.0.0.1")]
-        /// Host
+        /// Serve the blog at <host>
         host: String,
         #[clap(short = 'p', long = "port", default_value = "5000")]
-        /// Port
+        /// Serve the blog at <port>
         port: u16,
     },
     #[clap(name = "theme")]

@@ -1,0 +1,303 @@
+html {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #ddd;
+    color: #888;
+    font-size: 20px;
+    font-family: system, -apple-system, '.SFNSText-Regular', 'San Francisco', Roboto, 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', 'Helvetica', 'Microsoft YaHei', 'WenQuanYi Micro Hei', Arial, sans-serif;
+    text-decoration: none;
+}
+
+a {
+    color: inherit;
+    font-size: inherit;
+    text-decoration: none;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+header {
+    position: relative;
+    color: #fff;
+    background: #2ca6cb;
+}
+
+header .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+footer {
+    background: #1f1f1f;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+footer .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 1rem;
+    text-align: center;
+}
+
+header #site {
+    margin: 1rem;
+}
+
+header #site-name {
+    font-size: 2.4rem;
+}
+
+header #site-motto {
+    font-size: 1.2rem;
+}
+
+#header-nav {
+    margin: 1rem;
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+#header-nav a {
+    padding: 0.3rem 0.5rem;
+}
+
+#header-nav a:hover {
+    background: #dddddd44;
+    border-radius: 0.3rem;
+}
+
+header #menu {
+    display: none;
+    width: 3rem;
+    height: 3rem;
+}
+
+h1, h2, h3, h4 {
+    color: #2ca6cb;
+}
+
+svg.icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+svg.icon path {
+    fill: #888;
+}
+
+main {
+    box-sizing: border-box;
+    padding: 1rem;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+main a {
+    color: #2ca6cb;
+}
+
+main a:hover {
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+main a sup {
+    font-size: 0.6rem;
+    position: relative;
+    top: 0;
+    right: 0;
+}
+
+main > h1 {
+    font-size: 2rem;
+    margin: 0 1rem;
+    text-align: center;
+}
+
+article {
+    margin: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 0.5rem;
+}
+
+article section {
+    margin: 0.5rem 0;
+}
+
+article h1 {
+    font-size: 1.8rem;
+}
+
+article h2 {
+    font-size: 1.5rem;
+}
+
+article h3 {
+    font-size: 1.2rem;
+}
+
+article h4 {
+    font-size: 1rem;
+}
+
+article h1,
+article h2,
+article h3,
+article h4,
+article p {
+    margin: 1rem 0;
+}
+
+main ul,
+main ol {
+    padding-left: 3rem;
+    list-style-position: outside;
+}
+
+main ol {
+    list-style-type: decimal;
+}
+
+main ul {
+    list-style-type: disc;
+}
+
+main blockquote {
+    padding-left: 3rem;
+}
+
+main p img {
+    display: block;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+main p code,
+main li > code {
+    font-family: monospace;
+    border: 1px solid #ddd;
+    padding: 0px 4px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+pre code {
+    display: block;
+    border: 1px solid #ddd;
+    margin-left: 2rem;
+    padding: 1rem;
+    padding-left: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: #eee;
+    font-family: monospace;
+    line-height: 1.2rem;
+    overflow: auto;
+}
+
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+table thead {
+    font-weight: bold;
+}
+
+table td {
+    text-align: center;
+    border: 1px solid #888;
+    min-width: 4rem;
+}
+
+#pages {
+    margin: 0 1rem;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#pages .info {
+    text-align: center;
+    margin: 0 1rem;
+}
+
+#article-footer {
+    padding-left: 0;
+    margin: 0 1rem;
+    list-style-type: none;
+}
+
+#article-footer div {
+    display: flex;
+    align-items: center;
+}
+
+#article-footer .icon {
+    margin-right: 0.5rem;
+}
+
+#article-footer a {
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 767px) {
+    html {
+      font-size: 16px;
+    }
+
+    .title {
+      font-size: 1rem !important;
+    }
+
+    header #menu {
+        display: block;
+        margin: 0 1rem;
+    }
+
+    #header-nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        width: 100%;
+        z-index: 100;
+        margin: 0;
+        background: #888;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    #header-nav a {
+        width: 100%;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        border-radius: 0px;
+        box-sizing: border-box;
+    }
+}

@@ -239,6 +239,7 @@ table td {
     font-size: 1.2rem;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
 }
 
 #pages .info {

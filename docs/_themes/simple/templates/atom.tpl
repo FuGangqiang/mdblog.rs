@@ -4,8 +4,8 @@
   <title>{{ config.site_name }}</title>
   <updated>{{ now | date(format="%Y-%m-%dT%H:%M:%S%:z") }}</updated>
   <subtitle>{{ config.site_motto }}</subtitle>
-  <icon>/static/favicon.png</icon>
-  <logo>/static/logo.png</logo>
+  <icon>/media/favicon.png</icon>
+  <logo>/media/favicon.png</logo>
   <link rel="alternate" type="text/html" href="{{ config.site_url }}" />
   <link rel="self" type="application/atom+xml" href="{{ config.site_url }}/atom.xml" />
   <generator uri="https://github.com/FuGangqiang/mdblog.rs">mdblog.rs</generator>

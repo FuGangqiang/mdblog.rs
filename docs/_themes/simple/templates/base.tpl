@@ -3,60 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="generator" content="mdblog.rs">
-  <link rel="icon" href="{{ config.site_url }}/static/favicon.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,shrink-to-fit=no,user-scalable=0">
+  {%- block title %}{% endblock title -%}
   <link rel="stylesheet" href="{{ config.site_url }}/static/main.css">
   {%- block css %}{% endblock css -%}
-  {%- block title %}{% endblock title -%}
 </head>
 <body>
-<header class="clearfix">
-  <section id="imglogo">
-    <a href="{{ config.site_url }}/index.html" title="{{ config.site_name }}">
-    <img src="{{ config.site_url }}/static/logo.png"></a>
-  </section>
-  <section id="textlogo">
-    <h1 id="site-name">
-      <a href="{{ config.site_url }}/index.html" title="{{ config.site_name }}">{{ config.site_name }}</a>
-    </h1>
-    <h2 id="site-motto">{{ config.site_motto }}</h2>
-  </section>
-  <nav>
-    <ul>
-      <li><a href="{{ config.site_url }}/index.html">Blog</a></li>
-    </ul>
-  </nav>
-</header>
-<div id="container" class="clearfix">
-  <main>
-  {%- block main %}{% endblock main %}
-  </main>
-  <aside>
-    <section class="tags clearfix">
-      <h1>Tags</h1>
-      <ul>
-      {%- for tag in all_tags %}
-        <li><a href="{{ config.site_url }}{{ tag.url  | urlencode }}">{{ tag.name }}<sup>{{ tag.num }}</sup></a></li>
-      {%- endfor %}
-      </ul>
-    </section>
-    <section class="links clearfix">
-      <h1>Links</h1>
-      <ul>
-        <li><a href="{{ config.site_url }}/index.html" target="_blank">Blog</a></li>
-      </ul>
-    </section>
-    <div>
-      <a href="{{ config.site_url }}/atom.xml" target="_blank">
-        <img id="feed" src="{{ config.site_url }}/static/feed.png">
-      </a>
+<header>
+  <div class="container">
+    <div id="site">
+      <div id="site-name">
+        <a href="{{ config.site_url }}/index.html" title="{{ config.site_name }}">{{ config.site_name }}</a>
+      </div>
+      <div id="site-motto">{{ config.site_motto }}</div>
     </div>
-  </aside>
-</div>
+    <nav id="header-nav">
+      <a href="{{ config.site_url }}/index.html">Blog</a>
+      <a href="{{ config.site_url }}/tags.html">Tags</a>
+      <a href="{{ config.site_url }}/atom.xml">Feed</a>
+    </nav>
+    <svg id="menu" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      <path d="M128 298.666667h768a42.666667 42.666667 0 0 0 0-85.333334H128a42.666667 42.666667 0 0 0 0 85.333334z m768 170.666666H128a42.666667 42.666667 0 0 0 0 85.333334h768a42.666667 42.666667 0 0 0 0-85.333334z m0 256H128a42.666667 42.666667 0 0 0 0 85.333334h768a42.666667 42.666667 0 0 0 0-85.333334z" fill="#fff"></path>
+    </svg>
+  </div>
+</header>
+
+<main class="container">
+  {%- block main %}{% endblock main %}
+</main>
+
 <footer>
-  <p>
-    {{ config.footer_note }}
-  </p>
+  <div class="container">{{ config.footer_note }}</div>
 </footer>
+
+<script>
+  function setMenu() {
+    var menu = document.getElementById('menu');
+    if (!menu) {
+      return;
+    }
+
+    var headerNav = document.getElementById('header-nav');
+    menu.addEventListener('click', function() {
+      if (headerNav.style.display === "flex") {
+        headerNav.style.display = "none";
+      } else {
+        headerNav.style.display = "flex";
+      }
+    });
+
+    document.addEventListener('click', function(evt) {
+      if (!window.matchMedia("(max-width: 767px)").matches) {
+        return;
+      }
+      if (headerNav.style.display !== 'flex') {
+        return;
+      }
+
+      let targetElement = evt.target;
+      do {
+        if (targetElement == menu) {
+          return;
+        }
+        targetElement = targetElement.parentNode;
+      } while (targetElement);
+
+      headerNav.style.display = "none";
+    });
+  }
+
+  window.addEventListener('load', setMenu);
+</script>
 {%- block js %}{% endblock js -%}
 </body>
 </html>

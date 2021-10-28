@@ -188,8 +188,8 @@ impl Mdblog {
         }
 
         let mut tera = Tera::default();
-        tera.add_raw_template("hello.md.tpl", include_str!("demo_templates/hello.md.tpl"))?;
-        tera.add_raw_template("math.md.tpl", include_str!("demo_templates/math.md.tpl"))?;
+        tera.add_raw_template("hello.md.tpl", include_str!("demo/hello.md.tpl"))?;
+        tera.add_raw_template("math.md.tpl", include_str!("demo/math.md.tpl"))?;
 
         let now = Local::now();
         let mut context = Context::new();

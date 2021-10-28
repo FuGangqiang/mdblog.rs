@@ -19,7 +19,7 @@ doc = false
 [dependencies]
 log = "0.4"
 env_logger = "0.9"
-clap = "3.0.0-beta.4"
+clap = "3.0.0-beta.5"
 config = "0.11.0"
 derive_more = { version = "0.99", features = ["display", "from"]}
 pulldown-cmark = { version = "0.8", default-features = false, features = ["simd"] }

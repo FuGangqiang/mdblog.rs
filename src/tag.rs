@@ -11,19 +11,16 @@ pub struct Tag {
     pub name: String,
     /// the number of tag posts
     pub num: isize,
-    /// the tag url
-    pub url: String,
     /// the posts
     pub posts: Vec<Rc<Post>>,
 }
 
 impl Tag {
     /// create new `Tag`
-    pub fn new(name: &str, url: &str) -> Tag {
+    pub fn new(name: &str) -> Tag {
         Tag {
             name: name.to_string(),
             num: 0,
-            url: url.to_string(),
             posts: Vec::new(),
         }
     }

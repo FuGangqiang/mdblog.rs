@@ -103,6 +103,10 @@ impl Mdblog {
         Ok(())
     }
 
+    fn reset_site_url(&mut self, host: &str, port: u16) {
+        self.settings.site_url = format!("http://{}:{}", host, port);
+    }
+
     /// load blog posts.
     pub fn load_posts(&mut self) -> Result<()> {
         let mut posts: Vec<Rc<Post>> = Vec::new();
@@ -121,10 +125,8 @@ impl Mdblog {
             if post.headers.hidden {
                 continue;
             }
-            for tag_name in &post.headers.tags {
-                let tag = tags_map
-                    .entry(tag_name.to_string())
-                    .or_insert(Tag::new(tag_name, &format!("/tags/{}.html", tag_name)));
+            for name in &post.headers.tags {
+                let tag = tags_map.entry(name.to_string()).or_insert(Tag::new(name));
                 tag.add(post.clone());
             }
         }
@@ -214,6 +216,7 @@ impl Mdblog {
         self.export_static()?;
         self.export_posts()?;
         self.export_index()?;
+        self.export_tags()?;
         for tag in self.tags_map.values() {
             self.export_tag(tag)?;
         }
@@ -222,8 +225,8 @@ impl Mdblog {
     }
 
     /// serve the blog static files in the `build_dir` directory.
-    pub fn serve(&mut self, port: u16) -> Result<()> {
-        let addr_str = format!("127.0.0.1:{}", port);
+    pub fn serve(&mut self, host: String, port: u16) -> Result<()> {
+        let addr_str = format!("{}:{}", host, port);
         let server_root_dir = TempBuilder::new().prefix("mdblog.").rand_bytes(10).tempdir()?;
         info!("server root dir: {}", &server_root_dir.path().display());
 
@@ -234,11 +237,12 @@ impl Mdblog {
         info!("server blog at {}", &self.settings.site_url);
         let server_root_dir = self.server_root_dir.as_ref().unwrap().path().to_owned();
 
+        self.reset_site_url(&host, port);
         thread::spawn(move || {
             let mut config = rocket::config::Config::production();
             config
-                .set_address("127.0.0.1")
-                .expect("can not bind address: 127.0.0.1");
+                .set_address(&host)
+                .expect(&format!("can not bind address: {}", host));
             config.set_port(port);
             rocket::custom(config)
                 .mount("/", rocket_contrib::serve::StaticFiles::from(&server_root_dir))
@@ -443,6 +447,15 @@ impl Mdblog {
         Ok(())
     }
 
+    /// export blog tags page.
+    pub fn export_tags(&self) -> Result<()> {
+        let build_dir = self.build_root_dir()?;
+        let dest = build_dir.join("tags.html");
+        let html = self.render_tags()?;
+        write_file(&dest, html.as_bytes())?;
+        Ok(())
+    }
+
     /// export blog tag index page.
     pub fn export_tag(&self, tag: &Tag) -> Result<()> {
         let build_dir = self.build_root_dir()?;
@@ -475,28 +488,24 @@ impl Mdblog {
     fn get_base_context(&self) -> Result<Context> {
         let mut context = Context::new();
         context.insert("config", &self.settings);
-        context.insert("all_tags", &self.tags_map.values().collect::<Vec<_>>());
+        let mut tags = self.tags_map.values().collect::<Vec<_>>();
+        tags.sort_by_key(|x| &x.name);
+        context.insert("tags", &tags);
+        context.insert("tag_map", &self.tags_map);
         context.insert("index_pages", &self.index_pages);
         context.insert("tag_pages", &self.tag_pages);
         Ok(context)
     }
 
-    /// render blog post html.
+    /// render post.html.
     pub fn render_post(&self, post: &Post) -> Result<String> {
         debug!("rendering post({}) ...", post.path.display());
-        let post_tags = self
-            .tags_map
-            .iter()
-            .filter(|&(name, _)| post.headers.tags.contains(name))
-            .map(|(_, tag)| tag)
-            .collect::<Vec<_>>();
         let mut context = self.get_base_context()?;
         context.insert("post", &post);
-        context.insert("post_tags", &post_tags);
         Ok(self.theme.renderer.render("post.tpl", &context)?)
     }
 
-    /// render index page html.
+    /// render index*.html.
     pub fn render_index(&self, i: usize) -> Result<String> {
         debug!("rendering index ...");
         let mut context = self.get_base_context()?;
@@ -505,8 +514,16 @@ impl Mdblog {
         Ok(self.theme.renderer.render("index.tpl", &context)?)
     }
 
-    /// render tag pages html.
+    /// render tags.html.
+    pub fn render_tags(&self) -> Result<String> {
+        debug!("rendering tags ...");
+        let context = self.get_base_context()?;
+        Ok(self.theme.renderer.render("tags.tpl", &context)?)
+    }
+
+    /// render tag.html.
     pub fn render_tag(&self, tag: &Tag, i: usize) -> Result<String> {
+        debug!("rendering tag ...");
         let mut context = self.get_base_context()?;
         let page = self.tag_pages.get(&tag.name).unwrap().get(i).unwrap();
         context.insert("tag", &tag);

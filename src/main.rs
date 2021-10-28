@@ -2,14 +2,14 @@ use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
-use clap::Clap;
+use clap::{Parser, crate_name, crate_version, crate_authors};
 use log::error;
 use mdblog::{Mdblog, Result};
 
-#[derive(Clap, Debug)]
-#[clap(name = "mdblog")]
+#[derive(Parser, Debug)]
+#[clap(name = crate_name!(), version = crate_version!(), author=crate_authors!())]
 /// static site generator from markdown files
-enum Opt {
+enum Opts {
     #[clap(name = "init")]
     /// Initialize the blog directory layout
     Init {
@@ -32,8 +32,11 @@ enum Opt {
     #[clap(name = "serve")]
     /// Serve the blog, rebuild on change
     Serve {
+        #[clap(long = "host", default_value = "127.0.0.1")]
+        /// Host
+        host: String,
         #[clap(short = 'p', long = "port", default_value = "5000")]
-        /// Serve the blog at http://127.0.0.1:<port>
+        /// Port
         port: u16,
     },
     #[clap(name = "theme")]
@@ -44,7 +47,7 @@ enum Opt {
     },
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 enum SubCommandTheme {
     #[clap(name = "list")]
     /// list blog themes
@@ -74,13 +77,13 @@ fn main() {
         .filter(None, log::LevelFilter::Info)
         .init();
 
-    let opt = Opt::parse();
-    let res = match opt {
-        Opt::Init { ref name } => init(name),
-        Opt::New { ref tags, ref path } => new(path, tags),
-        Opt::Build => build(),
-        Opt::Serve { port } => serve(port),
-        Opt::Theme { ref subcmd } => theme(subcmd),
+    let opts = Opts::parse();
+    let res = match opts {
+        Opts::Init { ref name } => init(name),
+        Opts::New { ref tags, ref path } => new(path, tags),
+        Opts::Build => build(),
+        Opts::Serve { host, port } => serve(host, port),
+        Opts::Theme { ref subcmd } => theme(subcmd),
     };
 
     if let Err(ref e) = res {
@@ -112,11 +115,11 @@ fn build() -> Result<()> {
     Ok(())
 }
 
-fn serve(port: u16) -> Result<()> {
+fn serve(host: String, port: u16) -> Result<()> {
     let root_dir = env::current_dir()?;
     let mut mb = Mdblog::new(&root_dir)?;
     mb.load_customize_settings()?;
-    mb.serve(port)?;
+    mb.serve(host, port)?;
     Ok(())
 }
 

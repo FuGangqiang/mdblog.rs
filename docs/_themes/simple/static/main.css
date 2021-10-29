@@ -234,17 +234,21 @@ table td {
     min-width: 4rem;
 }
 
+.spacer {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
 #pages {
     margin: 0 1rem;
     font-size: 1.2rem;
     display: flex;
-    justify-content: flex-end;
     align-items: center;
 }
 
+#pages a,
 #pages .info {
-    text-align: center;
-    margin: 0 1rem;
+    margin: 0 0.5rem;
 }
 
 #article-footer {

@@ -26,11 +26,13 @@
 
   <div id="pages">
   {%- if page.index > 1 %}
-    <span class="prev"><a href="{{ tag_pages | get(key=tag.name) | nth(n=page.index - 2) | get(key='name') | urlencode }}">« Previous</a></span>
+    <a class="prev" href="{{ tag_pages | get(key=tag.name) | nth(n=page.index - 2) | get(key='name') | urlencode }}">« Previous</a>
   {%- endif -%}
+    <span class="spacer"></span>
     <span class="info">{{ page.index }} / {{ tag_pages | get(key=tag.name) | length }}</span>
+    <span class="spacer"></span>
   {%- if page.index < tag_pages | get(key=tag.name) | length %}
-    <span class="next"><a href="{{ tag_pages | get(key=tag.name) | nth(n=page.index) | get(key='name') | urlencode }}">Next »</a></span>
+    <a class="next" href="{{ tag_pages | get(key=tag.name) | nth(n=page.index) | get(key='name') | urlencode }}">Next »</a>
   {% endif -%}
   </div>
 {%- endblock main %}

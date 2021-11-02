@@ -24,7 +24,7 @@ use glob::Pattern;
 use log::{debug, error, info};
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use tempfile::{Builder as TempBuilder, TempDir};
-use tera::{Context, Tera};
+use tera::{Context, CtxThreadSafe, Tera};
 use walkdir::{DirEntry, WalkDir};
 
 pub use crate::error::{Error, Result};
@@ -485,11 +485,11 @@ impl Mdblog {
     }
 
     /// get base context of `theme.renderer` templates
-    fn get_base_context(&self) -> Result<Context> {
+    fn get_base_context(&self) -> Result<Context<CtxThreadSafe>> {
         let mut context = Context::new();
         context.insert("config", &self.settings);
         let mut tags = self.tags_map.values().collect::<Vec<_>>();
-        tags.sort_by_key(|x| &x.name);
+        tags.sort_by_key(|x| x.name.to_lowercase());
         context.insert("tags", &tags);
         context.insert("tag_map", &self.tags_map);
         context.insert("index_pages", &self.index_pages);

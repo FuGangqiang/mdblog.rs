@@ -34,6 +34,4 @@
   </article>
 {%- endblock main %}
 
-{% block js %}
-<script src="{{ config.site_url }}/static/main.js"></script>
-{% endblock js %}
+{% block js %}{% endblock js %}

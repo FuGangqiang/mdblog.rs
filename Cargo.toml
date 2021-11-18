@@ -1,6 +1,6 @@
 [package]
 name = "mdblog"
-version = "0.20.2"
+version = "0.20.3"
 authors = ["FuGangqiang <fu_gangqiang@qq.com>"]
 description = "static site generator from markdown files."
 repository = "https://github.com/FuGangqiang/mdblog.rs"
@@ -27,7 +27,7 @@ serde = { version = "1.0", features = ["rc", "std", "derive"]}
 serde_json = "1.0"
 serde_yaml = "0.8"
 toml = "0.5"
-tera = "1.14"
+tera = "1.15"
 walkdir = "2.3"
 tempfile = "3"
 rocket = "0.4"

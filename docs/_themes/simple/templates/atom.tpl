@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>{{ config.site_url }}</id>
   <title>{{ config.site_name }}</title>
-  <updated>{{ now | date(format="%Y-%m-%dT%H:%M:%S%:z") }}</updated>
+  <updated>{{ now }}</updated>
   <subtitle>{{ config.site_motto }}</subtitle>
   <icon>/media/favicon.png</icon>
   <logo>/media/favicon.png</logo>
@@ -13,8 +13,8 @@
   <entry>
     <id>{{ config.site_url }}{{ post.url  | urlencode }}</id>
     <title>{{ post.title }}</title>
-    <updated>{{ post.headers.created | date(format="%Y-%m-%dT%H:%M:%S%:z") }}</updated>
-    <published>{{ post.headers.created | date(format="%Y-%m-%dT%H:%M:%S%:z") }}</published>
+    <updated>{{ post.headers.created }}</updated>
+    <published>{{ post.headers.created }}</published>
     <link href="{{ config.site_url }}{{ post.url  | urlencode }}"/>
     <summary>{{ post.headers.description }}</summary>
     <content type="html" xml:lang="en" xml:base="{{ config.site_url }}">

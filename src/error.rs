@@ -21,6 +21,12 @@ pub enum Error {
     /// template error
     #[display(fmt = "template error")]
     Template(tera::Error),
+    ///datetime fetch error
+    #[display(fmt = "datetime fetch error")]
+    DateTimeFetchError(time::error::IndeterminateOffset),
+    /// datetime format error
+    #[display(fmt = "datetime format error")]
+    DateTimeFormat(time::error::Format),
     /// notify error
     #[display(fmt = "notify error")]
     Notify(notify::Error),
@@ -89,6 +95,8 @@ impl StdError for Error {
             PathStripPrefix(e) => Some(e),
             ConfigMerge(e) => Some(e),
             Template(e) => Some(e),
+            DateTimeFetchError(e) => Some(e),
+            DateTimeFormat(e) => Some(e),
             Notify(e) => Some(e),
             GlobPattern(e) => Some(e),
             TomlExport(e) => Some(e),

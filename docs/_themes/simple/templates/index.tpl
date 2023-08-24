@@ -17,7 +17,7 @@
   <article>
     {%- for post in posts %}
       <section>
-        <span>{{ post.headers.created | date(format="%Y-%m-%d") }}</span>
+        <span>{{ post.headers.created | truncate(length=10, end="") }}</span>
         <a class="title" href="{{ config.site_url }}{{ post.url  | urlencode }}">{{ post.title }}</a>
       </section>
     {%- endfor %}

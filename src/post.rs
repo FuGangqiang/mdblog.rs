@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Local};
+use time::OffsetDateTime;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,8 @@ use crate::utils::markdown_to_html;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostHeaders {
     /// post created local time, `created: 1970-01-01T00:00:00+08:00`
-    pub created: DateTime<Local>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub created: OffsetDateTime,
     /// post hidden flag, `hidden: true`, default `false`
     #[serde(default)]
     pub hidden: bool,

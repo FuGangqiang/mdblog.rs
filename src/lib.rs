@@ -18,7 +18,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use chrono::Local;
+use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use config::Config;
 use glob::Pattern;
 use log::{debug, error, info};
@@ -191,9 +191,9 @@ impl Mdblog {
         tera.add_raw_template("hello.md.tpl", include_str!("demo/hello.md.tpl"))?;
         tera.add_raw_template("math.md.tpl", include_str!("demo/math.md.tpl"))?;
 
-        let now = Local::now();
+        let now = OffsetDateTime::now_local()?;
         let mut context = Context::new();
-        context.insert("now", &now.format("%Y-%m-%dT%H:%M:%S%:z").to_string());
+        context.insert("now", &now.format(&Rfc3339)?);
 
         let hello_content = tera.render("hello.md.tpl", &context)?;
         let math_content = tera.render("math.md.tpl", &context)?;
@@ -372,13 +372,13 @@ impl Mdblog {
         if post_path.exists() {
             return Err(Error::PostPathExisted(path.into()));
         }
-        let now = Local::now();
+        let now = OffsetDateTime::now_local()?;
         let content = format!(
             "created: {}\n\
              tags: [{}]\n\
              \n\
              this is a new post!\n",
-            now.format("%Y-%m-%dT%H:%M:%S%:z"),
+            now.format(&Rfc3339)?,
             tags.join(", ")
         );
         write_file(&post_path, content.as_bytes())?;
@@ -473,11 +473,11 @@ impl Mdblog {
     /// export blog atom.xml
     pub fn export_atom(&self) -> Result<()> {
         debug!("rendering atom ...");
-        let build_dir = self.build_root_dir()?;
-        let dest = build_dir.join("atom.xml");
-        let now = Local::now();
-        let mut context = self.get_base_context()?;
-        context.insert("now", &now);
+        let build_dir: PathBuf = self.build_root_dir()?;
+        let dest: PathBuf = build_dir.join("atom.xml");
+        let now: OffsetDateTime = OffsetDateTime::now_local()?;
+        let mut context: Context = self.get_base_context()?;
+        context.insert("now", &now.format(&Rfc3339)?);
         context.insert("posts", &self.posts[..10.min(self.posts.len())]);
         let html = self.theme.renderer.render("atom.tpl", &context)?;
         write_file(&dest, html.as_bytes())?;

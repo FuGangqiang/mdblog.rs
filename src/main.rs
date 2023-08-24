@@ -26,7 +26,6 @@ enum CliCommand {
         #[clap(name="tag", short, long = "tag", default_value = "")]
         /// Post tags
         tags: Vec<String>,
-        #[clap(parse(from_os_str))]
         /// Post path relative to blog `posts` directory
         path: PathBuf,
     },

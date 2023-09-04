@@ -18,13 +18,14 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use config::Config;
 use glob::Pattern;
 use log::{debug, error, info};
-use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use notify::RecursiveMode;
+use notify_debouncer_mini::new_debouncer;
 use tempfile::{Builder as TempBuilder, TempDir};
 use tera::{Context, Tera};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use walkdir::{DirEntry, WalkDir};
 
 pub use crate::error::{Error, Result};
@@ -259,36 +260,32 @@ impl Mdblog {
         let (tx, rx) = mpsc::channel();
         let ignore_patterns = self.ignore_patterns()?;
         info!("watching dir: {}", self.root.display());
-        let mut watcher = watcher(tx, Duration::new(2, 0))?;
-        watcher.watch(&self.root, RecursiveMode::Recursive)?;
+
+        let mut debouncer = new_debouncer(Duration::from_secs(2), tx)?;
+        debouncer.watcher().watch(&self.root, RecursiveMode::Recursive)?;
+
         let interval = Duration::new(self.settings.rebuild_interval.into(), 0);
         let mut last_run: Option<Instant> = None;
-        loop {
-            match rx.recv() {
+        for result in rx {
+            match result {
                 Err(why) => error!("watch error: {:?}", why),
-                Ok(event) => match event {
-                    DebouncedEvent::Create(ref fpath)
-                    | DebouncedEvent::Write(ref fpath)
-                    | DebouncedEvent::Remove(ref fpath)
-                    | DebouncedEvent::Rename(ref fpath, _) => {
-                        if ignore_patterns.iter().any(|pat| pat.matches_path(fpath)) {
-                            continue;
-                        }
-                        let now = Instant::now();
-                        if let Some(last_time) = last_run {
-                            if now.duration_since(last_time) < interval {
-                                continue;
-                            }
-                        }
-                        last_run = Some(now);
-                        info!("Modified file: {}", fpath.display());
-                        if let Err(ref e) = self.rebuild() {
-                            crate::utils::log_error_chain(e);
-                            continue;
+                Ok(events) => events.iter().for_each(|event| {
+                    if ignore_patterns.iter().any(|pat| pat.matches_path(&event.path)) {
+                        return;
+                    }
+                    let now = Instant::now();
+                    if let Some(last_time) = last_run {
+                        if now.duration_since(last_time) < interval {
+                            return;
                         }
                     }
-                    _ => {}
-                },
+                    last_run = Some(now);
+                    info!("Modified file: {}", event.path.display());
+                    if let Err(ref e) = self.rebuild() {
+                        crate::utils::log_error_chain(e);
+                        return;
+                    }
+                }),
             }
         }
         #[allow(unreachable_code)]

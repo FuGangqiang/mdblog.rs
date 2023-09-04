@@ -91,11 +91,12 @@ impl Mdblog {
     /// * `config.toml`
     /// * `BLOG_` prefix environment variable
     pub fn load_customize_settings(&mut self) -> Result<()> {
-        let mut settings = Config::new();
-        settings.merge(self.settings.clone())?;
-        settings.merge(config::File::with_name("config.toml"))?;
-        settings.merge(config::Environment::with_prefix("BLOG"))?;
-        self.settings = settings.try_into()?;
+        let settings = Config::builder()
+            .add_source(self.settings.clone())
+            .add_source(config::File::with_name("config.toml"))
+            .add_source(config::Environment::with_prefix("BLOG"))
+            .build()?;
+        self.settings = settings.try_deserialize()?;
         if self.settings.site_url.ends_with('/') {
             self.settings.site_url = self.settings.site_url.trim_end_matches('/').to_string();
         }

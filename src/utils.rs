@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 
-use tracing::error;
 use pulldown_cmark::{html, Options, Parser};
+use tracing::error;
 
 use crate::error::Result;
 

@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use tracing::{debug, info};
 use tera::Tera;
+use tracing::{debug, info};
 
 use crate::error::{Error, Result};
 use crate::utils::{read_file, write_file};

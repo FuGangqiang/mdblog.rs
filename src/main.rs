@@ -3,8 +3,8 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
-use tracing::error;
 use mdblog::{Mdblog, Result};
+use tracing::error;
 
 /// static site generator from markdown files
 #[derive(Parser, Debug)]
@@ -23,7 +23,7 @@ enum CliCommand {
     },
     /// Create a blog post
     New {
-        #[clap(name="tag", short, long = "tag", default_value = "")]
+        #[clap(name = "tag", short, long = "tag", default_value = "")]
         /// Post tags
         tags: Vec<String>,
         /// Post path relative to blog `posts` directory

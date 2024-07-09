@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use serde::Serialize;
+use std::rc::Rc;
 
 use crate::post::Post;
 
@@ -13,5 +13,5 @@ pub struct Page {
     /// page index name
     pub name: String,
     /// page posts array
-    pub posts: Vec<Rc<Post>>
+    pub posts: Vec<Rc<Post>>,
 }

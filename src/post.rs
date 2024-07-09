@@ -2,9 +2,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use tracing::debug;
-use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 use crate::utils::markdown_to_html;

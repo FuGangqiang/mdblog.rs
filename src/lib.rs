@@ -20,15 +20,16 @@ use std::time::{Duration, Instant};
 
 use config::Config;
 use glob::Pattern;
-use tracing::{debug, error, info};
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use tempfile::{Builder as TempBuilder, TempDir};
 use tera::{Context, Tera};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use tracing::{debug, error, info};
 use walkdir::{DirEntry, WalkDir};
 
 pub use crate::error::{Error, Result};
+use crate::http::HttpServer;
 pub use crate::page::Page;
 pub use crate::post::Post;
 pub use crate::post::PostHeaders;
@@ -36,16 +37,15 @@ pub use crate::settings::Settings;
 pub use crate::tag::Tag;
 pub use crate::theme::Theme;
 use crate::utils::write_file;
-use crate::http::HttpServer;
 
 mod error;
+mod http;
 mod page;
 mod post;
 mod settings;
 mod tag;
 mod theme;
 mod utils;
-mod http;
 
 /// blog object
 pub struct Mdblog {

@@ -7,8 +7,7 @@ use axum::{
     routing::get,
     Router,
 };
-use tower_http::trace::{self, TraceLayer,
-};
+use tower_http::trace::{self, TraceLayer};
 use tracing::{debug, Level};
 
 #[derive(Clone)]
@@ -38,7 +37,7 @@ impl HttpServer {
                 .layer(
                     TraceLayer::new_for_http()
                         .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                        .on_response(trace::DefaultOnResponse::new().level(Level::INFO))
+                        .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
                 )
                 .with_state(StaticDir(root_dir));
             let rt = tokio::runtime::Builder::new_current_thread()

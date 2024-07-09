@@ -3,11 +3,13 @@ use std::path::PathBuf;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    response::{IntoResponse, Response, Redirect},
+    response::{IntoResponse, Redirect, Response},
     routing::get,
     Router,
 };
-use tracing::debug;
+use tower_http::trace::{self, TraceLayer,
+};
+use tracing::{debug, Level};
 
 #[derive(Clone)]
 struct StaticDir(PathBuf);
@@ -33,6 +35,11 @@ impl HttpServer {
             let app = Router::new()
                 .route("/", get(Redirect::permanent("/index.html")))
                 .route("/*path", get(Self::handle_path))
+                .layer(
+                    TraceLayer::new_for_http()
+                        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+                        .on_response(trace::DefaultOnResponse::new().level(Level::INFO))
+                )
                 .with_state(StaticDir(root_dir));
             let rt = tokio::runtime::Builder::new_current_thread()
                 .enable_all()

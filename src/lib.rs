@@ -36,6 +36,7 @@ pub use crate::settings::Settings;
 pub use crate::tag::Tag;
 pub use crate::theme::Theme;
 use crate::utils::write_file;
+use crate::http::HttpServer;
 
 mod error;
 mod page;
@@ -44,6 +45,7 @@ mod settings;
 mod tag;
 mod theme;
 mod utils;
+mod http;
 
 /// blog object
 pub struct Mdblog {
@@ -237,20 +239,9 @@ impl Mdblog {
         self.build()?;
 
         info!("server blog at {}", &self.settings.site_url);
-        let server_root_dir = self.server_root_dir.as_ref().unwrap().path().to_owned();
-
         self.reset_site_url(&host, port);
-        thread::spawn(move || {
-            let mut config = rocket::config::Config::production();
-            config
-                .set_address(&host)
-                .expect(&format!("can not bind address: {}", host));
-            config.set_port(port);
-            rocket::custom(config)
-                .mount("/", rocket_contrib::serve::StaticFiles::from(&server_root_dir))
-                .launch();
-        });
-
+        let server_root_dir = self.server_root_dir.as_ref().unwrap().path().to_owned();
+        HttpServer::new(host, port, server_root_dir).run();
         self.open_browser();
         self.watch()?;
         Ok(())

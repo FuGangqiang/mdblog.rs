@@ -17,8 +17,8 @@ name = "mdblog"
 doc = false
 
 [dependencies]
-log = "0.4"
-env_logger = "0.10"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
 clap = { version = "4", features = ["derive"]}
 config = "0.13"
 derive_more = { version = "0.99", features = ["display", "from"]}

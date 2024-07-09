@@ -7,7 +7,7 @@ use axum::{
     routing::get,
     Router,
 };
-use log::debug;
+use tracing::debug;
 
 #[derive(Clone)]
 struct StaticDir(PathBuf);

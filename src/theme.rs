@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use log::{debug, info};
+use tracing::{debug, info};
 use tera::Tera;
 
 use crate::error::{Error, Result};

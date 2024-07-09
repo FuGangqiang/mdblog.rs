@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 
 use config::Config;
 use glob::Pattern;
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use tempfile::{Builder as TempBuilder, TempDir};

@@ -3,7 +3,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
-use log::error;
+use tracing::error;
 use mdblog::{Mdblog, Result};
 
 /// static site generator from markdown files
@@ -69,9 +69,7 @@ enum ThemeCommand {
 }
 
 fn main() {
-    env_logger::Builder::from_default_env()
-        .filter(None, log::LevelFilter::Info)
-        .init();
+    tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
     let res = match cli.cmd {

@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use time::OffsetDateTime;
-use log::debug;
+use tracing::debug;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};

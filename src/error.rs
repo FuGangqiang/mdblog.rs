@@ -10,80 +10,74 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Display, From)]
 pub enum Error {
     /// IO error
-    #[display(fmt = "IO error")]
+    #[display("IO error")]
     Io(std::io::Error),
     /// path strip prefix error
-    #[display(fmt = "path strip prefix error")]
+    #[display("path strip prefix error")]
     PathStripPrefix(std::path::StripPrefixError),
     /// config merge error
-    #[display(fmt = "config merge error")]
+    #[display("config merge error")]
     ConfigMerge(config::ConfigError),
     /// template error
-    #[display(fmt = "template error")]
+    #[display("template error")]
     Template(tera::Error),
     ///datetime fetch error
-    #[display(fmt = "datetime fetch error")]
+    #[display("datetime fetch error")]
     DateTimeFetchError(time::error::IndeterminateOffset),
     /// datetime format error
-    #[display(fmt = "datetime format error")]
+    #[display("datetime format error")]
     DateTimeFormat(time::error::Format),
     /// notify error
-    #[display(fmt = "notify error")]
+    #[display("notify error")]
     Notify(notify::Error),
     /// glob pattern error
-    #[display(fmt = "glob pattern error")]
+    #[display("glob pattern error")]
     GlobPattern(glob::PatternError),
     /// toml export error
-    #[display(fmt = "toml export error")]
+    #[display("toml export error")]
     TomlExport(toml::ser::Error),
     /// path expand error
-    #[display(fmt = "path expand error")]
+    #[display("path expand error")]
     PathExpend(shellexpand::LookupError<std::env::VarError>),
     /// post head parse error
-    #[display(fmt = "{:?}: post head parse error, please use yaml grammar", _1)]
+    #[display("{:?}: post head parse error, please use yaml grammar", _1)]
     PostHeadPaser(serde_yaml::Error, PathBuf),
 
     /// blog root directory already exists error
     #[from(ignore)]
-    #[display(fmt = "blog root directory {:?} already exists", _0)]
+    #[display("blog root directory {:?} already exists", _0)]
     RootDirExisted(PathBuf),
     /// post path format error
     #[from(ignore)]
-    #[display(
-        fmt = "post path {:?} format error: must be relative path without file extension",
-        _0
-    )]
+    #[display("post path {:?} format error: must be relative path without file extension", _0)]
     PostPathInvaild(PathBuf),
     /// post path already existed
     #[from(ignore)]
-    #[display(fmt = "post path {:?} already existed", _0)]
+    #[display("post path {:?} already existed", _0)]
     PostPathExisted(PathBuf),
     /// theme template file encoding error
     #[from(ignore)]
-    #[display(fmt = "theme template file {:?} encoding error", _0)]
+    #[display("theme template file {:?} encoding error", _0)]
     ThemeFileEncoding(String),
     /// blog theme in use, can not be deleted error
     #[from(ignore)]
-    #[display(fmt = "blog theme {:?} in use, can not be deleted", _0)]
+    #[display("blog theme {:?} in use, can not be deleted", _0)]
     ThemeInUse(String),
     /// blog theme not found error
     #[from(ignore)]
-    #[display(fmt = "blog theme {:?} not found", _0)]
+    #[display("blog theme {:?} not found", _0)]
     ThemeNotFound(String),
     /// post must has two parts error
     #[from(ignore)]
-    #[display(
-        fmt = "post {:?} must has two parts: headers and body, splitted by first blank line",
-        _0
-    )]
+    #[display("post {:?} must has two parts: headers and body, splitted by first blank line", _0)]
     PostOnlyOnePart(PathBuf),
     /// post head part is empty error
     #[from(ignore)]
-    #[display(fmt = "post {:?} head part is empty", _0)]
+    #[display("post {:?} head part is empty", _0)]
     PostNoHead(PathBuf),
     /// post body part is empty error
     #[from(ignore)]
-    #[display(fmt = "post {:?} body part is empty", _0)]
+    #[display("post {:?} body part is empty", _0)]
     PostNoBody(PathBuf),
 }
 
